@@ -1,0 +1,37 @@
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Build / tool diagnostics (transient)
+vo/_incr_err.txt
+vo/_incr_log.txt
+vo/_pio_build*.txt
+
+# Synthetic / recorded media + derived CSVs (regenerable)
+vo/*.avi
+vo/*_traj.csv
+vo/*_traj_val.json
+vo/*_ate.csv
+vo/*_validation.png
+vo/*_meta.json
+vo/real_ba*.csv
+vo/real_incr_*.csv
+vo/calib_esp_vo*.csv
+
+# Calibration data (regenerable via camera_calibration)
+vo/calibration_esp32*.npz
+
+# Dewarp/_cov artifacts: avi + per-seq derived files, but KEEP results
+vo/_cov/*.avi
+vo/_cov/*_meta.json
+vo/_cov/*_traj.csv
+vo/_cov/*_traj_val.json
+vo/_cov/*_ate.csv
+vo/_cov/*_validation.png
+vo/_cov/res_*.csv
+vo/_cov/res_*.json
+vo/_cov/res_*.png
+vo/_cov/*_val.json
+
+# Windows
+Thumbs.db

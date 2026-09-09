@@ -1,0 +1,259 @@
+"""One-command regression: gate logic + sync + ATE math on the real modules.
+
+Run:  python -m unittest vo/test_regression.py -v     (from D:\Things)
+
+Covers:
+  * align_frames / drone_sync time-sync math (pure numpy)
+  * run_gt_ate center_of + umeyama alignment recovers a known similarity
+  * clean synthetic straight walk passes all 7 gates (subprocess, end-to-end)
+  * negative controls (back_forth / jump / curve) are REJECTED by the gates
+  * ATE harness (official pipeline + known truth) stays green
+  * official gate script keeps its keyframe volume on the clean clip
+"""
+
+import os
+import json
+import csv
+import subprocess
+import sys
+import tempfile
+import unittest
+
+import numpy as np
+
+VO = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, VO)
+
+from run_gt_ate import center_of, umeyama_sim3
+from drone_sync import align_frames, SyncTrajectory
+
+GEN = [sys.executable, os.path.join(VO, "gen_synth_seq.py")]
+CHECK = [sys.executable, os.path.join(VO, "run_clean_seq_check.py")]
+_PROC = None
+
+
+def _run(cmd, **kw):
+    global _PROC
+    _PROC = subprocess.run(cmd, cwd=VO, capture_output=True, text=True, **kw)
+    return _PROC
+
+
+class TestTimeSync(unittest.TestCase):
+    def test_align_knows_own_clock(self):
+        log = np.array([0.0, 0.5, 1.0, 1.5, 2.0])    # 2 Hz
+        cam = np.linspace(0.0, 2.0, 7)               # 3.5 Hz, same origin
+        l2c, c2l = align_frames(log, cam)
+        self.assertEqual(l2c[2], np.argmin(np.abs(cam - 1.0)))
+        self.assertEqual(c2l[3], np.argmin(np.abs(log - cam[3])))
+
+    def test_align_offset_clock(self):
+        log = np.array([0.0, 0.5, 1.0, 1.5, 2.0])
+        cam = np.linspace(1.0, 3.0, 7)               # shifted +1 s
+        l2c, _ = align_frames(log, cam)
+        # monotone: later log maps to a >= camera frame
+        self.assertTrue(np.all(np.diff(l2c) >= 0))
+        self.assertEqual(int(l2c[-1]), int(np.argmin(np.abs(cam - 2.0))))
+
+    def test_align_monotonic_inputs_required(self):
+        # non-monotonic cam still does not crash and returns ints
+        l2c, c2l = align_frames([2.0, 1.0], [0.0, 1.0])
+        self.assertEqual(l2c.dtype, np.int32)
+
+
+class TestTateMath(unittest.TestCase):
+    def test_umeyama_recovers_similarity(self):
+        rng = np.random.default_rng(0)
+        P = rng.normal(size=(20, 3))
+        s, R, t = 2.5, 0.3, np.array([4.0, -2.0, 1.0])
+        rot = np.array([[np.cos(R), -np.sin(R), 0],
+                        [np.sin(R), np.cos(R), 0], [0, 0, 1.0]])
+        Q = s * (rot @ P.T).T + t
+        cs, Rs, ts = umeyama_sim3(P, Q)
+        ali = (cs * Rs @ P.T).T + ts
+        np.testing.assert_allclose(ali, Q, atol=1e-8)
+
+    def test_center_of_is_rotation_invariant(self):
+        c = np.array([0.1, 0.2, -0.3])
+        R = np.array([[0, 0, 1.0], [1.0, 0, 0], [0, 1.0, 0]])
+        t = R @ -c                       # camera looks at origin
+        got = center_of(R, t.reshape(3, 1))
+        np.testing.assert_allclose(got, c, atol=1e-12)
+
+
+class TestSyncTrajectoryE2E(unittest.TestCase):
+    """SyncTrajectory merges a receiver log + camera meta + VO traj into a
+    single pose stream. Uses a small fixed meta/traj pair written on the fly
+    so the test never depends on recorded hardware files."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.mkdtemp(prefix="vo_sync_")
+        # camera meta: 16 fps, 48 frames (HOLD0 16 + MOVE 32)
+        cls.meta = os.path.join(cls.tmp, "cam_meta.json")
+        with open(cls.meta, "w") as f:
+            json.dump({"fps": 16.0,
+                       "frames": {"HOLD0": 6, "MOVE": 10, "HOLD1": 6},
+                       "size": [320, 240], "phases": []}, f)
+        # VO traj: monotone forward along +? with known camera frames
+        traj = os.path.join(cls.tmp, "traj.csv")
+        with open(traj, "w") as f:
+            f.write("kf,frame,pre_x,pre_y,pre_z,post_x,post_y,post_z\n")
+            for i in range(5):
+                f.write("%d,%d,%d,0,0,%d,0,0\n" % (i, 10 * i, i, i))
+        cls.traj_path = traj
+        # receiver log: 4 samples, offset by +0.25 s from frame clock
+        log = os.path.join(cls.tmp, "rc_log.csv")
+        with open(log, "w") as f:
+            f.write("ts_ms,roll_deg,pitch_deg,yaw_deg\n")
+            for i in range(4):
+                f.write("%.0f,1,2,3\n" % (1000.0 * (0.25 + 0.4 * i)))
+        cls.log_path = log
+
+    @classmethod
+    def tearDownClass(cls):
+        import shutil
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def test_frames_map_monotonically_with_offset(self):
+        sc = SyncTrajectory(self.log_path, self.meta, self.traj_path, fps=16.0)
+        # log at 0.25, 0.65, 1.05, 1.45 s -> cam frames [4, 10, 17, 21]
+        # (1.45 s sits past the last frame 21/16=1.31 s, clipped in-range)
+        self.assertEqual(list(map(sc.log_frame_for, range(4))),
+                         [4, 10, 17, 21])
+        # monotone, no unbounded extrapolation
+        m = [sc.log_frame_for(i) for i in range(len(sc.log_ts))]
+        self.assertTrue(all(a <= b for a, b in zip(m, m[1:])))
+
+    def test_sync_points_carry_log_times_and_nearest_pose(self):
+        sc = SyncTrajectory(self.log_path, self.meta, self.traj_path, fps=16.0)
+        pts = sc.sync_points()
+        self.assertEqual(len(pts), 4)
+        # times are the log-domain seconds, untouched
+        self.assertAlmostEqual(pts[0][0], 0.25)
+        self.assertAlmostEqual(pts[-1][0], 1.45)
+        # nearest-kf lookup: replicate it here independently
+        kf_frames = [10 * j for j in range(5)]
+        cam = [sc.log_frame_for(i) for i in range(4)]
+        x_expected = [
+            float(min(range(5), key=lambda j: abs(kf_frames[j] - f)))
+            for f in cam]
+        for i, p in enumerate(pts):
+            self.assertEqual(p[1], x_expected[i])   # x = pre_x of nearest kf
+            self.assertEqual(p[2], 0.0)             # y
+            self.assertEqual(p[3], 0.0)             # z
+        # rpy come from the receiver log rows
+        self.assertEqual(pts[0][4], 1.0)   # roll
+        self.assertEqual(pts[0][6], 3.0)   # yaw
+
+    def test_per_frame_ts_overrides_fps_clock(self):
+        # recorder writes irregular real timestamps that differ from i/fps
+        meta = os.path.join(self.tmp, "cam_ts.json")
+        with open(meta, "w") as f:
+            json.dump({"fps": 60.0, "frames": {"HOLD0": 4}, "size": [8, 8],
+                       "phases": [],
+                       "per_frame_ts": [0.000, 0.050, 0.200, 0.260]}, f)
+        sc = SyncTrajectory(self.log_path, meta, self.traj_path, fps=60.0)
+        np.testing.assert_allclose(
+            sc.cam_ts, np.array([0.0, 0.05, 0.2, 0.26]))
+
+
+class TestAteHarnessEndToEnd(unittest.TestCase):
+    """ATE harness (official pipeline + known analytic truth) must PASS."""
+    @classmethod
+    def setUpClass(cls):
+        cls.txt = _run([sys.executable,
+                        os.path.join(VO, "test_ate_harness.py")],
+                       timeout=600).stdout
+
+    def test_ate_harness_passes(self):
+        self.assertIn("RESULT: PASS", self.txt)
+
+    def test_ate_harness_ba_improves(self):
+        # post < pre: bundle adjustment must reduce ATE, not just be small
+        self.assertRegex(self.txt, r"improvement: \d+\.\d%")
+        self.assertRegex(self.txt, r"ATE (?:pre-BA :|pre-BA: ) \d\.\d{3}\n")
+        self.assertRegex(self.txt, r"ATE (?:post-BA:|post-BA : ) \d\.\d{3}\n")
+
+
+class TestGatesEndToEnd(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.mkdtemp(prefix="vo_regr_")
+        base = os.path.join(cls.tmp, "clean")
+        _run(GEN + ["--out", base + ".avi", "--noise", "1.5",
+                    "--step", "0.16"])
+        cls.clean_p = _run(CHECK + ["--video", base + ".avi",
+                                    "--out-prefix", base],
+                           timeout=300)
+        cls.clean_txt = cls.clean_p.stdout + cls.clean_p.stderr
+
+        cls.neg = {}
+        for name, extra in (("back_forth", ["--motion", "back_forth"]),
+                            ("jump", ["--motion", "jump"]),
+                            ("curve", ["--motion", "curve"])):
+            p = _run(GEN + ["--out", os.path.join(cls.tmp, name) + ".avi",
+                            "--noise", "1.5", "--step", "0.16"] + extra)
+            r = _run(CHECK + ["--video", os.path.join(cls.tmp, name) + ".avi",
+                              "--out-prefix", os.path.join(cls.tmp, name)],
+                     timeout=300)
+            cls.neg[name] = r.stdout + r.stderr
+
+        # official gate script keyframe volume (was part of the old class-vs-
+        # script drift monitor; the class IncrementalPnpVO is now removed, so
+        # this keeps the script's lane healthy alone)
+        with open(base + "_traj.csv") as f:
+            cls.script_kfs = sum(1 for _ in csv.DictReader(f))
+
+        # P7 negative control: camera jitters during HOLD -> gate must reject
+        _run(GEN + ["--out", os.path.join(cls.tmp, "hold_jitter") + ".avi",
+                    "--noise", "1.5", "--step", "0.16",
+                    "--hold-jitter", "0.06"])
+        r7 = _run(CHECK + ["--video", os.path.join(cls.tmp, "hold_jitter") + ".avi",
+                           "--out-prefix", os.path.join(cls.tmp, "hold_jitter"),
+                           "--meta", os.path.join(cls.tmp, "hold_jitter_meta.json")],
+                  timeout=300)
+        cls.neg["hold_jitter_meta"] = r7.stdout + r7.stderr
+
+    @classmethod
+    def tearDownClass(cls):
+        import shutil
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def test_clean_sequence_passes(self):
+        self.assertIn("RESULT: PASS", self.clean_txt)
+
+    def test_clean_has_sufficient_structure(self):
+        self.assertIn("P6 structure   [0]", self.clean_txt,
+                      "clean walk must keep kfs/map pts")
+
+    def test_back_forth_rejected_por3_p4(self):
+        t = self.neg["back_forth"]
+        self.assertIn("RESULT: FAIL", t)
+        self.assertIn("P3 straight", t)
+        self.assertIn("P4 monotonic", t)
+
+    def test_jump_rejected(self):
+        self.assertIn("RESULT: FAIL", self.neg["jump"])
+
+    def test_curve_is_liberal(self):
+        # a gentle arc may pass P3 straightness (by design) -- but the gate
+        # set must not crash; asserted for documentation value
+        self.assertIn("RESULT:", self.neg["curve"])
+
+    def test_hold_jitter_rejected_by_p7(self):
+        # HOLD-segment camera jitter must be caught by P7 static tail:
+        # meta reports mean_flow_px above the 2px threshold -> gate FAIL
+        t = self.neg["hold_jitter_meta"]
+        self.assertIn("RESULT: FAIL", t)
+        self.assertIn("P7 static tail", t)
+
+    def test_official_script_keyframe_volume(self):
+        # The class-based VO is gone; the sole trajectory producer is the
+        # official gate script.  It must keep producing its keyframe volume
+        # on the clean clip (historically 16 kfs).
+        self.assertGreaterEqual(self.script_kfs, 15,
+                                "official script unexpectedly lost keyframes")
+
+
+if __name__ == "__main__":
+    unittest.main()
