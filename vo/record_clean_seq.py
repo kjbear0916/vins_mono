@@ -14,7 +14,8 @@ reads.
 
 Usage:
   python record_clean_seq.py --seconds 12 --out vo/seq_clean_01.avi
-  python record_clean_seq.py --url http://192.168.4.1:81/stream --seconds 20
+  python record_clean_seq.py --url http://172.20.10.8:81/stream --seconds 20   # STA 固定 IP
+  python record_clean_seq.py --url http://192.168.4.1:81/stream --seconds 20  # ESP32 AP 模式
 """
 
 import argparse
@@ -36,7 +37,8 @@ HOLD_S = 3.0
 def parse():
     ap = argparse.ArgumentParser()
     ap.add_argument("--url",
-                    default=r"http://192.168.4.1:81/stream")
+                    default=r"http://172.20.10.8:81/stream",
+                    help="ESP32 stream URL (STA fixed IP by default; AP = http://192.168.4.1:81/stream)")
     ap.add_argument("--seconds", type=float, default=12.0,
                     help="duration of the MOVE phase")
     ap.add_argument("--out", default=r"D:\Things\vo\seq_clean_01.avi")

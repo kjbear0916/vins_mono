@@ -47,7 +47,7 @@
 **WiFi/AP模式連線問題(Windows NCSI自動漫遊)**——這是擋在「合成驗證100%完成」跟「真機驗證完成」之間唯一的關卡,且**問題性質是環境設定,不是演算法問題**。
 
 **建議解法(擇一):**
-1. 改ESP32韌體回**STA模式+固定IP**,連手機熱點或其他WiFi,徹底避開Windows自動切換網路的觸發條件(**建議優先做這個**,不需要任何系統權限)
+1. ~~改ESP32韌體回**STA模式+固定IP**~~ **已實作**:`esp32_cam_server.ino` 現在支援 STA 固定 IP(`config.h` 的 `WIFI_STATIC_IP_ENABLED`、`172.20.10.8` 對應 iPhone 個人熱點網段),`preflight_esp32.py` / `record_clean_seq.py` 預設 URL 已同步。只需改 config.h 憑證 → `pio run -t upload` → PC 連同一熱點即可,一次完全避開 Windows 自動切換網路的觸發條件。**待實際燒錄 + 錄影驗證。**
 2. 若有admin權限,修改機登錄`NCSI\EnableActiveProbing=0`,關閉Windows的網路探測行為
 
 ---

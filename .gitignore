@@ -35,3 +35,7 @@ vo/_cov/*_val.json
 
 # Windows
 Thumbs.db
+
+# PlatformIO build artifacts
+esp32_cam_server/.pio/
+esp32_cam_server/esp32cam_download.zip

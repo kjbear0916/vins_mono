@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>鼠患智能監控系統</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 頂部導航欄 -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">🐭</span>
+                <h1>鼠患智能監控</h1>
+            </div>
+            <div class="header-status">
+                <div class="status-indicator" id="connectionStatus">
+                    <span class="dot"></span>
+                    <span id="statusText">連線中...</span>
+                </div>
+                <button class="btn btn-icon" id="fullscreenBtn" title="全螢幕">⛶</button>
+            </div>
+        </header>
+
+        <!-- 主要內容 -->
+        <main class="main-content">
+            <!-- 左側：即時畫面 -->
+            <section class="live-view">
+                <div class="view-header">
+                    <h2>即時監控</h2>
+                    <div class="view-controls">
+                        <button class="btn btn-small btn-primary" id="captureBtn">📸 拍照</button>
+                    </div>
+                </div>
+                <div class="video-container">
+                    <img id="videoStream" src="" alt="即時影像" />
+                    <div class="video-overlay" id="videoOverlay">
+                        連線中...
+                    </div>
+                    <div class="timestamp" id="videoTimestamp"></div>
+                </div>
+                <div class="video-info">
+                    <span id="fpsInfo">FPS: --</span>
+                    <span id="qualityInfo">品質: --</span>
+                    <span id="resolutionInfo">解析度: --</span>
+                </div>
+
+                <!-- 運動偵測狀態 -->
+                <div class="motion-status">
+                    <h3>偵測狀態</h3>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="label">感測器狀態</span>
+                            <span class="value" id="motionStatus">等待中...</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">觸發次數</span>
+                            <span class="value" id="motionCount">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">靈敏度</span>
+                            <span class="value" id="sensitivityLevel">50%</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">上次觸發</span>
+                            <span class="value" id="lastTriggerTime">--</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 右側：控制面板 -->
+            <aside class="control-panel">
+                <!-- 標籤頁 -->
+                <div class="tabs">
+                    <button class="tab active" data-tab="camera">📹 攝影機</button>
+                    <button class="tab" data-tab="motion">🎯 偵測</button>
+                    <button class="tab" data-tab="alerts">🔔 告警</button>
+                    <button class="tab" data-tab="storage">💾 儲存</button>
+                    <button class="tab" data-tab="system">⚙️ 系統</button>
+                </div>
+
+                <!-- 攝影機設定標籤 -->
+                <div class="tab-content active" id="cameraTab">
+                    <h3>攝影機設定</h3>
+                    
+                    <div class="setting-group">
+                        <label>解析度</label>
+                        <select id="framesize">
+                            <option value="9">UXGA (1600x1200)</option>
+                            <option value="10" selected>SVGA (800x600)</option>
+                            <option value="11">VGA (640x480)</option>
+                            <option value="13">QVGA (320x240)</option>
+                        </select>
+                        <button class="btn btn-small btn-apply" onclick="applyCameraSetting('framesize', document.getElementById('framesize').value)">套用</button>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>JPEG 品質 <span id="qualityValue">10</span></label>
+                        <input type="range" id="quality" min="0" max="63" value="10" oninput="document.getElementById('qualityValue').textContent=this.value">
+                        <button class="btn btn-small btn-apply" onclick="applyCameraSetting('quality', document.getElementById('quality').value)">套用</button>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>亮度 <span id="brightnessValue">0</span></label>
+                        <input type="range" id="brightness" min="-2" max="2" value="0" oninput="document.getElementById('brightnessValue').textContent=this.value">
+                        <button class="btn btn-small btn-apply" onclick="applyCameraSetting('brightness', document.getElementById('brightness').value)">套用</button>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>對比度 <span id="contrastValue">0</span></label>
+                        <input type="range" id="contrast" min="-2" max="2" value="0" oninput="document.getElementById('contrastValue').textContent=this.value">
+                        <button class="btn btn-small btn-apply" onclick="applyCameraSetting('contrast', document.getElementById('contrast').value)">套用</button>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>飽和度 <span id="saturationValue">0</span></label>
+                        <input type="range" id="saturation" min="-2" max="2" value="0" oninput="document.getElementById('saturationValue').textContent=this.value">
+                        <button class="btn btn-small btn-apply" onclick="applyCameraSetting('saturation', document.getElementById('saturation').value)">套用</button>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>翻轉方向</label>
+                        <div class="toggle-row">
+                            <span>水平翻轉</span>
+                            <label class="switch">
+                                <input type="checkbox" id="hmirror" onchange="applyCameraSetting('hmirror', this.checked ? 1 : 0)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-row">
+                            <span>垂直翻轉</span>
+                            <label class="switch">
+                                <input type="checkbox" id="vflip" onchange="applyCameraSetting('vflip', this.checked ? 1 : 0)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 偵測設定標籤 -->
+                <div class="tab-content" id="motionTab">
+                    <h3>運動偵測設定</h3>
+                    
+                    <div class="setting-group">
+                        <label>啟用運動偵測</label>
+                        <label class="switch">
+                            <input type="checkbox" id="motionEnabled" checked onchange="saveSetting('motion_enabled', this.checked ? '1' : '0')">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>靈敏度 <span id="motionSensitivityValue">50</span></label>
+                        <input type="range" id="motionSensitivity" min="1" max="100" value="50" oninput="document.getElementById('motionSensitivityValue').textContent=this.value" onchange="saveSetting('motion_sensitivity', this.value)">
+                    </div>
+
+                    <div class="setting-group">
+                        <label>冷卻時間 (秒) <span id="cooldownValue">5</span></label>
+                        <input type="range" id="cooldown" min="1" max="60" value="5" oninput="document.getElementById('cooldownValue').textContent=this.value" onchange="saveSetting('motion_cooldown', this.value * 1000)">
+                    </div>
+
+                    <div class="setting-group">
+                        <label>觸發幀數 <span id="triggerCountValue">3</span></label>
+                        <input type="range" id="triggerCount" min="1" max="10" value="3" oninput="document.getElementById('triggerCountValue').textContent=this.value" onchange="saveSetting('motion_trigger_count', this.value)">
+                    </div>
+
+                    <div class="setting-group">
+                        <label>啟用 PIR 感測器</label>
+                        <label class="switch">
+                            <input type="checkbox" id="pirEnabled" checked onchange="saveSetting('pir_enabled', this.checked ? '1' : '0')">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>偵測到運動時拍照</label>
+                        <label class="switch">
+                            <input type="checkbox" id="captureOnMotion" checked onchange="saveSetting('capture_on_motion', this.checked ? '1' : '0')">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>拍照數量 <span id="captureCountValue">3</span></label>
+                        <input type="range" id="captureCount" min="1" max="10" value="3" oninput="document.getElementById('captureCountValue').textContent=this.value" onchange="saveSetting('capture_count', this.value)">
+                    </div>
+                </div>
+
+                <!-- 告警設定標籤 -->
+                <div class="tab-content" id="alertsTab">
+                    <h3>告警通知設定</h3>
+                    
+                    <div class="setting-group">
+                        <label>啟用告警系統</label>
+                        <label class="switch">
+                            <input type="checkbox" id="alertEnabled" checked onchange="saveSetting('alert_enabled', this.checked ? '1' : '0')">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <h4>Telegram 通知</h4>
+                    <div class="setting-group">
+                        <label>啟用 Telegram</label>
+                        <label class="switch">
+                            <input type="checkbox" id="telegramEnabled" checked onchange="saveSetting('telegram_enabled', this.checked ? '1' : '0')">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-group">
+                        <label>Bot Token</label>
+                        <input type="password" id="telegramToken" placeholder="輸入 Bot Token">
+                    </div>
+                    <div class="setting-group">
+                        <label>Chat ID</label>
+                        <input type="text" id="telegramChatId" placeholder="輸入 Chat ID">
+                    </div>
+                    <button class="btn btn-small btn-primary" onclick="saveTelegramConfig()">💾 儲存 Telegram 設定</button>
+                    <button class="btn btn-small" onclick="testTelegram()">📤 測試發送</button>
+
+                    <h4>Email 告警</h4>
+                    <div class="setting-group">
+                        <label>啟用 Email</label>
+                        <label class="switch">
+                            <input type="checkbox" id="emailEnabled" onchange="saveSetting('email_enabled', this.checked ? '1' : '0')">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-group">
+                        <label>收件信箱</label>
+                        <input type="email" id="emailRecipient" placeholder="收件信箱">
+                    </div>
+                    <button class="btn btn-small btn-primary" onclick="saveEmailConfig()">💾 儲存 Email 設定</button>
+
+                    <h4>警報冷卻</h4>
+                    <div class="setting-group">
+                        <label>告警冷卻時間 (秒) <span id="alertCooldownValue">60</span></label>
+                        <input type="range" id="alertCooldown" min="10" max="600" value="60" oninput="document.getElementById('alertCooldownValue').textContent=this.value" onchange="saveSetting('alert_cooldown', this.value * 1000)">
+                    </div>
+                </div>
+
+                <!-- 儲存設定標籤 -->
+                <div class="tab-content" id="storageTab">
+                    <h3>存儲設定</h3>
+                    
+                    <div class="settings-info-box">
+                        <h4>SD 卡狀態</h4>
+                        <div class="status-grid">
+                            <div class="status-item">
+                                <span class="label">狀態</span>
+                                <span class="value" id="sdStatus">偵測中...</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="label">可用空間</span>
+                                <span class="value" id="sdFreeSpace">--</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="label">檔案數量</span>
+                                <span class="value" id="sdFileCount">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>啟用 SD 卡儲存</label>
+                        <label class="switch">
+                            <input type="checkbox" id="sdEnabled" checked onchange="saveSetting('sd_enabled', this.checked ? '1' : '0')">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>自動刪除舊檔案</label>
+                        <label class="switch">
+                            <input type="checkbox" id="autoDelete" checked onchange="saveSetting('auto_delete', this.checked ? '1' : '0')">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>保留天數 <span id="deleteDaysValue">30</span></label>
+                        <input type="range" id="deleteDays" min="7" max="90" value="30" oninput="document.getElementById('deleteDaysValue').textContent=this.value" onchange="saveSetting('delete_after_days', this.value)">
+                    </div>
+
+                    <div class="danger-zone">
+                        <button class="btn btn-danger" onclick="clearAllImages()">🗑️ 清除所有影像</button>
+                        <button class="btn btn-danger" onclick="formatSD()">⚡ 格式化 SD 卡</button>
+                    </div>
+                </div>
+
+                <!-- 系統設定標籤 -->
+                <div class="tab-content" id="systemTab">
+                    <h3>系統設定</h3>
+                    
+                    <div class="settings-info-box">
+                        <h4>系統資訊</h4>
+                        <div class="status-grid">
+                            <div class="status-item">
+                                <span class="label">系統名稱</span>
+                                <span class="value" id="sysName">--</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="label">版本</span>
+                                <span class="value" id="sysVersion">--</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="label">IP 位址</span>
+                                <span class="value" id="sysIP">--</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="label">運行時間</span>
+                                <span class="value" id="uptime">--</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="label">WiFi 訊號</span>
+                                <span class="value" id="wifiSignal">--</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="label">記憶體使用</span>
+                                <span class="value" id="freeHeap">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>啟用 NTP 時間同步</label>
+                        <label class="switch">
+                            <input type="checkbox" id="ntpEnabled" checked onchange="saveSetting('ntp_enabled', this.checked ? '1' : '0')">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>時區偏移 (小時)</label>
+                        <input type="number" id="ntpOffset" value="8" min="-12" max="14" onchange="saveSetting('ntp_gmt_offset', this.value)">
+                    </div>
+
+                    <div class="danger-zone">
+                        <button class="btn btn-warning" onclick="restartDevice()">🔁 重啟設備</button>
+                        <button class="btn btn-danger" onclick="resetConfig()">⚠️ 恢復出廠設定</button>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- 事件日誌面板 -->
+        <section class="event-log">
+            <div class="event-log-header">
+                <h2>📋 近期事件</h2>
+                <button class="btn btn-small" onclick="refreshEvents()">🔄 重新整理</button>
+                <button class="btn btn-small" onclick="clearEvents()">🗑️ 清除</button>
+            </div>
+            <div class="event-list" id="eventList">
+                <div class="event-item empty">載入中...</div>
+            </div>
+        </section>
+
+        <!-- 拍照快顯 -->
+        <div class="modal" id="captureModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>📸 拍攝的照片</h2>
+                    <button class="btn btn-icon" onclick="closeModal()">✕</button>
+                </div>
+                <img id="capturedImage" src="" alt="拍攝照片" />
+                <div class="modal-footer">
+                    <span id="captureInfo"></span>
+                    <a id="downloadLink" href="#" download="capture.jpg">💾 下載</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 通知 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
