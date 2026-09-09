@@ -15,6 +15,8 @@ def main():
     ap.add_argument("--video",
                     default=r"D:\Things\vo\real_seq.avi")
     ap.add_argument("--out", default=r"D:\Things\vo\real_incr_traj.csv")
+    ap.add_argument("--min-flow", type=float, default=12.0,
+                    help="flow threshold (px) to trigger init/kf (default 12)")
     args = ap.parse_args()
 
     K = np.load(r"D:\Things\vo\calibration_esp32_qvga.npz")["camera_matrix"]
@@ -30,7 +32,7 @@ def main():
 
     lk = dict(winSize=(21, 21), maxLevel=3,
               criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 20, 0.02))
-    MIN_FLOW = 12.0
+    MIN_FLOW = args.min_flow
     MIN_PNP = 8
     MAX_PTS = 300
 
@@ -198,6 +200,24 @@ def main():
         inl = inl.ravel().tolist()
         R, _ = cv2.Rodrigues(rvec)
         t = tvec.reshape(3, 1)
+        # reject degenerate solves: a hand-pushed rig moves smoothly, so the
+        # per-kf translation must stay comparable to the recent median step.
+        # A gross outlier (local-minimum mirror/flip) would otherwise jump the
+        # trajectory by orders of magnitude and poison every later gate.
+        if len(ts) >= 5:
+            tp = np.array([ts[i].ravel() for i in range(-5, 0)])
+            recent = np.linalg.norm(np.diff(tp, axis=0), axis=1)
+            med_step = float(np.median(recent))
+            if med_step > 1e-9:
+                step = float(np.linalg.norm(t.ravel() - ts[-1].ravel()))
+                if step > 15.0 * med_step:
+                    pnp_fail += 1
+                    # witness kf so structure / continuity remain dense
+                    Rs.append(Rs[-1].copy())
+                    ts.append(ts[-1].copy())
+                    kfs.append(fno)
+                    kf_gray = g.copy()
+                    continue
         zs = [(R @ mapp[used[j]]["X"] + t.ravel())[2] for j in inl]
         if float(np.median(zs)) < 0.05:
             pnp_fail += 1

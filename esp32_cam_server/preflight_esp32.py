@@ -29,7 +29,8 @@ import requests
 
 
 def get(base, path, **kw):
-    return requests.get(base + path, timeout=5, **kw).status_code
+    r = requests.get(base + path, timeout=5, **kw)
+    return r.status_code, r.text.strip()
 
 
 def post(base, path, **kw):
@@ -39,7 +40,7 @@ def post(base, path, **kw):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--url", default="http://172.20.10.8",
+    ap.add_argument("--url", default="http://192.168.1.200",
                     help="ESP32 base URL (STA fixed IP; AP = http://192.168.4.1)")
     ap.add_argument("--check-only", action="store_true",
                     help="only report, don't change anything")
@@ -62,10 +63,10 @@ def main():
         print("ESP32 not reachable -- power it on first.")
         return 1
 
-    # 2. camera intrinfic control endpoints exist
-    ctl = post(args.url, "/control?var=framesize&val=5")
+    # 2. camera control endpoints exist (framesize 6 = QVGA on ESP32-CAM)
+    ctl = get(args.url, "/control?var=framesize&val=6")
     if args.check_only:
-        print("INFO [framesize] current control POST would set=5 (QVGA)")
+        print("INFO [framesize] current control GET would set=6 (QVGA)")
     else:
         check("framesize->QVGA", ctl[0] == 200, "(HTTP %d)" % ctl[0])
 
@@ -92,7 +93,7 @@ def main():
     # 4. exposure lock
     for k, v in [("aec", "0"),        # manual exposure
                  ("aec_value", "500")]:
-        code, body = post(args.url, "/control?var=%s&val=%s" % (k, v))
+        code, body = get(args.url, "/control?var=%s&val=%s" % (k, v))
         check("%s=%s" % (k, v), code == 200, "(HTTP %d)" % code)
 
     # 5. stream sanity

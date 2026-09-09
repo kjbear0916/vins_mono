@@ -29,8 +29,10 @@ from video_source import create_source
 
 CALIB = r"D:\Things\vo\calibration_esp32_qvga.npz"
 MAX_FLOW = 30.0        # px/frame; frames beyond this are dropped (jolt)
+MAX_DIFF = 20.0        # mean absdiff cushion: catches stepwise jumps that
+                       # break LK (flow reads low, diff still spikes)
 MIN_FLOW_LIVE = 1.0    # overlay hint only
-FPS = 16.0
+FPS = 30.0
 HOLD_S = 3.0
 
 
@@ -71,6 +73,13 @@ def main():
     map1, map2 = cv2.initUndistortRectifyMap(
         K, dist, None, K, (w, h), cv2.CV_32FC1)
 
+    lv = cv2.cvtColor(f0, cv2.COLOR_BGR2GRAY).mean()
+    if lv < 20.0:
+        print("ABORT: stream too dark (mean %.1f < 20) -- "
+              "fix lighting/exposure first" % lv)
+        raise SystemExit(1)
+    print("stream brightness OK (mean %.1f) at %s" % (lv, a.url))
+
     out = cv2.VideoWriter(a.out, cv2.VideoWriter_fourcc(*"MJPG"),
                           a.fps, (w, h), False)
     lk = dict(winSize=(21, 21), maxLevel=2,
@@ -105,7 +114,9 @@ def main():
                 out.release(); src.release()
                 return
             flow = 0.0
+            diff = 0.0
             if prev is not None:
+                diff = float(cv2.absdiff(prev, g).mean())
                 p = cv2.goodFeaturesToTrack(prev, maxCorners=80,
                                             qualityLevel=0.01, minDistance=10)
                 if p is not None and len(p) > 8:
@@ -117,10 +128,13 @@ def main():
                         flow = float(np.linalg.norm(
                             nxt[okq, 0] - pp[okq, 0], axis=1).mean())
 
-            if phase == "MOVE" and prev is not None and flow > MAX_FLOW:
+            jump = phase == "MOVE" and prev is not None and \
+                (flow > MAX_FLOW or diff > MAX_DIFF)
+            if jump:
                 stats[key]["dropped"] += 1
                 disp = cv2.cvtColor(g, cv2.COLOR_GRAY2BGR)
-                cv2.putText(disp, "flow %6.2f DROPPED" % flow, (10, 25),
+                tag = "flow %6.2f  diff %5.2f  DROPPED (stepwise)" % (flow, diff)
+                cv2.putText(disp, tag, (10, 25),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
                 cv2.imshow("RECORD %s" % phase, disp)
                 if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -141,9 +155,25 @@ def main():
             disp = cv2.cvtColor(g, cv2.COLOR_GRAY2BGR)
             el = time.time() - t_start
             frac = min(el / max(dur, 1e-9), 1.0)
-            col = (0, 255, 0) if flow <= MAX_FLOW else (0, 0, 255)
-            cv2.putText(disp, "%s  t=%4.1f/%4.1fs  flow %5.2f" %
-                        (phase, el, dur, flow), (10, 25),
+            # flow pacing guidance: a clean smooth push sustains a steady
+            # mid-range flow. Too low = stalled push, too high w/ jitter =
+            # stepwise motion (kills LK). Mark both so the operator adjusts.
+            if phase == "MOVE":
+                if diff > MAX_DIFF:
+                    msg, col = "STEPWISE - push CONTINUOUSLY", (0, 0, 255)
+                elif flow < 5.0:
+                    msg, col = "TOO SLOW - push steadily", (0, 0, 255)
+                elif flow <= MAX_FLOW:
+                    msg, col = "GOOD", (0, 255, 0)
+                else:
+                    msg, col = "TOO FAST - slow down", (0, 255, 255)
+                cv2.putText(disp, msg, (10, 72),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, col, 2)
+            col = (0, 0, 255) if diff > MAX_DIFF else \
+                  (0, 255, 0) if 0 < flow <= MAX_FLOW else \
+                  (0, 255, 255) if flow > MAX_FLOW else (0, 0, 255)
+            cv2.putText(disp, "%s  t=%4.1f/%4.1fs  flow %5.2f  diff %5.2f" %
+                        (phase, el, dur, flow, diff), (10, 25),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, col, 2)
             bar_x = 10
             bar_w = int(200 * frac)
@@ -155,8 +185,7 @@ def main():
                 cv2.destroyAllWindows()
                 return
             prev = g
-            if phase != "MOVE":
-                time.sleep(1.0 / a.fps)
+            time.sleep(1.0 / a.fps)
 
     out.release()
     src.release()

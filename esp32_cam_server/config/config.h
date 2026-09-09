@@ -4,24 +4,23 @@
 // ===========================
 // WiFi 設定
 // ===========================
-#define WIFI_SSID "iPhone"
-#define WIFI_PASSWORD "12345678"
+#define WIFI_SSID "CHT113405"
+#define WIFI_PASSWORD "0933816226"
 
 // WiFi 重試設定
 #define WIFI_MAX_RETRY 10
 #define WIFI_RETRY_DELAY_MS 500
 
 // STA 固定 IP(建議用於 VO 實錄:避開 DHCP 每次變動,
-// 且 PC 端可固定連 http://172.20.10.8:81/stream 不必翻 serial log)
+// 且 PC 端可固定連 http://192.168.1.200:81/stream 不必翻 serial log)
 //
-// 預設對應「iPhone 個人熱點」網段 172.20.10.0/28:
-//   gateway 172.20.10.1、可用 host 172.20.10.2 ~ 172.20.10.14
-// 若改用其他熱點/路由器,先 `ipconfig /all` 查網段,再改下面三個宏。
+// 目前對應家用 WiFi CHT113405(2.4GHz,gateway 192.168.1.1)。
+// 固定 IP 選 .200 避開 DHCP 常見分配段;若衝突(連不上)改下一個。
 // 設 1 啟用,設 0 走 DHCP
 #define WIFI_STATIC_IP_ENABLED 1
-#define WIFI_STATIC_IP "172.20.10.8"
-#define WIFI_STATIC_GATEWAY "172.20.10.1"
-#define WIFI_STATIC_NETMASK "255.255.255.240"
+#define WIFI_STATIC_IP "192.168.1.200"
+#define WIFI_STATIC_GATEWAY "192.168.1.1"
+#define WIFI_STATIC_NETMASK "255.255.255.0"
 
 // ===========================
 // AP 熱點設定（設定模式）

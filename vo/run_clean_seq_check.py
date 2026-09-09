@@ -36,12 +36,15 @@ def main():
     ap.add_argument("--out-prefix", required=True)
     ap.add_argument("--meta", default=None)
     ap.add_argument("--skip-gate", action="store_true")
+    ap.add_argument("--min-flow", type=float, default=12.0,
+                    help="forwarded to test_incr_pnp.py (default 12.0)")
     a = ap.parse_args()
 
     traj = a.out_prefix + "_traj.csv"
 
     rc = run([sys.executable, os.path.join(VO, "test_incr_pnp.py"),
-              "--video", a.video, "--out", traj])
+              "--video", a.video, "--out", traj,
+              "--min-flow", str(a.min_flow)])
     if rc != 0:
         print("test_incr_pnp failed (rc=%d)" % rc)
         return rc

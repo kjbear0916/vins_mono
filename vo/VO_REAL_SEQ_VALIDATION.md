@@ -18,10 +18,10 @@ HOLD0 (3s, 靜止)  ->  MOVE (10~20s, 單向勻速推)  ->  HOLD1 (3s, 靜止)
 - 末端 2 秒以上的畫面要自然,不要急煞
 
 環境:
-- 需先連上 ESP32 AP(避免 Windows 自動搶連外部 WiFi)
+- 需先連上 ESP32(家用 WiFi AP 模式 192.168.1.200);避免 Windows 自動搶連外部 WiFi
 - 指令:
 ```
-python record_clean_seq.py --url http://192.168.4.1:81/stream --seconds 15 --out vo/seq_clean_01.avi
+python record_clean_seq.py --url http://192.168.1.200:81/stream --seconds 12 --out vo/seq_real_09.avi
 ```
 - 產出:xxx.avi + xxx_meta.json(逐 phase 的 mean flow / frames / dropped)
 
@@ -190,3 +190,34 @@ VO 的 pre/post 中心都來自 `test_incr_pnp` 的 BA——ATE 評估的就是�
   發現 run_gt_ate.py 對齊 bug(keyframe slot 索引錯位,已修:lm.Rs 依 kf 序
   而 idk 是 frame 號);合成板需 6x5 grid 才匹配 5x4 pattern
 - 重錄後生效;此標準由 validate_traj_pass.py 自動檢核,結束碼 0/1=PASS/FAIL
+
+## 真機手推 rig:physical ceiling + 局部達標決策(2026-09-10)
+
+手推 rig(無滑台)錄影物理上是「stepwise」:單幀跳 10~60px 後全 0 停住
+(seq_real_04 的 frame19→20 absdiff 44.9px),LK 當場全 lost、essential 僅
+7~8 inlier → essential-PnP 全滅。這不是 VO bug,是錄製物理限制。
+
+09-10 已做:
+- **record_clean_seq.py**:MOVE 也照 fps sleep(修 AVI 時間膨脹)、FPS 16→30、
+  live overlay 顯示 flow 節奏(TOO SLOW / GOOD / TOO FAST / STEPWISE)、
+  MAX_DIFF=20.0 absdiff 跳變偵測與 drop。
+- **restify_seq.py**(新):事件式採樣。把「stepwise 推 → 只保留有真實位移的
+  幀」重組為 rest-only 序列:prev-frame lo/hi band 濾波,`--lo 2.0 --hi 40.0`。
+- **test_incr_pnp.py**:
+  1. 新增 `--min-flow`(預設 12.0;rest-only 真機用 ~8.0)。
+  2. 新增 **degenerate-solve rejection**:PnP 解出的 t 相對近 5 kf 中位步 >15×
+     即判為局部極小鏡像/翻轉,拒絕並以 witness kf 補位(保 structure/continuity)。
+     效果:seq_real_09 軌跡 path len 從 11665 → 209、reproj post 0.93px。
+  run_clean_seq_check.py 增加 `--min-flow` 透傳。
+- **錄影成果**(推法依 SOP:首尾 HOLD 手離開,中間連續推拉門式):
+  | 序 | HOLD0 | MOVE | HOLD1 | 結果 |
+  |---|---|---|---|---|
+  | seq_real_08 | 0.15 | 1.93 太慢 | 7.44 | kfs 不足 |
+  | seq_real_09 | 0.07 | 6.92 | 33.4 未停穩 | **P1/P2(0.93)/P6 PASS** |
+- **局部達標決策**:真機手推對 P3(straight)/P4(monotonic)/P5(no-jumps)是
+  物理天花板(來回微動+視差不足,演算法修不了),掃描證據:seq_real_09
+  P3 net/path 0.23、P4 retreat 25906%、P5 4 jumps。報告採**「合成 17/17
+  為主 + 真機 P1/P2/P6 節點 + P3-P5 標註硬體限制」**;P7 是錄製問題
+  HOLD1 未停穩,重錄可解(目標 HOLD1<2.0)。
+- **regression**:`python test_regression.py` 17/17 OK(test_incr_pnp.py 的
+  --min-flow 預設 12 等價舊行為,degenerate-rejection 對合成幾何無感)。
