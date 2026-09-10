@@ -52,7 +52,17 @@ def main():
     ap.add_argument("--min-pts", type=int, default=30)
     ap.add_argument("--min-kfs", type=int, default=15)
     ap.add_argument("--static-flow-max", type=float, default=2.0)
+    ap.add_argument("--gates", default=None,
+                    help="comma-separated subset of P1..P7 to run, "
+                         "e.g. --gates P2,P6 (default: all)")
     a = ap.parse_args()
+
+    assert (a.gates is None or
+            all(g in {"P1", "P2", "P3", "P4", "P5", "P6", "P7"}
+                for g in a.gates.split(","))), \
+        "--gates must be a comma-separated subset of P1..P7"
+    want = set(a.gates.split(",")) if a.gates else \
+        {"P1", "P2", "P3", "P4", "P5", "P6", "P7"}
 
     kf, fr, pre, post = load_traj(a.traj)
     n = len(kf)
@@ -60,82 +70,94 @@ def main():
     results = []
 
     # ---- P1 continuity ----
-    na = int((~np.isfinite(pre)).sum() + (~np.isfinite(post)).sum())
-    results.append(("P1 continuity", na == 0,
-                    "NaN/inf count = %d" % na))
+    if "P1" in want:
+        na = int((~np.isfinite(pre)).sum() + (~np.isfinite(post)).sum())
+        results.append(("P1 continuity", na == 0,
+                        "NaN/inf count = %d" % na))
 
     # ---- P2 reprojection improvement from sidecar ----
     import os
     val_path = a.traj.replace(".csv", "_val.json")
-    if os.path.exists(val_path):
-        val = json.load(open(val_path))
-        e_pre, e_post = val.get("reproj_pre_px"), val.get("reproj_post_px")
-        ok = (e_pre is not None and e_post is not None and
-              e_post <= e_pre and e_post < a.reproj_post_max)
-        results.append(("P2 reproj-BA", bool(ok),
-                        "pre %.2f -> post %.2f px (need post<=pre and <%.1f)"
-                        % (e_pre, e_post, a.reproj_post_max)))
-    else:
-        results.append(("P2 reproj-BA", None,
-                        "no %s sidecar (run test_incr_pnp.py)" % val_path))
+    if "P2" in want:
+        if os.path.exists(val_path):
+            val = json.load(open(val_path))
+            e_pre, e_post = val.get("reproj_pre_px"), val.get("reproj_post_px")
+            ok = (e_pre is not None and e_post is not None and
+                  e_post <= e_pre and e_post < a.reproj_post_max)
+            results.append(("P2 reproj-BA", bool(ok),
+                            "pre %.2f -> post %.2f px (need post<=pre and <%.1f)"
+                            % (e_pre, e_post, a.reproj_post_max)))
+        else:
+            results.append(("P2 reproj-BA", None,
+                            "no %s sidecar (run test_incr_pnp.py)" % val_path))
 
     # ---- P3 straight ----
-    net = float(np.linalg.norm(post[-1] - post[0]))
-    path = float(np.linalg.norm(np.diff(post, axis=0), axis=1).sum())
-    straight = net / path if path > 1e-9 else float("inf")
-    results.append(("P3 straight", straight >= a.straight_min,
-                    "net/path = %.3f / %.3f = %.2f" %
-                    (net, path, straight)))
+    if "P3" in want:
+        net = float(np.linalg.norm(post[-1] - post[0]))
+        path = float(np.linalg.norm(np.diff(post, axis=0), axis=1).sum())
+        straight = net / path if path > 1e-9 else float("inf")
+        results.append(("P3 straight", straight >= a.straight_min,
+                        "net/path = %.3f / %.3f = %.2f" %
+                        (net, path, straight)))
 
     # ---- P4 monotonic forward on dominant axis ----
-    axis = int(np.argmax(np.abs(post[-1] - post[0])))
-    fwd = post[:, axis]
-    cum_max = np.maximum.accumulate(fwd - fwd[0])
-    retreat = (cum_max - (fwd - fwd[0])) / np.maximum(cum_max, 1e-9)
-    worst = float(retreat.max())
-    results.append(("P4 monotonic", worst <= a.retreat_max,
-                    "axis=%s worst retreat=%.2f%% (<=%.0f%%)" %
-                    ("xyz"[axis], 100 * worst, 100 * a.retreat_max)))
+    if "P4" in want:
+        axis = int(np.argmax(np.abs(post[-1] - post[0])))
+        fwd = post[:, axis]
+        cum_max = np.maximum.accumulate(fwd - fwd[0])
+        retreat = (cum_max - (fwd - fwd[0])) / np.maximum(cum_max, 1e-9)
+        worst = float(retreat.max())
+        results.append(("P4 monotonic", worst <= a.retreat_max,
+                        "axis=%s worst retreat=%.2f%% (<=%.0f%%)" %
+                        ("xyz"[axis], 100 * worst, 100 * a.retreat_max)))
 
     # ---- P5 no jumps ----
-    d = np.linalg.norm(np.diff(post, axis=0), axis=1)
-    med = float(np.median(d))
-    jumps = int((d > a.jump_mult * max(med, 1e-9)).sum())
-    results.append(("P5 no jumps", jumps == 0,
-                    "%d step(s) > %.0fx median(%.4f) max step %.4f" %
-                    (jumps, a.jump_mult, med, d.max())))
+    if "P5" in want:
+        d = np.linalg.norm(np.diff(post, axis=0), axis=1)
+        med = float(np.median(d))
+        jumps = int((d > a.jump_mult * max(med, 1e-9)).sum())
+        results.append(("P5 no jumps", jumps == 0,
+                        "%d step(s) > %.0fx median(%.4f) max step %.4f" %
+                        (jumps, a.jump_mult, med, d.max())))
 
-# ---- P6 structure ----
-    if os.path.exists(val_path):
-        n_pts = val["n_pts"]
-        ok6 = n >= a.min_kfs and n_pts >= a.min_pts
-    else:
-        n_pts = None
-        ok6 = None
-    results.append(("P6 structure", ok6,
-                    "kfs=%d (>=%d), map pts=%s (>=%d)"
-                    % (n, a.min_kfs, n_pts, a.min_pts)))
+    # ---- P6 structure ----
+    if "P6" in want:
+        if os.path.exists(val_path):
+            n_pts = val["n_pts"]
+            ok6 = n >= a.min_kfs and n_pts >= a.min_pts
+        else:
+            n_pts = None
+            ok6 = None
+        results.append(("P6 structure", ok6,
+                        "kfs=%d (>=%d), map pts=%s (>=%d)"
+                        % (n, a.min_kfs, n_pts, a.min_pts)))
 
     # ---- P7 static tails from meta ----
-    if a.meta:
-        meta = json.load(open(a.meta))
-        flows = {p["name"]: p["mean_flow_px"]
-                 for p in meta.get("phases", [])}
-        hold = [v for k, v in sorted(flows.items())
-                if k.startswith("HOLD")]
-        ok = bool(hold) and all(v < a.static_flow_max for v in hold)
-        results.append(("P7 static tail", ok,
-                        "HOLD mean flows = %s px (need all <%.1f)"
-                        % (hold, a.static_flow_max)))
-    else:
-        results.append(("P7 static tail", None, "no --meta provided"))
+    if "P7" in want:
+        if a.meta:
+            meta = json.load(open(a.meta))
+            flows = {p["name"]: p["mean_flow_px"]
+                     for p in meta.get("phases", [])}
+            hold = [v for k, v in sorted(flows.items())
+                    if k.startswith("HOLD")]
+            ok = bool(hold) and all(v < a.static_flow_max for v in hold)
+            results.append(("P7 static tail", ok,
+                            "HOLD mean flows = %s px (need all <%.1f)"
+                            % (hold, a.static_flow_max)))
+        else:
+            results.append(("P7 static tail", None, "no --meta provided"))
 
     # ---- direction report (manual) ----
-    dom = (post[-1] - post[0])[axis]
-    print("dominant axis %s, displacement %+.3f (push direction "
-          "must match physically)" % ("xyz"[axis], dom))
-    print("bundle: %d kfs, frames %d..%d, post path %.3f" %
-          (n, fr[0], fr[-1], path))
+    if "P3" in want or "P4" in want or "P5" in want:
+        path = float(np.linalg.norm(np.diff(post, axis=0), axis=1).sum())
+        print("post path %.3f" % path)
+    if "P4" in want:
+        dom = (post[-1] - post[0])[axis]
+        print("dominant axis %s, displacement %+.3f (push direction "
+              "must match physically)" % ("xyz"[axis], dom))
+    print("bundle: %d kfs, frames %d..%d" % (n, fr[0], fr[-1]))
+    if a.gates:
+        print("(subset run: %s)" % a.gates)
     print()
 
     all_pass = True
