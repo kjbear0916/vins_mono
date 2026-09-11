@@ -33,6 +33,16 @@ vo/_cov/res_*.json
 vo/_cov/res_*.png
 vo/_cov/*_val.json
 
+# Adversarial search artifacts: avi/derived per-seq files ignored,
+# but KEEP the search tools + summary CSVs
+vo/_adv/*.avi
+vo/_adv/*_meta.json
+vo/_adv/*_traj.csv
+vo/_adv/*_traj_val.json
+vo/_adv/*_ate.csv
+vo/_adv/*_validation.png
+vo/_adv/dbg_*
+
 # Windows
 Thumbs.db
 

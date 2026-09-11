@@ -125,9 +125,15 @@ def main():
     ap.add_argument("--board-py", type=float, default=None,
                     help="projected board-centre v (px); default = image centre")
     ap.add_argument("--motion", default="straight",
-                    choices=["straight", "back_forth", "jump", "curve"],
+                    choices=["straight", "back_forth", "jump", "curve",
+                             "sway"],
                     help="negative-control trajectories: straight (clean), "
-                         "back_forth (P4), jump (P5), curve (P3)")
+                         "back_forth (P4), jump (P5), curve (P3), "
+                         "sway (lateral snake at constant fwd speed)")
+    ap.add_argument("--sway-amp", type=float, default=0.30,
+                    help="lateral amplitude of the sway motion (world units)")
+    ap.add_argument("--sway-cycles", type=float, default=3.0,
+                    help="number of full lateral oscillations over MOVE")
     ap.add_argument("--hold-jitter", type=float, default=0.0,
                     help="per-frame random translation to add during HOLD "
                          "phases (world units) -> P7 static-tail FAIL")
@@ -182,6 +188,14 @@ def main():
                 # curvature: z straight but x=y kicks following an arc  => P3
                 t = k / max(1, nf - 1)
                 dz = base
+            elif name == "MOVE" and a.motion == "sway":
+                # lateral sine snake: fwd speed constant, x oscillates.
+                # P3/P4 look at net/path and the dominant axis only, so a
+                # low-amplitude snake can stay GREEN even though the rig is
+                # not a straight line -- potential protocol blind spot.
+                dz = base
+                t_wc[0] = a.sway_amp * np.sin(2.0 * np.pi *
+                                              a.sway_cycles * k / max(1, nf - 1))
             jit = np.zeros(3)
             if name.startswith("HOLD") and a.hold_jitter > 0.0:
                 # P7 negative control: random walk on the camera pose while
