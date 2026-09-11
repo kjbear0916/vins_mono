@@ -158,6 +158,21 @@
 #define SLEEP_DURATION_US 30000000  // 30 秒
 
 // ===========================
+// IMU 設定(軌道二,MPU6050)
+// ===========================
+// 預設關閉,不影響現有功能;接好 MPU6050 後設 1。
+#define IMU_ENABLED 0
+#define IMU_SDA_PIN 14              // S3-EYE 閒置腳位(避開 camera 4,5,6..18)
+#define IMU_SCL_PIN 38              // 同上
+#define IMU_I2C_FREQ 400000
+#define IMU_SAMPLE_HZ 200           // 200 Hz gyro/accel 取樣
+#define IMU_ADDR 0x68               // MPU6050 預設 (AD0=GND)
+// UDP 輸出(與影像 HTTP TCP 分開通道;與 meta 共用 ESP32 millis 時基)
+#define IMU_UDP_ENABLED 1
+#define IMU_UDP_PORT 3333
+#define IMU_UDP_TARGET_IP "192.168.1.255"   // 廣播;改 PC IP 可單播
+
+// ===========================
 // 除錯設定
 // ===========================
 #define DEBUG_ENABLED true

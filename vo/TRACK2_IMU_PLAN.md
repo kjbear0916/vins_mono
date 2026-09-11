@@ -18,10 +18,13 @@
 |---|---|---|
 | VCC | 3.3V(↑ 非 5V,否則上電燒) | 行動電源 5V 需經過底板穩壓 3.3V |
 | GND | GND | 共地必要 |
-| SDA | GPIO21(ESP32 預設 I2C SDA)→ 底板 Pin21 | 若開發板只有 ESP32-CAM 需掃出 21/18 |
-| SCL | GPIO22(EPS32 預設 I2C SCL)→ 底板 Pin22 | 時序 400kHz 可負荷 |
-| INT(選用) | 任一 GPIO(如 34) | 不接也行,輪詢即可 |
+| SDA | **GPIO14**(S3-EYE 閒置腳) | camera 已佔 4,5,6..18,勿用其他 S3-EYE camera pin |
+| SCL | **GPIO38**(S3-EYE 閒置腳) | 同上 |
+| INT(選用) | 任一 GPIO(如 39) | 不接也行,輪詢即可 |
 | AD0 | GND(位址 0x68) | 多顆才需要改 |
+
+> 註:先前草案寫 21/22 是 AI-THINKER 慣用腳,與本題 GOOUUU ESP32-S3-EYE
+> 不相容。已改為 14/38;若改板子記得重查 `camera_pins.h` 佔用。
 
 電源:MPU6050 平均 <5mA,3.3V 直接吃 ESP32 底板穩壓即可;若底板沒有
 3.3V 抽頭,才從行動電源 5V 經 AMS1117-3.3 降壓(注意壓降需求)。
@@ -30,6 +33,15 @@
 
 現況:圖片串流在 `app_httpd.cpp`,`loop()` 只有 motion/heartbeat,
 **沒有 IMU、沒有 Core 分割**。(grep 已確認無 IMU/Gyro/Accel 程式碼)
+
+**雛形已完成(2026-09-11,未燒錄)**:`firmware/src/imu_driver.h/.cpp`
+(裸 I2C 讀 MPU6050、Core-0 task、UDP 3333 廣播 `IMU,<ts_ms>,gx,gy,gz,ax,ay,az`)、
+`config.h` 加 `IMU_ENABLED`(預設 0)、`esp32_cam_server.ino` 加
+`#if IMU_ENABLED` 的 xTaskCreatePinnedToCore 掛載。IMU_ENABLED=0 時編譯
+路徑完全不碰 IMU 程式碼 → 現有功能零風險。接線後設 1 重燒即可。
+
+待辦:200Hz 固定節拍未在真機實測(S3-EYE 40MHz flash、I2C 400kHz,fps 影響待量;
+UDP 無 ACK,若 PC 端掉封包需在 CSV 做 time-gap 校正)。
 
 加 IMU 的四個步驟(全部可熱插拔,不影響影像流):
 1. **新增 `imu_driver` 模組**(cpp/h):`Wire.begin(21,22,400000)` →

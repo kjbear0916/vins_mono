@@ -15,6 +15,10 @@
 #include "firmware/src/event_logger.h"
 #include "firmware/src/config_manager.h"
 
+#ifdef IMU_ENABLED
+#include "firmware/src/imu_driver.h"
+#endif
+
 // ===========================
 // Global instances
 // ===========================
@@ -282,6 +286,17 @@ void setup() {
   // Start camera server
   Serial.println("Starting camera server...");
   startCameraServer();
+
+#ifdef IMU_ENABLED
+#if IMU_ENABLED
+  if (imuDriver.begin(IMU_SDA_PIN, IMU_SCL_PIN, IMU_I2C_FREQ)) {
+    // IMU 任務固定 Core 0(影像/HTTP 在預設排程,另一核),高優先級。
+    // 預設優先級 1、可被 HTTP 任務搶佔;重要時可調到 3。
+    xTaskCreatePinnedToCore(ImuDriver::taskLoop, "imu", 4096, NULL, 1, NULL, 0);
+    Serial.println("[IMU] task pinned to Core 0 @ 200Hz");
+  }
+#endif
+#endif
 
   Serial.println("System ready!");
   Serial.printf("Use 'http://%s' to connect (AP %s)\n",
