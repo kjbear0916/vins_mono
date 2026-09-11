@@ -190,7 +190,14 @@ class TestGatesEndToEnd(unittest.TestCase):
         cls.neg = {}
         for name, extra in (("back_forth", ["--motion", "back_forth"]),
                             ("jump", ["--motion", "jump"]),
-                            ("curve", ["--motion", "curve"])):
+                            ("curve", ["--motion", "curve"]),
+                            # protocol blind-spot negative: lateral sine sway
+                            # (amp 0.30, ~1.9x the 0.16 fwd step) passes all 7
+                            # gates; assert it does so this regression will
+                            # FAIL once a future P9 sway gate is added --
+                            # that is the intended symptom
+                            ("sway", ["--motion", "sway",
+                                      "--sway-amp", "0.30"])):
             p = _run(GEN + ["--out", os.path.join(cls.tmp, name) + ".avi",
                             "--noise", "1.5", "--step", "0.16"] + extra)
             r = _run(CHECK + ["--video", os.path.join(cls.tmp, name) + ".avi",
@@ -247,12 +254,64 @@ class TestGatesEndToEnd(unittest.TestCase):
         self.assertIn("RESULT: FAIL", t)
         self.assertIn("P7 static tail", t)
 
+    def test_sway_blind_spot_is_codified(self):
+        # Lateral sine sway at amp 0.30 is a documented protocol blind spot:
+        # P3/P4 miss it because they only monitor the dominant axis and both
+        # endpoints.  This test pins that behaviour so adding a future P9
+        # (non-dominant-axis shape gate) must flip it to FAIL on purpose.
+        self.assertIn("RESULT: PASS", self.neg["sway"], 
+                      "expected sway PASS until a P9 sway gate exists")
+
     def test_official_script_keyframe_volume(self):
         # The class-based VO is gone; the sole trajectory producer is the
         # official gate script.  It must keep producing its keyframe volume
         # on the clean clip (historically 16 kfs).
         self.assertGreaterEqual(self.script_kfs, 15,
                                 "official script unexpectedly lost keyframes")
+
+
+class TestImuGateEndToEnd(unittest.TestCase):
+    """IMU external-reference gate: trajectory gates PASS where IMU gate FAILs.
+
+    A yaw-drifting flight (camera rotation while translating) is invisible to
+    the 7 trajectory-intrinsic gates (they monitor translation shape only)
+    yet the VO-rotated angle deviates from the synthetic gyro by >5 deg.
+    This is the external-reference orthogonal gate argued for in
+    VO_METHODOLOGY_ABSTRACTION.md 2-3/2-4.  The trajectory must PASS all 7
+    gates while imu_gate_probe.py returns FAIL -- pinning that yaw rotation
+    is a real blind spot the IMU dimension closes.
+    """
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.mkdtemp(prefix="vo_imu_regr_")
+        base = os.path.join(cls.tmp, "yaw")
+        _run(GEN + ["--out", base + ".avi", "--noise", "1.5",
+                    "--step", "0.16", "--yaw-drift", "0.15",
+                    "--out-imu", base + "_imu.json", "--board"])
+        # trajectory gates: validate_traj_pass.py is the fast gate entrypoint
+        # (run_clean_seq_check re-runs VO, which is slow and redundant here)
+        _run(CHECK + ["--video", base + ".avi",
+                      "--out-prefix", base,
+                      "--meta", base + "_meta.json"], timeout=600)
+        pv = _run([sys.executable, os.path.join(VO, "validate_traj_pass.py"),
+                   "--traj", base + "_traj.csv",
+                   "--meta", base + "_meta.json"], timeout=240)
+        cls.gates_txt = pv.stdout + pv.stderr
+        pi = _run([sys.executable, os.path.join(VO, "imu_gate_probe.py"),
+                   "--video", base + ".avi", "--gyro", base + "_imu.json"],
+                  timeout=240)
+        cls.imu_txt = pi.stdout + pi.stderr
+
+    @classmethod
+    def tearDownClass(cls):
+        import shutil
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def test_trajectory_gates_pass_despite_yaw(self):
+        self.assertIn("RESULT: PASS", self.gates_txt)
+
+    def test_imu_gate_catches_yaw_drift(self):
+        self.assertIn("RESULT: FAIL", self.imu_txt)
 
 
 if __name__ == "__main__":

@@ -40,9 +40,12 @@ def make_scene(rng, n=900):
     return np.stack([x, y, z], axis=1).T
 
 
-def render(K, gray, pts_world, t_wc, rng, noise):
+def render(K, gray, pts_world, t_wc, rng, noise, R_wc=None):
     gray[:] = 0
-    X_c = pts_world + t_wc.reshape(3, 1)
+    if R_wc is None:
+        X_c = pts_world + t_wc.reshape(3, 1)
+    else:
+        X_c = R_wc @ pts_world + t_wc.reshape(3, 1)
     z = X_c[2, :]
     keep = (z > 0.3) & (z < 60)
     if np.count_nonzero(keep) < 20:
@@ -64,30 +67,34 @@ def render(K, gray, pts_world, t_wc, rng, noise):
     gray += rng.normal(0.0, noise, gray.shape).astype(np.float32)
 
 
-def render_board(K, gray, cells, z_board, t_wc, dark=30.0):
-    """Draw a flat chessboard at world z=z_board, fronto-parallel.
-
-    cells = (cols, rows, square, offset3)
-    The board's white background is filled first, then dark squares.
-    """
+def render_board(K, gray, cells, z_board, t_wc, dark=30.0, R_wc=None):
+    """Draw a flat chessboard at world z=z_board, supporting camera rotation."""
     cols, rows, square, off = cells
-    zc = z_board + t_wc[2]
-    if zc <= 0.3:
+    # build board corner world points (flat z=z_board)
+    x0, y0, _ = off
+    x1, y1 = x0 + cols * square, y0 + rows * square
+    corners_w = np.array([[x0, y0, z_board],
+                          [x1, y0, z_board],
+                          [x1, y1, z_board],
+                          [x0, y1, z_board]])
+    def transform(w):
+        if R_wc is not None:
+            return (R_wc @ w.T).T + t_wc.reshape(1, 3)
+        return w + t_wc.reshape(1, 3)
+    corners_c = transform(corners_w)
+    if corners_c[:, 2].min() <= 0.3:
         return
 
-    def proj(x, y):
-        return (K[0, 0] * x / zc + K[0, 2],
-                K[1, 1] * y / zc + K[1, 2])
-
-    x0, y0 = off[0], off[1]
-    x1, y1 = x0 + cols * square, y0 + rows * square
-
+    def proj(X_c):
+        z = X_c[:, 2]
+        u = K[0, 0] * X_c[:, 0] / z + K[0, 2]
+        v = K[1, 1] * X_c[:, 1] / z + K[1, 2]
+        return u, v
     # white background rectangle
-    u0, v0 = proj(x0, y0)
-    u1, v1 = proj(x1, y1)
+    u0, v0 = proj(corners_c[0:1])
+    u1, v1 = proj(corners_c[2:3])
     rect = np.array([[u0, v0], [u1, v0], [u1, v1], [u0, v1]])
     cv2.fillPoly(gray, [np.round(rect).astype(np.int32)], 255)
-
     for j in range(rows):
         for i in range(cols):
             if (i + j) % 2 == 0:
@@ -96,8 +103,8 @@ def render_board(K, gray, cells, z_board, t_wc, dark=30.0):
                 [[i, j, 0.0], [i + 1, j, 0.0], [i + 1, j + 1, 0.0],
                  [i, j + 1, 0.0]]) * square + off
             w[:, 2] = z_board
-            X_c = w + t_wc.reshape(1, 3)
-            u, v = proj(X_c[:, 0], X_c[:, 1])
+            X_c = transform(w)
+            u, v = proj(X_c)
             uv = np.stack([u, v], axis=1)
             if np.isfinite(uv).all():
                 cv2.fillPoly(gray, [np.round(uv).astype(np.int32)], dark)
@@ -135,8 +142,15 @@ def main():
     ap.add_argument("--sway-cycles", type=float, default=3.0,
                     help="number of full lateral oscillations over MOVE")
     ap.add_argument("--hold-jitter", type=float, default=0.0,
-                    help="per-frame random translation to add during HOLD "
-                         "phases (world units) -> P7 static-tail FAIL")
+                     help="per-frame random translation to add during HOLD "
+                          "phases (world units) -> P7 static-tail FAIL")
+    ap.add_argument("--yaw-drift", type=float, default=0.0,
+                     help="yaw angular velocity (rad/s) applied during MOVE "
+                          "phase; produces camera rotation that synth-gyro "
+                          "must match VO rotation (external-ref gate demo)")
+    ap.add_argument("--out-imu", default=None,
+                     help="path to write synthetic IMU JSON; default: "
+                          "<out>_imu.json (same stem as --out)")
     a = ap.parse_args()
 
     rng = np.random.default_rng(a.seed)
@@ -170,6 +184,8 @@ def main():
               ("MOVE", n_move, a.step),
               ("HOLD1", n_hold, None)]
     meta_phases = []
+    yaw = 0.0
+    gyro_log = []  # (t_s, gx, gy, gz) per frame
     for name, nf, step in phases:
         zsum = []
         disp_sum = 0.0
@@ -211,16 +227,27 @@ def main():
                 t = k / max(1, nf - 1)
                 t_wc[0] = 2.5 * a.move_s * a.step * t * t
                 t_wc[1] = 0.6 * a.step * t
-            render(K, gray, scene, t_wc, rng, a.noise)
+            # build R_wc from accumulated yaw (rotation about world Y = camera pitch; yaw means yaw about world up = Y)
+            R_wc = None
+            if yaw != 0.0 or a.yaw_drift != 0.0:
+                cy, sy = np.cos(yaw), np.sin(yaw)
+                R_wc = np.array([[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]])
+            t_s = (len(gyro_log)) / a.fps
+            gy = a.yaw_drift if (name == "MOVE") else 0.0
+            gyro_log.append({"t_s": round(t_s, 5), "gx": 0.0, "gy": round(gy, 6), "gz": 0.0})
+            render(K, gray, scene, t_wc, rng, a.noise, R_wc=R_wc)
             if a.board:
                 render_board(K, gray, (bcols, brows, bsquare, board_off),
-                             a.board_z, t_wc)
+                             a.board_z, t_wc, R_wc=R_wc)
             frame_u8 = np.clip(gray, 0, 255).astype(np.uint8)
             writer.write(frame_u8)
             zc = scene[2] + t_wc[2]
             zok = zc[(zc > 0.3) & (zc < 60)]
             if len(zok):
                 zsum.append(float(zok.mean()))
+            # advance yaw AFTER rendering (R_wc was frame-end pose)
+            if name == "MOVE":
+                yaw += a.yaw_drift / a.fps
         if disp_sum > 0.0 and zsum:
             mean_flow = float(K[0, 0] * (disp_sum / nf) / np.mean(zsum))
         else:
@@ -238,6 +265,12 @@ def main():
     with open(meta_path, "w") as f:
         json.dump(meta, f, indent=2)
     print("metadata ->", meta_path)
+
+    imu_path = a.out_imu or a.out.replace(".avi", "_imu.json")
+    with open(imu_path, "w") as f:
+        json.dump({"fps": a.fps, "yaw_drift": a.yaw_drift,
+                   "gyro": gyro_log}, f, indent=2)
+    print("imu ->", imu_path)
     print("WROTE %s" % a.out)
 
 
