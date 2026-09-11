@@ -91,7 +91,9 @@ def main():
     gt_by_i = {}
     found = 0
     for i, g in enumerate(frames):
-        ok, corners = cv2.findChessboardCorners(g, (cols, rows), None)
+        ok, corners = cv2.findChessboardCorners(
+            g, (cols, rows), None,
+            cv2.CALIB_CB_ADAPTIVE_THRESH | cv2.CALIB_CB_NORMALIZE_IMAGE)
         if not ok:
             continue
         corners = cv2.cornerSubPix(

@@ -122,8 +122,15 @@ essential 只剩 7~8 inlier。這使 essential-PnP 在弱視差下把軌跡 scal
 
 真機 ATE 需要「靜止棋盤(立放桌面)+ rig 從其前方滑過、全程入鏡」。實測
 seq_real_13(6s MOVE、棋盤立放):`run_gt_ate.py` 於 198 幀中偵測到 **0 幀棋盤
-GT**——棋盤未成功入鏡(亮度偏低 mean ~80、部分 pattern 被裁/太遠)。修正錄製
-擺位後重試即可;此步驟尚未取得數值,列為追蹤開放事項(見 §5)。
+GT**。事後診斷(2026-09-11):
+- 對全部既有真機序列(seq_real_08~13)以 `ADAPTIVE_THRESH|NORMALIZE_IMAGE`
+  旗標重掃,均偵測不到 5×4 內角——**棋盤根本未入鏡**(先前序列皆為 VO 清潔
+  序列,不需棋盤;seq_real_13 的 0/198 非偵測演算法缺陷,而是錄製時棋盤
+  未在視野/過遠/太暗)。
+- 已交付重錄 SOP(`vo/REALATE_RERECORD_SOP.md`)與錄前自檢
+  (`vo/chessboard_precheck.py`:確認 5×4 內角、跨度 ≥60 px 才開錄),
+  檢附修正:`run_gt_ate.py` 偵測旗標補齊,避免光照不均漏抓。
+- 此步驟尚未取得數值,列為追蹤開放事項(見 §5)。
 
 合成端 ATE 已完成(**post-BA 2.4–2.8 mm**),真機端 ATE 為量級背書的下一步。
 
@@ -131,9 +138,9 @@ GT**——棋盤未成功入鏡(亮度偏低 mean ~80、部分 pattern 被裁/�
 
 | 項目 | 狀態 | 依賴 |
 |---|---|---|
-| 真機棋盤 ATE(mm 級) | 待重錄(seq_real_13 0/198 幀 GT) | rig 與棋盤擺位修正 |
+| 真機棋盤 ATE(mm 級) | 待重錄(seq_real_13 0/198;根因=棋盤未入鏡)。SOP+自檢已備好 | 實體重錄(`vo/REALATE_RERECORD_SOP.md`) |
 | 動力滑台重錄 P3–P5 全綠 | 未來工作 | 硬體升級 |
-| IMU/軌道二(選擇性) | 規劃完成(`TRACK2_IMU_PLAN.md`),合成端先驗已過(§6-4) | 時間資源 |
+| IMU/軌道二(選擇性) | 規劃完成(`TRACK2_IMU_PLAN.md`),合成端先驗已過(§6-4,`imu_gate_probe.py`) | 真機 MPU6050 接線 |
 
 ## 6. 結論
 
