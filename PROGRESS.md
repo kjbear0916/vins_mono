@@ -27,9 +27,9 @@
 | **真機ATE量測** | 0%(合成2.4–2.8mm) | seq_real_13 實測 0/198 幀 GT | 待重錄(棋盤擺位修正 + ESP32 換 WiFi) |
 | **~~Loop Closure~~** | — | — | 未執行 |
 | **~~VINS~~** | — | — | 不採用,列未來工作 |
-| **文件/日誌** | 90% | `VO_REAL_SEQ_VALIDATION.md`、`DRONE_SYNC.md`、`TRACK2_IMU_PLAN.md`、觀察日誌0001–0008 | |
-| **git版本控制** | 已建立 | commit `d4e5e58`~`f74d53c`(16 commits) | — |
-| **最終報告撰寫** | 90% | `FINAL_REPORT.md`(v1 定稿) | 4.5 真機ATE為開放事項,§5追蹤 |
+| **文件/日誌** | 95% | `VO_REAL_SEQ_VALIDATION.md`、`DRONE_SYNC.md`、`TRACK2_IMU_PLAN.md`、`VO_METHODOLOGY_ABSTRACTION.md`、觀察日誌0001–0010 | 協議安全邊界分析(§2-5)已寫入報告§6-4 |
+| **git版本控制** | 已建立 | commit `d4e5e58`~`3f03f5e`(14 commits) | 協議安全邊界分析3 commits(0a25c7f/e835c06/3f03f5e) |
+| **最終報告撰寫** | 95% | `FINAL_REPORT.md` | §6-4 協議安全邊界(對抗搜尋+反結果+IMU先驗)已補;真機ATE待重錄 |
 
 ---
 
@@ -63,6 +63,15 @@ VALIDATION.md 4.4):seq_real_10「stepwise→尾段退化跳點」、seq_real_12�
 
 **後續(依兩軌道計畫)**:**軌道一**= 真機棋盤 ATE(待 rig 可裝棋盤)→ 收尾文件;
 **軌道二(選擇性)**= IMU(MPU6050+ESP32)補回,時間資源允許才做。
+
+**09-11 加碼完成(純軟件,報告已同步)**:協議安全邊界的完整刻畫——
+(1) 對抗搜尋證明存在 7 閘門全 PASS 但 ATE 20.06mm 的合成序列;
+(2) 閘門冗餘分析 rho(P2,P3)=0.79、rho(P3,P4)=0.78;
+(3) 反結果:軌跡內生統計(形狀/干預)與 ATE 相關 ≤0.43,誤差為
+**非剛體形變**(Umeyama Sim3 對齊後仍殘留);
+(4) IMU 旋轉一致性閘門合成首驗`imu_gate_probe.py`:yaw-drift 序列
+7 閘門 PASS 但 IMU gate FAIL(12.45°>5°),證明外部參考正交性。
+所有發現 codified 進 regression(20/20 全過)。
 
 ---
 

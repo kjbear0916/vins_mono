@@ -20,6 +20,8 @@
   | P6 structure | ≥ 15 keyframes、≥ 30 map points |
   | P7 static tail | 首尾 HOLD 平均 flow < 2 px/幀 |
 - ATE 量測(`run_gt_ate.py`,需要場景中棋盤 + Umeyama Sim3 對齊)。
+- 方法論抽象化與安全邊界分析(對抗搜尋、閘門冗餘、反結果、IMU 首驗)→
+  `<vo/VO_METHODOLOGY_ABSTRACTION.md>`;報告 §6-4 為其摘要。
 
 ## 3. 合成驗證(基準)
 
