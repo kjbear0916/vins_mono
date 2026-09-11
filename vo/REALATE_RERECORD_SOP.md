@@ -31,14 +31,21 @@ python vo/record_clean_seq.py --url http://192.168.1.200:81/stream ^
 
 ## 鏈結驗證(5 分鐘)
 ```
-python vo/test_incr_pnp.py --video vo/seq_real_14.avi --out vo/seq_real_14_traj.csv
-python vo/validate_traj_pass.py --traj vo/seq_real_14_traj.csv --meta vo/seq_real_14_meta.json
-python vo/run_gt_ate.py --video vo/seq_real_14.avi --traj vo/seq_real_14_traj.csv --out vo/seq_real_14_ate.csv
+python vo/run_clean_seq_check.py --video vo/seq_real_14.avi ^
+   --out-prefix vo/seq_real_14 --meta vo/seq_real_14_meta.json --min-flow 8
+python vo/run_gt_ate.py --video vo/seq_real_14.avi ^
+   --traj vo/seq_real_14_traj.csv --out vo/seq_real_14_ate.csv
 ```
-預期:
-- 7 閘門至少 P1/P2/P6/P7 通過;
-- `ATE post-BA: X.XX mm`(量級參照合成基準 2.4–2.8 mm;真機含標定/壓縮
-  誤差合理落在單一數位 mm,可接受 <10 mm 即為閉案門檻)。
+注意: `--min-flow 8` 為必要參數(預設 12 會使 keyframe 數不足,
+P6 12 kfs < 15 FAIL; min-flow 8 產生 18 kfs,合成 dry-run 已驗證)。
+預期: `RESULT: PASS` 或至少 P1/P2/P6/P7 通過;
+ATE 數值在合成基準 2.4–2.8 mm 量級(真機含標定/壓縮誤差,合理落在
+<10 mm 即為閉案門檻)。
+
+## 棋盤擺位要點
+- 棋盤面**正對鏡頭**,離鏡頭 40–120 cm,偏右或偏左使它在 rig 推程中
+  **全程不脫離視野**;不要把棋盤放在 rig 推進的正前方(會被推過)。
+- 燈光充足、避免表面反光;棋盤平整(不要彎曲)。
 
 ## 若仍 0/198 GT
 - 改 `--n-shots` 多抓幾次確認非單幀偶然。
