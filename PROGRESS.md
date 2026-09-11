@@ -12,7 +12,7 @@
 
 | 模組 | 完成度 | 實際產出物 | 狀態說明 |
 |---|---|---|---|
-| **硬體韌體/傳輸** | 95% | `esp32_cam_server.ino`(WIFI_AP_STA雙模,內建STA連線邏輯)、`video_source.py`(`HTTPMJPEGSource`/`ThreadedMJPEGSource`) | **僅影像傳輸,無IMU**(grep確認`esp32_cam_server.ino`無IMU/Gyro/Accel相關程式碼),卡在AP模式WiFi環境問題 |
+| **硬體韌體/傳輸** | 95%(+軌道二雛形) | `esp32_cam_server.ino`(WIFI_AP_STA雙模,內建STA連線邏輯)、`video_source.py`、`firmware/src/imu_driver.*`(IMU雛形) | 影像傳輸正常;IMU 未實體接入,但雛形已寫好(`IMU_ENABLED=0` 預設關閉,MPU6050/SDA14/SCL38/Core0/UDP3333) |
 | **VO前端(增量PnP+Local Map)** | 100% | `vo_local_map.py`、`vo_core.py` | Bootstrap死鎖、id錯位、視差角過濾等bug已修完 |
 | **~~EKF融合~~(已改路線)** | — | — | 原規劃項目,由BA取代;**因韌體從未實作IMU傳輸,EKF這條路線實際上從未具備執行條件** |
 | **Bundle Adjustment全局優化** | 100% | `vo_bundle.py`、`run_offline_ba.py`、`run_ba_kfvo.py` | drift從~3577px降到~26px |
@@ -23,12 +23,12 @@
 | **相機標定** | 100% | `calibration_esp32_qvga.npz`(另有`esp32.npz`) | RMS 0.259px |
 | **真機硬體連線** | 100% | — | 家用WiFi AP模式固定IP 192.168.1.200,stream/status/control 全通 |
 | **真機乾淨序列實錄** | 70% | `seq_real_08~12.avi` + meta | **seq_real_10:P1/P2(2.69px)/P6(17kfs/146pts)/P7(0.04/1.77) 全過**——真機核心4閘門首次全綠;P3-P5 為手推rig物理天花板(量化:三序列三種失敗模式,見4.4) |
-| **真機ATE量測** | 0% | — | 依賴上一步 |
+| **真機ATE量測** | 0%(合成2.4–2.8mm) | seq_real_13 實測 0/198 幀 GT | 待重錄(棋盤擺位修正 + ESP32 換 WiFi) |
 | **~~Loop Closure~~** | — | — | 未執行 |
 | **~~VINS~~** | — | — | 不採用,列未來工作 |
-| **文件/日誌** | 80% | `VO_REAL_SEQ_VALIDATION.md`、`DRONE_SYNC.md`、觀察日誌0001–0006 | 缺最終整合報告 |
-| **git版本控制** | 已建立 | commit `d4e5e58` | — |
-| **最終報告撰寫** | 0% | — | 待真機數據到位 |
+| **文件/日誌** | 90% | `VO_REAL_SEQ_VALIDATION.md`、`DRONE_SYNC.md`、`TRACK2_IMU_PLAN.md`、觀察日誌0001–0008 | |
+| **git版本控制** | 已建立 | commit `d4e5e58`~`f74d53c`(16 commits) | — |
+| **最終報告撰寫** | 90% | `FINAL_REPORT.md`(v1 定稿) | 4.5 真機ATE為開放事項,§5追蹤 |
 
 ---
 
