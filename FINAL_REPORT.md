@@ -1,10 +1,10 @@
-# 室內無人機自動導航系統之感知定位子系統——純視覺 BA 軌跡估計與驗證(最終版,2026-09-11)
+# 室內無人機自動導航系統之感知定位子系統——純視覺 BA 軌跡估計與驗證(最終版,2026-09-10~11)
 
 ## 1. 研究定位
 
 - **題目**:室內無人機自動導航系統之感知定位子系統——純視覺 Bundle Adjustment 軌跡估計與驗證
 - **路線**:原規劃 EKF+IMU 融合 + Loop Closure,開發中優先聚焦純視覺前端(增量 PnP + Local Map)與 BA 優化驗證 → IMU 整合因時間/硬體資源未實作 → 最終選擇純視覺 BA 路線並建立完整驗證機制。
-- **硬體**:ESP32-CAM(QVGA 320×240、MJPEG over WiFi)+ PC 側 OpenCV 管線;標定 `calibration_esp32_qvga.npz`(RMS 0.259 px)。
+- **硬體**:GOOUUU ESP32-S3-EYE 開發板(OV3660 感測器、QVGA 320×240、JPEG over WiFi)+ PC 側 OpenCV 管線;標定 `calibration_esp32_qvga.npz`(RMS 0.259 px)。
 
 ## 2. 方法(簡)
 
@@ -38,9 +38,11 @@
 HOLD0(3s 完全靜止,手離開)→ MOVE(6~12s 連續單向推)→ HOLD1(3s 靜止)
 ```
 
-- 推法:像推拉門,一次發力、中途不停/不倒抽/不微調;overlay flow 維持 8~15 最佳。
+- 推法:像推拉門,一次發力、中途不停/不倒抽/不微調;overlay flow 顯示實時節奏。
 - **實測最佳化:MOVE 縮短到 6 秒**(後半疲勞易 stepwise);**推到定位瞬間立刻
-  全程定格**(收尾煞車的微動會變成尾段退化跳點,見 4.4 模式①)。
+  全程定格**(收尾煞車的微動會變成尾段退化跳點,見 4.4 模式①);MOVE 單幀 flow
+  落在 **3~5 px/幀**為手推 rig 的實測甜區(<3 視差不足見 4.4 模式③,>15 觸發
+  stepwise drop)。
 - stepwise 跳變(單幀 diff > 20)由錄製器即時 drop 並顯示 STEPWISE 警告。
 - 環境:ESP32 固定 IP **192.168.1.200**(家用 WiFi CHT113405),避開 Windows NCSI 漫遊。
 
@@ -88,6 +90,10 @@ essential 只剩 7~8 inlier。這使 essential-PnP 在弱視差下把軌跡 scal
 **工程結論**:6s MOVE + 定格收尾 = 可重現地同時滿足「視差充足」與「HOLD 靜止」,
 是手推 rig 下唯一可行的甜區(flow 3~5 px/幀)。
 
+**附圖指引**:四合一驗證圖 `vo/seq_real_10_validation.png`(軌跡三視圖、reproj
+分配、map 俯視)為 seq_real_10 的正式證物;`vo/synth_clean_01_validation.png`
+為合成正對照基準圖。
+
 ### 4.4 P3–P5 為何列為硬體限制(非演算法缺陷)
 
 - P3/P4 要求「單一方向的直線淨位移、無回退」——這在無動力滑台的手推運作下
@@ -129,7 +135,7 @@ GT**——棋盤未成功入鏡(亮度偏低 mean ~80、部分 pattern 被裁/�
 
 ## 6. 結論
 
-純視覺 incremental-PnP + Bundle Adjustment 管線在 ESP32-CAM/PC 架構上完成
+純視覺 incremental-PnP + Bundle Adjustment 管線在 ESP32-S3-EYE/PC 架構上完成
 端到端驗證:
 
 - **演算法正確性(合成,17/17 自動化閘門)**:對乾淨直線運動全 PASS、對折返/
