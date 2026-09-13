@@ -1,0 +1,49 @@
+{
+  "dictionary": "DICT_4X4_50",
+  "marker_length_m": null,
+  "world_origin_description": "",
+  "markers": {
+    "0": {
+      "x_m": null,
+      "y_m": null,
+      "z_m": null,
+      "measurement_error_mm": null,
+      "note": "fill after physical measurement"
+    },
+    "1": {
+      "x_m": null,
+      "y_m": null,
+      "z_m": null,
+      "measurement_error_mm": null,
+      "note": "fill after physical measurement"
+    },
+    "2": {
+      "x_m": null,
+      "y_m": null,
+      "z_m": null,
+      "measurement_error_mm": null,
+      "note": "fill after physical measurement"
+    },
+    "3": {
+      "x_m": null,
+      "y_m": null,
+      "z_m": null,
+      "measurement_error_mm": null,
+      "note": "fill after physical measurement"
+    },
+    "4": {
+      "x_m": null,
+      "y_m": null,
+      "z_m": null,
+      "measurement_error_mm": null,
+      "note": "fill after physical measurement"
+    },
+    "5": {
+      "x_m": null,
+      "y_m": null,
+      "z_m": null,
+      "measurement_error_mm": null,
+      "note": "fill after physical measurement"
+    }
+  }
+}
