@@ -314,5 +314,76 @@ class TestImuGateEndToEnd(unittest.TestCase):
         self.assertIn("RESULT: FAIL", self.imu_txt)
 
 
+class TestIndoorGps(unittest.TestCase):
+    """Indoor-GPS (ArUco absolute positioning) modules share the camera-math
+    helpers of the VO line (umeyama_sim3, projection/K convention), so any
+    change there must not break them.  Each test wraps the module's own
+    headless self-test; the detection and calibration-sanity tests are
+    synthetic probes that do not need the ESP32."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.mkdtemp(prefix="indoor_gps_")
+
+    @classmethod
+    def tearDownClass(cls):
+        import shutil
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def test_marker_detection_probe(self):
+        """A 90 px marker pasted on a gray background must be detected after
+        histogram equalisation (the ESP32 MJPEG low-contrast path)."""
+        import cv2
+        from marker_loc import _render_marker_frame
+        ad = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+        det = cv2.aruco.ArucoDetector(ad, cv2.aruco.DetectorParameters())
+        marker = cv2.cvtColor(cv2.aruco.generateImageMarker(ad, 3, 90),
+                              cv2.COLOR_GRAY2BGR)
+        uv = np.array([[100, 60], [210, 62], [208, 175], [98, 173]],
+                      np.float64)
+        frame, _ = _render_marker_frame(marker, uv)
+        corners, ids, _ = det.detectMarkers(cv2.equalizeHist(frame))
+        self.assertIsNotNone(ids)
+        self.assertIn(3, ids.ravel())
+
+    def test_marker_pose_selftest(self):
+        """estimate_marker_poses + camera_abs_position three-layer self-test
+        (direct 0.000 mm / oblique render->detect->pose / frontal noise)."""
+        from marker_loc import _run_selftest
+        _run_selftest()
+
+    def test_marker_sim3_identity(self):
+        """The Umeyama glue must recover an exact identity similarity from 5
+        control points (VO-gauge -> marker-absolute map)."""
+        from align_sim3_demo import align_to_markers
+        rng = np.random.default_rng(7)
+        rel = np.column_stack([np.linspace(0.0, 2.5, 50),
+                               np.linspace(-0.2, 0.3, 50), np.zeros(50)])
+        ctrl = rel[np.linspace(0, 49, 5).astype(int)]
+        c, R, t, rms = align_to_markers(ctrl, ctrl)
+        self.assertAlmostEqual(c, 1.0, places=6)
+        self.assertLess(rms, 1e-9)
+
+    def test_marker_pipeline_selftest(self):
+        """localise_video end-to-end synthetic run (6 fused frames, mean
+        position error ~52 mm)."""
+        from localise_video import _selftest as _ls
+        _ls()
+
+    def test_calibration_sanity_flags_swap_bug(self):
+        """calib_sanity must (a) not crash on the in-tree npz (cy warning
+        tolerated until calibration v2) and (b) positively flag a synthetic
+        swapped-principal-point calibration."""
+        import numpy as _np
+        from calib_sanity import check
+        rc = check(os.path.join(VO, "calibration_esp32_qvga.npz"))
+        self.assertIn(rc, (0, 1))
+        bad = os.path.join(self.tmp, "bad_calib.npz")
+        _np.savez(bad, camera_matrix=_np.array(
+            [[282.5, 0, 130], [0, 290.6, 30.0], [0, 0, 1.0]]),
+            dist_coeffs=_np.zeros(5), image_size=[320, 240])
+        self.assertEqual(check(bad), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

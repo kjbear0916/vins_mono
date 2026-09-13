@@ -93,7 +93,10 @@ yaw per-marker deg)正確載入與索引(6 標記示範);
 (6) `run_indoor_gps_validation.py`(步驟 7 收斂):單一入口跑全部 5 個階段自測
 + 15cm 標記 pose 誤差包絡表(深度×角點雜訊 σ)——σ=0.5px 時 0.4m 20mm,
 0.6m 85mm,1.0m 225mm;σ=0.1px(subpix 理想)0.6m 14mm。行動建議:印 ≥15cm、
-0.5–1m 內操作、多標記平均、yaw >8°。
+0.5–1m 內操作、多標記平均、yaw >8°;
+(7) 已併入 regression(`test_regression.py` 新增 `TestIndoorGps` 5 項:
+偵測探針/pose 自測/sim3 恒等/管線自測/calib-sanity 正對照),**全套
+25/25 全過(25 tests,466s)**——之後改共用座標數學不再需要單獨手跑。
 剩餘硬體步驟:印標記並實量邊長(--marker-m)、PC 連 `RatMonitor_Setup` AP、
 實測 `aruco_detect_test.py --snapshot 60`、以棋盤重標定得
 `calibration_esp32_qvga_v2.npz`(現 npz 之 cy=30.6 仍為寬高顛倒殘骸,obs #0012;
