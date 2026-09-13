@@ -131,6 +131,9 @@ essential 只剩 7~8 inlier。這使 essential-PnP 在弱視差下把軌跡 scal
   - **尺度對齊因子**: pre 1245 / post 870.6 mm/unit
 
 - **量測結論**:首次在真機上取得棋盤 GT 對齊的 ATE 量測數值。**154mm 屬公分等級**,高於合成基準(2.4–2.8 mm)約 60 倍。主要成因分析如下:
+  > ⚠️ §4.6(2026-09-13 敏感度分析):以下數值以儲存內參 fx=282/cy=30.6 為前提;
+  > cy 異常已證實無關,但 focal 假說(magnitude ~282/474/948)未定案,精確 mm 值待
+  > 專用 QVGA 標定 v2(§4.6 表)。
 
   | 成因 | 估計貢獻 |
   |---|---|
@@ -142,11 +145,42 @@ essential 只剩 7~8 inlier。這使 essential-PnP 在弱視差下把軌跡 scal
 
 - **BA 前後 ATE 幾乎不變的機制**:reprojection error 改善 40%,但 ATE 僅改善 0.4%,原因有三:①BA 把誤差在整條軌跡重分佈(中段改善、末段惡化,RMSE 相消);② pre 與 post 各自獨立執行 Umeyama Sim3 對齊,7 自由度把 BA 帶來的全局尺度變化(原始跨度從 0.1132 → 0.1693 unit)吸收掉;③部分 kf 的 GT 本身就是異常值(如 kf7 的棋盤位姿相對前後點跳躍 ~255 mm)。逐點分析:12/20 kf 的單點誤差 BA 後有改善,8/20 kf 惡化,改善量被惡化量抵消。
 
+### 4.6 內參敏感度分析與 cy=30.6 影響範圍(2026-09-13)
+
+`calibration_esp32_qvga.npz` 的 cy=30.6 是 `camera_calibration.py` 的
+`calibrateCamera` imageSize 寬高顛倒殘骸(obs #0012;以留存資料 + 3 組 K
+重跑 §4.5 全程,免重錄)。**結論分兩層**:
+
+| post-BA ATE | fx | cx | cy | 假說 |
+|---|---|---|---|---|
+| **154.19 mm** | 282.5 | 130.2 | 30.6 | 儲存內參(swap 擬合) |
+| 154.16 mm | 282.5 | 130.2 | 120 | cy 修正(主點居中) |
+| 161.12 mm | 282.5 | 160 | 120 | cy+cx 都置中 |
+| 290.81 mm | 474 | 160 | 120 | QVGA=full-FOV 縮放假說(≈VGA fx 948/2) |
+| 565.82 mm | 900 | 159.5 | 119.5 | seq_real_14 重估 fixed-PP |
+| 605.80 mm | 948 | 160 | 120 | QVGA=視窗裁切假說(≈VGA fx) |
+
+- **cy=30.6 本身不是問題**:修正主點後 ATE 幾乎不變(154.16–161.12 mm,
+  最大變異 ≤4.5%)。§4.5 的 154mm 對 cy 異常強健,成因分析架構不變。
+- **真正的未定數是 focal 假說**:ATE 對 fx 高度敏感(154→606 mm)。儲存值
+  fx=282 是在壞 imageSize 下擬合、本身未獲獨立證實;OV3660 的 QVGA 若為
+  full-FOV 縮放則 fx≈474(ATE≈291mm),若為中央視窗裁切則 fx≈948(ATE
+  ≈606mm)。**嘗試直接從 seq_real_14 的 109 幀棋盤視圖重估內參失敗**:
+  姿態多樣性不足(rig 只有平移滑動),optimizer 把 focal 換進畸變
+  (k3≈1640)得到低 RMS 卻不合理的 K(fx≈900、cx>320)——已被擴充的
+  `calib_sanity.py`(focal 帶 + dist 爆炸檢查)與 `recalibrate_from_frames.py`
+  守衛拒絕,不會再被當成 v2。
+- **因此 154mm 目前是「內參模型條件式」數字**:正確的 QVGA 內參只能由
+  **專用的多姿態 QVGA 棋盤標定錄影**確定(`camera_calibration.py --pattern
+  5x4,--out calibration_esp32_qvga_v2.npz`),seq_real_14 無需重錄,
+  拿到 certified v2 後 rerun §4.5 即可定案。在此之前報告不宣稱精確 mm 值;
+  公制尺度(mm/unit)同樣待定(870→745→2152 視 K 而變)。
+
 ## 5. 尚未完成的事項(追蹤)
 
 | 項目 | 狀態 | 說明 |
 |---|---|---|
-| 真機棋盤 ATE | ✅ 首次有效量測(seq_real_14) | 108/201 幀 GT、20/26 kf 對齊(76.9%)、post-BA ATE 154.19 mm(公分等級);成因已分析(§4.5) |
+| 真機棋盤 ATE | ⚠️ 量測成立、mm 值待 v2 cert(§4.6) | 108/201 幀 GT、20/26 kf 對齊(76.9%)、post-BA ATE 154.19 mm(**以 fx=282 為前提**;cy 異常無影響,但 focal 假說未定,見 §4.6) |
 | 室內 GPS 真機驗證(§7) | 純軟件 5/5 就緒,待硬體 | 印 15–20cm 標記 + 重標定 v2 後,`localise_video.py` 產棚內絕對軌跡接 `run_gt_ate.py` |
 | 動力滑台重錄 P3–P5 全綠 | 未來工作 | 硬體升級(消除手推 rig 之非剛體微動) |
 | IMU/軌道二(選擇性) | 規劃完成(`TRACK2_IMU_PLAN.md`),合成端先驗已過(§6-4,`imu_gate_probe.py`) | 真機 MPU6050 接線 |
@@ -263,9 +297,12 @@ VO 軌跡的 Sim3 尺度基準整合(此計畫無 GPS 室內訊號,標記地圖�
 1. 以 A4 印 15–20cm 標記(marker 0–5),貼牆/天花板/地板,量實際邊長;
 2. PC 連 `RatMonitor_Setup` AP,`aruco_detect_test.py --snapshot 60`
    實測偵測(記實際 dx/dy,屋頂 y、roll/pitch/yaw 塞回 `marker_positions.json`);
-3. **重錄棋盤標定**生 `calibration_esp32_qvga_v2.npz`——磁碟上現存 npz 的
-   cy=30.6 是 calibrateCamera imageSize 寬高顛倒的殘骸(obs #0012;產生器 bug
-   已修,內參必須靠重標定修復),§1 所述 RMS 0.259 為舊版之上的記錄;
+3. **重錄棋盤標定**(多姿態 QVGA 專用錄影)生 `calibration_esp32_qvga_v2.npz`:
+   cy=30.6 是 `calibrateCamera` imageSize 寬高顛倒的殘骸(obs #0012,產生器
+   bug 已修);**且儲存 fx=282 本身未獲獨立證實——focal 假說未定(full-FOV
+   縮放→474 vs 視窗裁切→948),seq_real_14 姿態多樣性不足以重估
+   (§4.6,已被守衛拒絕),只能靠專用標定錄影定案**;§4.6 需要之已重跑者
+   無須重錄;§1 所述 RMS 0.259 為 VGA 模式(calibration_esp32.npz)記錄;`camera_calibration.py --pattern 5x4 --out calibration_esp32_qvga_v2.npz`;
 4. `python vo/localise_video.py --stream http://192.168.4.1:81/stream`
    產 `indoor_gps_traj.csv`,再以 `run_gt_ate.py` 接上 VO 真機序列做
    絕對基準 ATE。

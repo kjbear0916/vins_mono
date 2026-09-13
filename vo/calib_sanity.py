@@ -37,6 +37,18 @@ def check(npz_path, expect_w=320, expect_h=240):
     if abs(fx - fy) / max(fx, fy) > 0.2:
         warnings.append("fx/fy mismatch (non-square pixels?): %.1f / %.1f"
                         % (fx, fy))
+    if not (0.25 * expect_w <= fx <= 2.5 * expect_w
+            and 0.25 * expect_h <= fy <= 2.5 * expect_h):
+        warnings.append(
+            "focal out of plausible band for %dx%d: fx=%.1f fy=%.1f "
+            "(QVGA full-FOV scale ~0.5x, window crop ~1.0x of VGA focal; "
+            "flag anything outside 0.25x-2.5x of the image width)" %
+            (expect_w, expect_h, fx, fy))
+    if dist.size and float(np.abs(dist).max()) > 50.0:
+        warnings.append(
+            "implausible distortion (max |dist|=%.2f) -- usually an "
+            "overfit of a degenerate pose set (focal traded into distortion)" %
+            float(np.abs(dist).max()))
     for w in warnings:
         print("WARNING:", w)
     if not warnings:

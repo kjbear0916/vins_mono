@@ -24,7 +24,7 @@
 | **相機標定** | 100% | `calibration_esp32_qvga.npz`(另有`esp32.npz`) | RMS 0.259px |
 | **真機硬體連線** | 100% | — | 家用WiFi AP模式固定IP 192.168.1.200,stream/status/control 全通 |
 | **真機乾淨序列實錄** | 100% | `seq_real_08~14.avi` + meta | **seq_real_10 達成核心4閘門全過(P1/P2/P6/P7);seq_real_14 達成棋盤全程入鏡(108/201 幀 GT)** |
-| **真機ATE量測** | ✅ 量級結論穩健(內參敏感度分析完成) | `seq_real_14_ate.csv` | **核心結論(154mm 量級)已通過內參敏感度分析,對 cy=30.6 異常強健——用留存資料(seq_real_14.avi + traj,免重錄)換三組 K 重跑,post-BA ATE 最大變異僅 4.5%(154.19→154.16→161.12mm);⚠️ Scale 因子(mm/unit 換算)對內參較敏感(~14% 變異:870→745),待 v2 校正檔(`calibration_esp32_qvga_v2.npz`)產出後需 rerun 確認最終精確數字;誤差成因分析不變(GT 偵測雜訊 ~50% + 手推 rig 非剛體 ~30%),見 FINAL_REPORT §4.5** |
+| **真機ATE量測** | ⚠️ 量級結論兩層分流(§4.6) | `seq_real_14_ate.csv` | **層1:154mm 對 cy=30.6 異常強健**(留存資料换三組 K 重跑,cy=120/主點置中後 post-BA ATE 154.16–161.12mm,變異≤4.5%)。**層2:對 focal 假說高度敏感**——ATE=fx-282→154 / 474→291 / 900→566 / 948→606mm;儲存 fx=282 於壞 imageSize 擬合、未獨立證實,真實 QVGA 內參(OV3660:full-FOV 縮放~474 vs 視窗裁切~948)僅能由專用多姿態 QVGA 標定 shoot 決定;從 seq_real_14 重估內參失敗(姿態多樣性不足,focal 被換進畸變,k3≈1640),`recalibrate_from_frames.py` + 擴充 `calib_sanity.py`(focal 帶+dist 爆炸檢查)已拒收垃圾 K。公制尺度(mm/unit)同待定(870→745→2152 視 K)。誤差成因架構(GT 噪聲~50%+非剛體~30%)不受影响,見 FINAL_REPORT §4.5–4.6** |
 | **~~Loop Closure~~** | — | — | 未執行 |
 | **~~VINS~~** | — | — | 不採用,列未來工作 |
 | **文件/日誌** | 100% | `VO_REAL_SEQ_VALIDATION.md`、`DRONE_SYNC.md`、`TRACK2_IMU_PLAN.md`、`VO_METHODOLOGY_ABSTRACTION.md`、觀察日誌0001–0010 | 協議安全邊界分析(§2-5)與真機 ATE 數據已全部寫入報告 |
@@ -97,10 +97,20 @@ yaw per-marker deg)正確載入與索引(6 標記示範);
 (7) 已併入 regression(`test_regression.py` 新增 `TestIndoorGps` 5 項:
 偵測探針/pose 自測/sim3 恒等/管線自測/calib-sanity 正對照),**全套
 25/25 全過(25 tests,466s)**——之後改共用座標數學不再需要單獨手跑。
+(8) **09-13 補查(重要)**:嘗試直接從 seq_real_14 的 109 幀棋盤視圖重估
+    QVGA v2 內參失敗——主點置中後 fx 收斂到 899、dist k3=-1640,低 RMS
+    卻不合理(focal 被換進畸變);**對照 VGA 標定(calibration_esp32.npz,
+    fx=948)與 firmware(FRAMESIZE_QVGA)衍生兩個物理假說**:
+    full-FOV 縮放(fx≈474)→ATE 291mm vs 視窗裁切(fx≈948)→ATE 606mm;
+    而舊 fx=282(壞 imageSize 擬合)下 ATE=154mm。**結論:154mm 對 cy 穩健,
+    但對 focal 假說敏感到 154→606mm**,精確 ATE 只能由專用多姿態 QVGA
+    標定錄影定案;`recalibrate_from_frames.py` 已加 calib_sanity 守衛
+    (審核 focal 帶+dist 爆炸),SEO 此類「低 RMS 卻垃圾 K」的陷阱(見
+    FINAL_REPORT §4.6)。
 剩餘硬體步驟:印標記並實量邊長(--marker-m)、PC 連 `RatMonitor_Setup` AP、
-實測 `aruco_detect_test.py --snapshot 60`、以棋盤重標定得
-`calibration_esp32_qvga_v2.npz`(現 npz 之 cy=30.6 仍為寬高顛倒殘骸,obs #0012;
-產生器已修,需重標定才有正確內參)。
+實測 `aruco_detect_test.py --snapshot 60`、**多姿態 QVGA 棋盤標定錄影**得
+`calibration_esp32_qvga_v2.npz`(現 npz 之 cy=30.6 為寬高顛倒殘骸 + fx=282
+未獲獨立證實,obs #0012;產生器已修,需重標定才有正確內參)。
 
 ---
 
@@ -114,4 +124,4 @@ yaw per-marker deg)正確載入與索引(6 標記示範);
 
 ## 一句話總結現況
 
-**合成驗證端已完工到論文等級嚴謹度(17/17 閘門、ATE 2.4–2.8 mm,合成 GT 完美無雜訊);真機端跨過 WiFi 關卡後錄出可用的乾淨序列:核心閘門 P1/P2/P6/P7 全部通過,剩餘 P3-P5 是手推 rig 的物理天花板(三序列三種失敗模式量化佐證);真機 ATE 首次有效量測為 154 mm(公分等級),成因已分析(GT 偵測雜訊主導,非 VO 演算法缺陷);室內 GPS(ArUco 標記絕對定位)步驟 1–7 純軟件全部 5/5 自測通過(e2e 合成均誤 52mm,pose 包絡表定量刻畫深度×雜訊),剩餘硬體驗證待印 15–20cm 標記+重標定——最終以「局部達標 + 硬體限制標註 + ATE 成因誠實說明 + 室內 GPS 已就緒待硬體」收尾。**
+**合成驗證端已完工到論文等級嚴謹度(17/17 閘門、ATE 2.4–2.8 mm,合成 GT 完美無雜訊);真機端跨過 WiFi 關卡後錄出可用的乾淨序列:核心閘門 P1/P2/P6/P7 全部通過,剩餘 P3-P5 是手推 rig 的物理天花板(三序列三種失敗模式量化佐證);真機 ATE 首次有效量測 154mm(以儲存 fx=282 為前提;cy=30.6 異常已證實影響 <4.5%,但 focal 假說未定,154→606mm 跨假說,精確數值須待專用 QVGA 標定 v2,見 §4.6);成因已分析(GT 偵測雜訊主導,非 VO 演算法缺陷);室內 GPS(ArUco 標記絕對定位)步驟 1–7 純軟件全部 5/5 自測通過(e2e 合成均誤 52mm,pose 包絡表定量刻畫深度×雜訊),剩餘硬體驗證待印 15–20cm 標記+多姿態重標定——最終以「局部達標 + 硬體限制標註 + ATE 成因誠實說明 + 室內 GPS 已就緒待硬體」收尾。**
