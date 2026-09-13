@@ -65,6 +65,9 @@ def main():
             map1, map2 = cv2.initUndistortRectifyMap(
                 K, dist, None, K, (g.shape[1], g.shape[0]), cv2.CV_32FC1)
             g = cv2.remap(g, map1, map2, cv2.INTER_LINEAR)
+        # ESP32 MJPEG is low-contrast; histogram-equalise first or the corner
+        # detector misses the grid entirely (empirically required at 320x240).
+        g = cv2.equalizeHist(g)
         ok, corners = cv2.findChessboardCorners(
             g, (cols, rows), None,
             cv2.CALIB_CB_ADAPTIVE_THRESH | cv2.CALIB_CB_NORMALIZE_IMAGE)

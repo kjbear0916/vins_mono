@@ -128,41 +128,11 @@ void initCamera() {
 // WiFi setup
 // ===========================
 void setupWiFi() {
-  WiFi.mode(WIFI_AP_STA);
+  WiFi.mode(WIFI_AP);
   WiFi.softAP(AP_SSID, AP_PASSWORD);
-  Serial.printf("[WiFi] AP '%s' started, AP IP=%s\n",
-                AP_SSID, WiFi.softAPIP().toString().c_str());
-
-  WiFi.disconnect(true);
   delay(100);
-  WiFi.setSleep(false);
-  Serial.printf("[WiFi] STA connecting to '%s' ...\n", ssid);
-#if WIFI_STATIC_IP_ENABLED
-  IPAddress sta_ip, sta_gw, sta_nm;
-  sta_ip.fromString(WIFI_STATIC_IP);
-  sta_gw.fromString(WIFI_STATIC_GATEWAY);
-  sta_nm.fromString(WIFI_STATIC_NETMASK);
-  if (WiFi.config(sta_ip, sta_gw, sta_nm)) {
-    Serial.printf("[WiFi] STA static IP configured: %s\n", WIFI_STATIC_IP);
-  } else {
-    Serial.println("[WiFi] WARN: WiFi.config failed, falling back to DHCP");
-  }
-#endif
-  WiFi.begin(ssid, password);
-
-  uint8_t attempt = 0;
-  while (WiFi.status() != WL_CONNECTED && attempt < WIFI_MAX_RETRY) {
-    delay(WIFI_RETRY_DELAY_MS);
-    attempt++;
-    Serial.printf("[WiFi] STA attempt %d status=%d\n", attempt, WiFi.status());
-  }
-
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.printf("[WiFi] STA Connected! IP=%s RSSI=%d dBm\n",
-                  WiFi.localIP().toString().c_str(), WiFi.RSSI());
-  } else {
-    Serial.printf("[WiFi] STA failed (final status=%d), AP is still up\n", WiFi.status());
-  }
+  Serial.printf("[WiFi] Pure AP '%s' started, IP=%s\n",
+                AP_SSID, WiFi.softAPIP().toString().c_str());
 }
 
 // ===========================

@@ -91,8 +91,11 @@ def main():
     gt_by_i = {}
     found = 0
     for i, g in enumerate(frames):
+        # ESP32 MJPEG is low-contrast; histogram-equalise first or the corner
+        # detector misses the grid entirely (empirically required at 320x240).
+        ge = cv2.equalizeHist(g)
         ok, corners = cv2.findChessboardCorners(
-            g, (cols, rows), None,
+            ge, (cols, rows), None,
             cv2.CALIB_CB_ADAPTIVE_THRESH | cv2.CALIB_CB_NORMALIZE_IMAGE)
         if not ok:
             continue

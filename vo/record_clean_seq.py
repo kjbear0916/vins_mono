@@ -49,12 +49,18 @@ def parse():
     return ap.parse_args()
 
 
-def grab(src, timeout=6.0):
+def grab(src, timeout=15.0):
     t0 = time.time()
+    last_val = getattr(grab, "_last_val", None)
     while time.time() - t0 < timeout:
         ok, fr = src.read()
         if ok and fr is not None:
-            return fr
+            # use a fast corner sample check to ensure it's a freshly decoded frame
+            sample = (fr[0, 0, 0], fr[-1, -1, 0], fr[100, 100, 0], fr[50, 50, 0])
+            if sample != last_val:
+                grab._last_val = sample
+                return fr
+        time.sleep(0.01)
     return None
 
 
@@ -185,7 +191,6 @@ def main():
                 cv2.destroyAllWindows()
                 return
             prev = g
-            time.sleep(1.0 / a.fps)
 
     out.release()
     src.release()

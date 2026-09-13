@@ -4,23 +4,26 @@
 // ===========================
 // WiFi 設定
 // ===========================
-#define WIFI_SSID "CHT113405"
-#define WIFI_PASSWORD "0933816226"
+#define WIFI_SSID "BEARHOME_MESH"
+#define WIFI_PASSWORD "66666666"
 
 // WiFi 重試設定
+// 快速嘗試(10 發)、之後放棄停在 AP 模式:CHT113405 對快速重連的 STA
+// 會暫時封鎖(reason 208, comeback ~4.5 分鐘)。刻意「嘗試就停」,讓封鎖
+// 在靜默期自然過期;需要重連時在 AP-idle 後單次乾淨 reset 即可首連成功。
 #define WIFI_MAX_RETRY 10
 #define WIFI_RETRY_DELAY_MS 500
 
 // STA 固定 IP(建議用於 VO 實錄:避開 DHCP 每次變動,
 // 且 PC 端可固定連 http://192.168.1.200:81/stream 不必翻 serial log)
 //
-// 目前對應家用 WiFi CHT113405(2.4GHz,gateway 192.168.1.1)。
+// 目前對應家用網 BEARHOME_MESH(2.4GHz/mesh,gateway 192.168.68.1)。
 // 固定 IP 選 .200 避開 DHCP 常見分配段;若衝突(連不上)改下一個。
 // 設 1 啟用,設 0 走 DHCP
-#define WIFI_STATIC_IP_ENABLED 1
-#define WIFI_STATIC_IP "192.168.1.200"
-#define WIFI_STATIC_GATEWAY "192.168.1.1"
-#define WIFI_STATIC_NETMASK "255.255.255.0"
+#define WIFI_STATIC_IP_ENABLED 0
+#define WIFI_STATIC_IP "192.168.68.200"
+#define WIFI_STATIC_GATEWAY "192.168.68.1"
+#define WIFI_STATIC_NETMASK "255.255.252.0"
 
 // ===========================
 // AP 熱點設定（設定模式）
@@ -56,8 +59,8 @@
 #define CAMERA_BRIGHTNESS -2
 #define CAMERA_CONTRAST 2
 #define CAMERA_SATURATION -2
-#define CAMERA_EXPOSURE_CTRL 0  // 0=手動, 1=自動
-#define CAMERA_AEC_VALUE 500    // 手動曝光值
+#define CAMERA_EXPOSURE_CTRL 1  // 0=手動, 1=自動
+#define CAMERA_AEC_VALUE 500    // 手動曝光值(僅 EXPOSURE_CTRL=0 時有效)
 
 // ===========================
 // PIR 感測器設定
