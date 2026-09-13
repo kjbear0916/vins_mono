@@ -100,7 +100,7 @@ def main():
         raise SystemExit(1)
 
     rms, K, dist, _, _ = cv2.calibrateCamera(
-        obj_points, img_points, (frame_size[1], frame_size[0]), None, None)
+        obj_points, img_points, frame_size, None, None)
 
     print("calibration RMS (pixels, lower is better): %.4f" % rms)
     print("camera matrix:\n%s" % K)

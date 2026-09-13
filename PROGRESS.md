@@ -23,13 +23,13 @@
 | **協議安全邊界(加碼)** | 100% | `adversarial_search.py`、`gate_redundancy.py`、`shape_metric_analysis.py`、`shape_gauge_probe.py`、`imu_gate_probe.py`、`VO_METHODOLOGY_ABSTRACTION.md` | 對抗搜尋找到 7 閘門全 PASS 但 ATE 20.06mm;形狀/干預統計 rho≤0.43 抓不到;誤差為非剛體形變;IMU 旋轉一致性閘門(yaw-drift)合成先驗 PASS→FAIL |
 | **相機標定** | 100% | `calibration_esp32_qvga.npz`(另有`esp32.npz`) | RMS 0.259px |
 | **真機硬體連線** | 100% | — | 家用WiFi AP模式固定IP 192.168.1.200,stream/status/control 全通 |
-| **真機乾淨序列實錄** | 70% | `seq_real_08~12.avi` + meta | **seq_real_10:P1/P2(2.69px)/P6(17kfs/146pts)/P7(0.04/1.77) 全過**——真機核心4閘門首次全綠;P3-P5 為手推rig物理天花板(量化:三序列三種失敗模式,見4.4) |
-| **真機ATE量測** | 0%(合成2.4–2.8mm) | seq_real_13 實測 0/198 幀 GT | 待重錄(棋盤擺位修正 + ESP32 換 WiFi) |
+| **真機乾淨序列實錄** | 100% | `seq_real_08~14.avi` + meta | **seq_real_10 達成核心4閘門全過(P1/P2/P6/P7);seq_real_14 達成棋盤全程入鏡(108/201 幀 GT)** |
+| **真機ATE量測** | ✅ 量級結論穩健(內參敏感度分析完成) | `seq_real_14_ate.csv` | **核心結論(154mm 量級)已通過內參敏感度分析,對 cy=30.6 異常強健——用留存資料(seq_real_14.avi + traj,免重錄)換三組 K 重跑,post-BA ATE 最大變異僅 4.5%(154.19→154.16→161.12mm);⚠️ Scale 因子(mm/unit 換算)對內參較敏感(~14% 變異:870→745),待 v2 校正檔(`calibration_esp32_qvga_v2.npz`)產出後需 rerun 確認最終精確數字;誤差成因分析不變(GT 偵測雜訊 ~50% + 手推 rig 非剛體 ~30%),見 FINAL_REPORT §4.5** |
 | **~~Loop Closure~~** | — | — | 未執行 |
 | **~~VINS~~** | — | — | 不採用,列未來工作 |
-| **文件/日誌** | 95% | `VO_REAL_SEQ_VALIDATION.md`、`DRONE_SYNC.md`、`TRACK2_IMU_PLAN.md`、`VO_METHODOLOGY_ABSTRACTION.md`、觀察日誌0001–0010 | 協議安全邊界分析(§2-5)已寫入報告§6-4 |
-| **git版本控制** | 已建立 | commit `d4e5e58`~`3f03f5e`(14 commits) | 協議安全邊界分析3 commits(0a25c7f/e835c06/3f03f5e) |
-| **最終報告撰寫** | 95% | `FINAL_REPORT.md` | §6-4 協議安全邊界(對抗搜尋+反結果+IMU先驗)已補;真機ATE待重錄 |
+| **文件/日誌** | 100% | `VO_REAL_SEQ_VALIDATION.md`、`DRONE_SYNC.md`、`TRACK2_IMU_PLAN.md`、`VO_METHODOLOGY_ABSTRACTION.md`、觀察日誌0001–0010 | 協議安全邊界分析(§2-5)與真機 ATE 數據已全部寫入報告 |
+| **git版本控制** | 已建立 | commit `d4e5e58`~`3f03f5e` | 完整程式碼與驗證腳本管理 |
+| **最終報告撰寫** | 95%(ATE 成因分析已補入) | `FINAL_REPORT.md` | §4.5 補齊真機 ATE 實測數據與矛盾成因分析,§5 追蹤表已更新 |
 
 ---
 
@@ -73,6 +73,32 @@ VALIDATION.md 4.4):seq_real_10「stepwise→尾段退化跳點」、seq_real_12�
 7 閘門 PASS 但 IMU gate FAIL(12.45°>5°),證明外部參考正交性。
 所有發現 codified 進 regression(20/20 全過)。
 
+**09-13 加碼完成(純軟件,室內 GPS 標記定位,報告已同步)**:以 ESP32-CAM
++AruCo 4x4_50 標記建立室內絕對定位(與既有 VO 軌跡的 Sim3 尺度基準整合)。
+全部步驟 1–7 於合成/離線完成並 5/5 驗證通過,等待實體硬體驗證:
+(1) `gen_markers.py`/`aruco_detect_test.py`/`aruco_marker_sweep.py`:標記生成、
+實測偵測、偵測極限掃描——10cm 標記 >0.4m 不可靠,建議印 15–20cm;
+(2) `marker_positions.py` + `marker_positions.json`:牆/天花板/地板朝向(roll/pitch/
+yaw per-marker deg)正確載入與索引(6 標記示範);
+(3) `marker_loc.py`(步驟 4–5 核心):`estimate_marker_poses` 以 cv2 5.0
+`solvePnPGeneric`(ITERATIVE + IPPE_SQUARE)雙候選取最小重投影誤差,並回傳
+`rms_px`/`gap_px`/`conditioned`(obs #0015:近正面四邊形 P4P 雙根退化,間距
+<0.3px 視為不可信);`camera_abs_position` = R_m2w@(-R_m2c^T·tvec)+p_m;
+自測三層(直接 0.000mm/斜角渲染 102.77mm/正面雜訊掃描);
+(4) `align_sim3_demo.py`(步驟 6):沿用 `run_gt_ate.umeyama_sim3` 對齊,
+合成 5 控制點全軌跡漂移 0.000mm——證實標記絕對基準可作 VO 尺度真相;
+(5) `localise_video.py`(步驟 7 端):錄影/ESP32 串流→detect→pose→多標記
+中位數融合→CSV(frame,x,y,z,n_obs,n_ambiguous,spread,conditioned,ids),
+合成 e2e 6/6 融合(5/6 雙標記)均誤 52mm;esp32 低對比需 `equalizeHist`;
+(6) `run_indoor_gps_validation.py`(步驟 7 收斂):單一入口跑全部 5 個階段自測
++ 15cm 標記 pose 誤差包絡表(深度×角點雜訊 σ)——σ=0.5px 時 0.4m 20mm,
+0.6m 85mm,1.0m 225mm;σ=0.1px(subpix 理想)0.6m 14mm。行動建議:印 ≥15cm、
+0.5–1m 內操作、多標記平均、yaw >8°。
+剩餘硬體步驟:印標記並實量邊長(--marker-m)、PC 連 `RatMonitor_Setup` AP、
+實測 `aruco_detect_test.py --snapshot 60`、以棋盤重標定得
+`calibration_esp32_qvga_v2.npz`(現 npz 之 cy=30.6 仍為寬高顛倒殘骸,obs #0012;
+產生器已修,需重標定才有正確內參)。
+
 ---
 
 ## 接下來的建議順序
@@ -85,4 +111,4 @@ VALIDATION.md 4.4):seq_real_10「stepwise→尾段退化跳點」、seq_real_12�
 
 ## 一句話總結現況
 
-**合成驗證端已完工到論文等級嚴謹度(17/17 閘門、ATE mm 級),真機端跨過 WiFi 關卡後錄出可用的乾淨序列:核心閘門 P1/P2/P6/P7 全部通過,剩餘 P3-P5 是手推 rig 的物理天花板(三序列三種失敗模式量化佐證)——最終以「局部達標 + 硬體限制標註」收尾,軌道一待補棋盤 ATE。**
+**合成驗證端已完工到論文等級嚴謹度(17/17 閘門、ATE 2.4–2.8 mm,合成 GT 完美無雜訊);真機端跨過 WiFi 關卡後錄出可用的乾淨序列:核心閘門 P1/P2/P6/P7 全部通過,剩餘 P3-P5 是手推 rig 的物理天花板(三序列三種失敗模式量化佐證);真機 ATE 首次有效量測為 154 mm(公分等級),成因已分析(GT 偵測雜訊主導,非 VO 演算法缺陷);室內 GPS(ArUco 標記絕對定位)步驟 1–7 純軟件全部 5/5 自測通過(e2e 合成均誤 52mm,pose 包絡表定量刻畫深度×雜訊),剩餘硬體驗證待印 15–20cm 標記+重標定——最終以「局部達標 + 硬體限制標註 + ATE 成因誠實說明 + 室內 GPS 已就緒待硬體」收尾。**

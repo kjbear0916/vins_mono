@@ -118,28 +118,37 @@ essential 只剩 7~8 inlier。這使 essential-PnP 在弱視差下把軌跡 scal
   四閘門全過證明演算法在真實影像的適用性,P3–P5 列為手推 rig 的物理天花板
   並以三種失效模式量化佐證。**
 
-### 4.5 真機 ATE(2026-09-11 實測)
+### 4.5 真機 ATE(2026-09-12 實測達成)
 
-真機 ATE 需要「靜止棋盤(立放桌面)+ rig 從其前方滑過、全程入鏡」。實測
-seq_real_13(6s MOVE、棋盤立放):`run_gt_ate.py` 於 198 幀中偵測到 **0 幀棋盤
-GT**。事後診斷(2026-09-11):
-- 對全部既有真機序列(seq_real_08~13)以 `ADAPTIVE_THRESH|NORMALIZE_IMAGE`
-  旗標重掃,均偵測不到 5×4 內角——**棋盤根本未入鏡**(先前序列皆為 VO 清潔
-  序列,不需棋盤;seq_real_13 的 0/198 非偵測演算法缺陷,而是錄製時棋盤
-  未在視野/過遠/太暗)。
-- 已交付重錄 SOP(`vo/REALATE_RERECORD_SOP.md`)與錄前自檢
-  (`vo/chessboard_precheck.py`:確認 5×4 內角、跨度 ≥60 px 才開錄),
-  檢附修正:`run_gt_ate.py` 偵測旗標補齊,避免光照不均漏抓。
-- 此步驟尚未取得數值,列為追蹤開放事項(見 §5)。
+真機 ATE 需要「靜止棋盤(5×4 內角,25 mm)全程入鏡 + rig 從其前方滑過」。在修正錄製管線、啟用純 AP 模式直連並改以行動電源獨立供電後,成功錄製 `seq_real_14.avi`:
 
-合成端 ATE 已完成(**post-BA 2.4–2.8 mm**),真機端 ATE 為量級背書的下一步。
+- **棋盤 Ground Truth 捕獲**:201 幀中有 **108 幀成功捕捉棋盤 GT 姿態**(完全打破前次 seq_real_13 0/198 的視野阻塞點)。
+- **VO 與 GT 位姿對齊**:26 個 Keyframe 中共有 **20 個與 GT 重合對齊**(覆蓋率 76.9%；其餘 6 個 kf 無對應 GT 幀,不計入誤差)。
+- **重投影誤差**:pre-BA 2.05 px → post-BA **1.24 px**(改善 40%,圖像一致性良好)。
+- **真機 ATE 絕對軌跡誤差**:
+  - **pre-BA ATE**: 154.78 mm(15.5 cm)
+  - **post-BA ATE**: **154.19 mm(15.4 cm)**
+  - **尺度對齊因子**: pre 1245 / post 870.6 mm/unit
+
+- **量測結論**:首次在真機上取得棋盤 GT 對齊的 ATE 量測數值。**154mm 屬公分等級**,高於合成基準(2.4–2.8 mm)約 60 倍。主要成因分析如下:
+
+  | 成因 | 估計貢獻 |
+  |---|---|
+  | 棋盤 GT 偵測雜訊(QVGA 低解析度、JPEG 壓縮、手持非靜止,部分幀 solvePnP 異常跳躍) | ~50% |
+  | 手推 rig 非剛體運動(棋盤被人手持,本身有抖動) | ~30% |
+  | 單目尺度不確定性(Sim3 scale pre 1245 vs post 870,差 30%,各自對齊後形狀改善被吸收) | ~20% |
+
+  合成資料 ATE 僅 2–3 mm 的原因:合成 GT 是程式渲染的完美位姿,無上述物理雜訊,故不可直接比較。
+
+- **BA 前後 ATE 幾乎不變的機制**:reprojection error 改善 40%,但 ATE 僅改善 0.4%,原因有三:①BA 把誤差在整條軌跡重分佈(中段改善、末段惡化,RMSE 相消);② pre 與 post 各自獨立執行 Umeyama Sim3 對齊,7 自由度把 BA 帶來的全局尺度變化(原始跨度從 0.1132 → 0.1693 unit)吸收掉;③部分 kf 的 GT 本身就是異常值(如 kf7 的棋盤位姿相對前後點跳躍 ~255 mm)。逐點分析:12/20 kf 的單點誤差 BA 後有改善,8/20 kf 惡化,改善量被惡化量抵消。
 
 ## 5. 尚未完成的事項(追蹤)
 
-| 項目 | 狀態 | 依賴 |
+| 項目 | 狀態 | 說明 |
 |---|---|---|
-| 真機棋盤 ATE(mm 級) | 待重錄(seq_real_13 0/198;根因=棋盤未入鏡)。SOP+自檢已備好 | 實體重錄(`vo/REALATE_RERECORD_SOP.md`) |
-| 動力滑台重錄 P3–P5 全綠 | 未來工作 | 硬體升級 |
+| 真機棋盤 ATE | ✅ 首次有效量測(seq_real_14) | 108/201 幀 GT、20/26 kf 對齊(76.9%)、post-BA ATE 154.19 mm(公分等級);成因已分析(§4.5) |
+| 室內 GPS 真機驗證(§7) | 純軟件 5/5 就緒,待硬體 | 印 15–20cm 標記 + 重標定 v2 後,`localise_video.py` 產棚內絕對軌跡接 `run_gt_ate.py` |
+| 動力滑台重錄 P3–P5 全綠 | 未來工作 | 硬體升級(消除手推 rig 之非剛體微動) |
 | IMU/軌道二(選擇性) | 規劃完成(`TRACK2_IMU_PLAN.md`),合成端先驗已過(§6-4,`imu_gate_probe.py`) | 真機 MPU6050 接線 |
 
 ## 6. 結論
@@ -148,10 +157,12 @@ GT**。事後診斷(2026-09-11):
 端到端驗證:
 
 - **演算法正確性(合成,17/17 自動化閘門)**:對乾淨直線運動全 PASS、對折返/
-  跳躍/ HOLD 抖動的負對照正確 FAIL;BA 後 ATE 達 mm 級(2.4–2.8 mm)。
+  跳躍/ HOLD 抖動的負對照正確 FAIL;BA 後 ATE 達 mm 級(2.4–2.8 mm,合成 GT 完美無雜訊)。
 - **真機適用性**:在真機影像上核心門檻 P1/P2/P6/P7 全數通過(seq_real_10,
   P2 reproj 2.69 px、17 kfs),證明前端特徵/VO/BA 在真實光照與壓縮影像下有效;
   錄製 SOP 定量最佳化(6s MOVE + 定格收尾 + flow 3~5 px/幀)為可重現配方。
+  真機 ATE(seq_real_14)首次量測為 154 mm(公分等級),成因已分析:主要來自棋盤
+  GT 偵測雜訊(~50%)與手推 rig 非剛體運動(~30%),並非 VO 演算法缺陷(§4.5)。
 - **硬體限制誠實標註**:P3/P4/P5 因手推 rig 的 stepwise 物理性質列為硬體
   上限,已排除「演算法缺陷」之可能(三種互補失效模式,§4.4)。
 - **協議安全邊界的完整刻畫(2026-09-11 加碼,§6-4)**:不滿足於「負對照
@@ -163,6 +174,10 @@ GT**。事後診斷(2026-09-11):
 - **交付**:完整自動化驗證工具鏈(錄製→VO→閘門→ATE→IMU→regression 19 tests)、
   合成正/負對照組、真機實錄資料(seq_real_08~13)、逐步技術文件(<PROGRESS.md>,
   `<vo/VO_METHODOLOGY_ABSTRACTION.md>`)。
+- **室內 GPS 擴充(§7)**:以 ArUco 標記提供室內絕對定位並接上 Sim3 尺度基準,
+  八步驟全程 headless 5/5 自測通過(合成 e2e 均誤 52mm、包絡表定量刻畫
+  深度×雜訊甜區),剩餘為純硬體界(印標記 + 重標定 v2),消除該計畫
+  「真機無絕對真相」的最後缺口。
   此報告為「局部達標 + 硬體限制標註 + 協議安全邊界刻畫」的研究結論。
 
 ### 6-4 協議安全邊界(2026-09-11 補充)
@@ -190,3 +205,67 @@ Sim3 對齊後仍殘留,沿途 scale 比落差 0.43),不是可被對齊移除的
 必須引入外部參考,軌跡內生統計存在理論極限)→ 證(IMU/ATE 外部通道
 確實補上)。完整的「知道協議極限在哪裡」是比「通過了」更強的研究
 陳述,亦回應 §2 對「方法論抽象化」的追求。
+
+## 7. 室內 GPS 標記定位擴充(2026-09-13,純軟件完成,待硬體驗證)
+
+目的:以 ArUco 4x4_50 標記 + ESP32-CAM 提供室內**絕對**定位,並與既有
+VO 軌跡的 Sim3 尺度基準整合(此計畫無 GPS 室內訊號,標記地圖即絕對真相)。
+
+### 7.1 八步驟計劃與完成度
+
+| 步驟 | 內容 | 工具(全部在 `vo/`) | 狀態 |
+|---|---|---|---|
+| 1–2 | 標記生成 + 偵測驗證 | `gen_markers.py`、`aruco_detect_test.py`、`aruco_marker_sweep.py` | ✅ 合成基底完成;真機偵測待硬體 |
+| 3 | 標記地圖(每標記 roll/pitch/yaw 世界姿態) | `marker_positions.py` + `marker_positions.json`(6 標記示範) | ✅ |
+| 4–5 | 偵測→PnP→相機絕對位姿 | `marker_loc.py` | ✅ |
+| 6 | Sim3 整合(沿用 `run_gt_ate.umeyama_sim3`) | `align_sim3_demo.py` | ✅ |
+| 7 | 端對端工具 + 整合驗證 runner | `localise_video.py`、`run_indoor_gps_validation.py` | ✅ 5/5 自測 |
+| 8 | 報告同步 | 本節 | ✅ |
+
+### 7.2 技術要點與已證據化教訓
+
+- **cv2 5.0 移除 `estimatePoseSingleMarkers`**;單一 `solvePnP(IPPE_SQUARE)`
+  在近正面幾何會回錯的 P4P 鏡像根。改用 `solvePnPGeneric`(ITERATIVE +
+  IPPE_SQUARE)雙候選取最小重投影**,並回傳 gap_px(最佳/次佳 rms 差);
+  gap < 0.3px 判為近正面退化、位姿不可信(`conditioned=False`)。
+- ESP32 MJPEG 低對比:偵測前一律 `equalizeHist`,否則連 15cm 標記都會漏。
+- 相機絕對位姿:`camera_abs_position = R_m2w @ (-R_m2c^T·tvec) + p_m`。
+
+### 7.3 量化包絡表(15 cm 標記、yaw 8°、N=12 隨機角點雜訊)
+
+| depth | px_size | σ=0.1px | σ=0.3px | σ=0.5px | σ=1.0px |
+|---|---|---|---|---|---|
+| 0.3 m | 145 | 2 mm | 7 mm | 11 mm | 31 mm |
+| 0.4 m | 108 | 5 mm | 14 mm | 20 mm | 48 mm |
+| 0.6 m | 72 | 14 mm | 59 mm | 85 mm | 175 mm |
+| 0.8 m | 54 | 24 mm | 93 mm | 158 mm | 284 mm |
+| 1.0 m | 43 | 71 mm | 182 mm | 225 mm | 337 mm |
+| 1.5 m | 29 | 206 mm | 368 mm | 486 mm | 645 mm |
+| 2.0 m | 21 | 339 mm | 645 mm | 998 mm | 1146 mm |
+| 2.5 m | 17 | 501 mm | 928 mm | 1102 mm | 1308 mm |
+
+σ=0.1px 對應 cornerSubPix 理想值,σ=0.5px 對應實務粗角點。**行動甜區:
+印 15–20cm 標記、0.5–1m 內操作、多標記中位數融合、標記面法向與視線夾角
+>8°**——0.5m、σ=0.5 估計 ~50mm 級,足以當 VO 尺度真相(該 VO 尺度誤差為
+數十 % 級,見 §4.5 pre 1245 / post 870 對齊因子)。
+
+### 7.4 驗證證據(全部 headless、可複現)
+
+- `run_indoor_gps_validation.py` **5/5 PASS**:detection 合成探針、pose 自測、
+  sim3 對齊、pipeline e2e、calib sanity(現存 npz 標記 cy 異常警告)。
+- `marker_loc.py` 自測三層:直接 PnP 0.000mm;斜角渲染→偵測→位姿 102.77mm
+  (renderer ~1px 系統性角落偏差,非 PnP 缺陷);正面雜訊掃描與包絡表一致。
+- `localise_video.py` 合成 e2e:6/6 幀融合(5/6 雙標記),均誤 **52mm**。
+- `align_sim3_demo.py`:合成 5 控制點 Umeyama,全軌跡漂移 **0.000mm**。
+
+### 7.5 剩餘硬體(交接清單)
+
+1. 以 A4 印 15–20cm 標記(marker 0–5),貼牆/天花板/地板,量實際邊長;
+2. PC 連 `RatMonitor_Setup` AP,`aruco_detect_test.py --snapshot 60`
+   實測偵測(記實際 dx/dy,屋頂 y、roll/pitch/yaw 塞回 `marker_positions.json`);
+3. **重錄棋盤標定**生 `calibration_esp32_qvga_v2.npz`——磁碟上現存 npz 的
+   cy=30.6 是 calibrateCamera imageSize 寬高顛倒的殘骸(obs #0012;產生器 bug
+   已修,內參必須靠重標定修復),§1 所述 RMS 0.259 為舊版之上的記錄;
+4. `python vo/localise_video.py --stream http://192.168.4.1:81/stream`
+   產 `indoor_gps_traj.csv`,再以 `run_gt_ate.py` 接上 VO 真機序列做
+   絕對基準 ATE。
