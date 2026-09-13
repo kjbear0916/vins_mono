@@ -107,6 +107,14 @@ yaw per-marker deg)正確載入與索引(6 標記示範);
     標定錄影定案;`recalibrate_from_frames.py` 已加 calib_sanity 守衛
     (審核 focal 帶+dist 爆炸),SEO 此類「低 RMS 卻垃圾 K」的陷阱(見
     FINAL_REPORT §4.6)。
+(9) **09-13 晚**:試圖用棋盤像素跨度定案 fx 失敗——發現 **fx–z 退化**
+    (solvePnP 的 z 與 fx 反向縮放:fx=282→z≈800mm vs fx=900→z≈2431mm,
+    預測跨度對 fx 幾乎不變+被透視縮短污染),像素跨度無法排除任何 focal 假說,
+    必須靠**獨立距離參考**。`calib_sanity.py` 新增 **FOV 快速篩子**
+    (282→59°=ESP32-CAM 典型 vs 900→20° 不合理)與 **`--clip --z-hint`
+    交叉驗證**(獨立距離檢驗 solvePnP 中位數 z)。物理傾向(59°+~1m rig+800mm)
+    支持 fx≈282 家族,但僅條件式——最終仍待多姿態標定錄影 + 錄後雙重把關
+    (見 FINAL_REPORT §7.5-3)。
 剩餘硬體步驟:印標記並實量邊長(--marker-m)、PC 連 `RatMonitor_Setup` AP、
 實測 `aruco_detect_test.py --snapshot 60`、**多姿態 QVGA 棋盤標定錄影**得
 `calibration_esp32_qvga_v2.npz`(現 npz 之 cy=30.6 為寬高顛倒殘骸 + fx=282

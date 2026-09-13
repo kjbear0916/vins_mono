@@ -176,6 +176,18 @@ essential 只剩 7~8 inlier。這使 essential-PnP 在弱視差下把軌跡 scal
   拿到 certified v2 後 rerun §4.5 即可定案。在此之前報告不宣稱精確 mm 值;
   公制尺度(mm/unit)同樣待定(870→745→2152 視 K 而變)。
 
+- **補充調查(2026-09-13 晚):試圖用 seq_real_14 的棋盤像素跨度定案 fx 失敗
+  ——發現 fx–z 退化**:solvePnP 的 z 與 fx 反向縮放(同樣畫面, fx=282→
+  z≈800mm, fx=900→z≈2431mm),像素跨度換算的 fx 預測因此與 fx 幾乎無關,
+  且被透視縮短污染,無法像直覺以為的那樣「直接量畫面就排除 900」。
+  **唯一能打破該退化的是獨立距離參考**(棋盤/相機實測距離)。因此 `calib_sanity.py`
+  新增兩道關於:①**FOV 快速篩子**(fx=282→HFOV 59°=ESP32-CAM 典型;fx=900/948
+  →20°/19°,除非確認視窗裁切讀出否則不合理);②**`--clip + --z-hint` 交叉驗證**
+  (以已知距離檢驗 solvePnP 中位數 z,500–1800mm 帶, fx=900 會跑到 2.4m 被逐出)。
+  目前的物理傾向(59° 典型 FOV + ~1m rig 佈置 + z≈800mm)仍指向 fx≈282 家族,
+  但這只是「條件式支持」,不動搖上述結論:最終仍須多姿態標定錄影 + 錄完後
+   ①`calib_sanity --clip`、②seq_real_14 敏感度 rerun(同 §4.6 表)雙重驗證。
+
 ## 5. 尚未完成的事項(追蹤)
 
 | 項目 | 狀態 | 說明 |
@@ -302,7 +314,13 @@ VO 軌跡的 Sim3 尺度基準整合(此計畫無 GPS 室內訊號,標記地圖�
    bug 已修);**且儲存 fx=282 本身未獲獨立證實——focal 假說未定(full-FOV
    縮放→474 vs 視窗裁切→948),seq_real_14 姿態多樣性不足以重估
    (§4.6,已被守衛拒絕),只能靠專用標定錄影定案**;§4.6 需要之已重跑者
-   無須重錄;§1 所述 RMS 0.259 為 VGA 模式(calibration_esp32.npz)記錄;`camera_calibration.py --pattern 5x4 --out calibration_esp32_qvga_v2.npz`;
+   無須重錄;§1 所述 RMS 0.259 為 VGA 模式(calibration_esp32.npz)記錄。
+   **錄影採集要求(避免焦距–畸變退化,obs #0018)**:至少 25–30 張、棋盤
+   佔滿四角+中央各區、傾斜 ±30–45° 至少含數張、距離近/中/遠都要有、
+   前向姿態只是少數幾張;**錄完立刻雙重把關**:①`calib_sanity.py
+   calibration_esp32_qvga_v2.npz`(cy/FOV/dist 通過)並 `--clip seq_real_14.avi
+   --z-hint <實測距離>` 交叉驗證;②以 v2 rerun §4.6 敏感度表(seq_real_14
+   免重錄)確認 ATE 定案再寫報告;
 4. `python vo/localise_video.py --stream http://192.168.4.1:81/stream`
    產 `indoor_gps_traj.csv`,再以 `run_gt_ate.py` 接上 VO 真機序列做
    絕對基準 ATE。

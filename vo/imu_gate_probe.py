@@ -71,11 +71,6 @@ def main():
     fps = float(g["fps"])
     yaw_drift = float(g.get("yaw_drift", 0.0))
     gyro = g["gyro"]
-    n_move = sum(1 for e in gyro if abs(e["gy"]) > 1e-9)
-    # integrated gyro angle over the MOVE phase (rad -> deg)
-    gyro_angle_deg = math.degrees(yaw_drift * n_move / fps)
-    print("gyro: %d MOVE frames @ yaw %.3f rad/s -> integrated %.2f deg"
-          % (n_move, yaw_drift, gyro_angle_deg))
 
     lk = dict(winSize=(21, 21), maxLevel=3,
               criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 20, 0.02))
@@ -116,6 +111,18 @@ def main():
         return 1
     i0, i1 = move_idx[0], move_idx[-1]
     vo_angle_deg = rel_rot_angle_deg(kf_R[i0], kf_R[i1])
+    # obs #0015b: integrate gyro over the SAME bracket as the VO keyframes
+    # (frames kf_frames[i0]..kf_frames[i1]), NOT the full MOVE phase.  Unequal
+    # supports manufacture failures no estimator accuracy can remove; print
+    # both spans so a reviewer can see the coverage.
+    kf_lo, kf_hi = kf_frames[i0], kf_frames[i1]
+    n_move = sum(1 for e in gyro if abs(e["gy"]) > 1e-9)
+    n_span = sum(1 for e in gyro[kf_lo:kf_hi + 1] if abs(e["gy"]) > 1e-9)
+    # integrated gyro angle over the kf bracket (rad -> deg)
+    gyro_angle_deg = math.degrees(yaw_drift * n_span / fps)
+    print("gyro over VO-kf bracket frames %d..%d: %d/%d MOVE frames"
+          " -> integrated %.2f deg" % (kf_lo, kf_hi, n_span, n_move,
+                                       gyro_angle_deg))
     err_deg = abs(vo_angle_deg - gyro_angle_deg)
     print("VO MOVE kfs: %d..%d (frames %d..%d)"
           % (i0, i1, kf_frames[i0], kf_frames[i1]))

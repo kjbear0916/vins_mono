@@ -200,13 +200,32 @@ def _selftest():
 
     def proj(mid, p_c):
         tv = R_cam.T @ (table[mid]["p"] - p_c).reshape(3, 1)
-        return cv2.projectPoints(obj, R_cam.T, tv, K, dist)[0].reshape(4, 2)
+        return tv, cv2.projectPoints(obj, R_cam.T, tv, K, dist)[0].reshape(4, 2)
+
+    # obs #0016b: scene-geometry preflight BEFORE any detection/fusion assert.
+    # Markers off-FOV or behind the camera masquerade as "detection failed".
+    margin = 4
+    for t in range(6):
+        p_c = np.array([0.17 + 0.02 * t, -0.05, 1.70])
+        for mid in (1, 2):
+            tv, uv = proj(mid, p_c)
+            assert float(tv[2]) * 1000.0 > 50.0, \
+                "marker %d at frame %d is behind/near camera (z=%.0f mm)" \
+                % (mid, t, float(tv[2]) * 1000.0)
+            x = uv[:, 0]; y = uv[:, 1]
+            assert (x >= margin).all() and (x <= IMG_W - 1 - margin).all(), \
+                "marker %d at frame %d outside horizontal frame" % (mid, t)
+            assert (y >= margin).all() and (y <= IMG_H - 1 - margin).all(), \
+                "marker %d at frame %d outside vertical frame" % (mid, t)
+    print("scene preflight OK: markers in-frame, in front of camera, all 6 poses")
 
     errs, seen, seen2 = [], 0, 0
     N = 6
     for t in range(N):
         p_c = np.array([0.17 + 0.02 * t, -0.05, 1.70])
-        frame = _render_scene([imgs[1], imgs[2]], [proj(1, p_c), proj(2, p_c)])
+        _, uv1 = proj(1, p_c)
+        _, uv2 = proj(2, p_c)
+        frame = _render_scene([imgs[1], imgs[2]], [uv1, uv2])
         r = process_frame(frame, K, dist, table, marker_m)
         gt = p_c
         if r["fused"] is not None:
