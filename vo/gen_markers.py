@@ -19,7 +19,7 @@ def main():
     ap.add_argument("--ids", default="0,1,2,3,4,5")
     ap.add_argument("--size", type=int, default=400,
                     help="marker edge in px (printed size is set at print time)")
-    ap.add_argument("--out", default=r"D:\Things\vo\markers")
+    ap.add_argument("--out", default=r"D:\Things\markers")
     a = ap.parse_args()
 
     if a.dict not in DICTS:
