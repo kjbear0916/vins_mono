@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>drone_control</name>
+  <version>1.0.0</version>
+  <description>MAVSDK-Python bridge: turns /drone/cmd_vel into PX4 SITL offboard velocity setpoints</description>
+  <maintainer email="dev@disaster-drone.sim">disaster_drone</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

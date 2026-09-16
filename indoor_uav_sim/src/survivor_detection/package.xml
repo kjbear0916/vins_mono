@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>survivor_detection</name>
+  <version>1.0.0</version>
+  <description>Survivor marker detection and reporting</description>
+  <maintainer email="dev@disaster-drone.sim">disaster_drone</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>drone_msgs</depend>
+  <depend>opencv-contrib-python</depend>
+  <depend>numpy</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>uwb_localization</name>
+  <version>1.0.0</version>
+  <description>UWB anchor deployment, ranging simulation, and trilateration</description>
+  <maintainer email="dev@disaster-drone.sim">disaster_drone</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>drone_msgs</depend>
+  <depend>numpy</depend>
+  <depend>scipy</depend>
+  <depend>PyYAML</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
