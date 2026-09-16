@@ -1,0 +1,24 @@
+# navigation_params.yaml
+# Flight altitudes and controller gains for waypoint navigation.
+#
+# IMPORTANT: marker z in marker_map.yaml is the FLOOR-MOUNTED marker pose,
+# NOT the flight altitude. Target altitude is computed from the floor:
+#   target_z = (floor - 1) * 3.0 + 0.2 + cruise_offset
+# (0.2 = slab top, 3.0 = storey height — must match tools/gen_world.py)
+
+navigation:
+  storey_height: 3.0
+  slab_top: 0.2
+  cruise_offset: 1.2          # hover height above each floor's surface
+
+  max_horizontal_speed: 1.5   # m/s
+  max_vertical_speed: 1.0     # m/s (also used during stairwell climb)
+
+  position_kp: 0.8
+  yaw_kp: 1.0
+  position_tolerance: 0.3     # m
+  yaw_tolerance: 0.15         # rad
+
+  # stairwell transition: how close to the shaft centre the drone must be
+  # before engaging the vertical climb
+  stairwell_align_radius: 1.0

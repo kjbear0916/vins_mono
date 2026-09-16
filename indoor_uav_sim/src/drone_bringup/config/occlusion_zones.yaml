@@ -1,0 +1,53 @@
+# occlusion_zones.yaml — regions where visual (ArUco) localisation may be
+# degraded, and where a UWB anchor should be deployed BEFORE entering.
+#
+# zones are geometric boxes. A zone is considered active when the drone is
+# inside its volume, OR when the next mission waypoint lies inside it.
+#
+# trigger_waypoints: marker ids (from marker_map.yaml) whose approach
+#   triggers an anchor deploy at the drone's current (ArUco-trusted) pose.
+# risk_level: high zones guarantee anchor deployment; low zones are
+#   informational only.
+# purge markers (900+) and stairwell room-9 entries are always treated as
+# high-risk in addition to what is listed here.
+
+zones:
+  - id: corridor_corner_1F_A
+    type: corner
+    trigger_waypoints: [109]
+    region: {x: [16.0, 18.0], y: [4.2, 8.0], z: [0.0, 3.0]}
+    risk_level: high
+
+  - id: stairwell_atrium_1F
+    type: open_space
+    trigger_waypoints: [192]
+    region: {x: [9.0, 15.0], y: [7.8, 12.0], z: [0.0, 3.0]}
+    risk_level: high
+
+  - id: stairwell_atrium_2F
+    type: open_space
+    trigger_waypoints: [292]
+    region: {x: [9.0, 15.0], y: [7.8, 12.0], z: [3.0, 6.0]}
+    risk_level: high
+
+  - id: stairwell_atrium_3F
+    type: open_space
+    trigger_waypoints: [392]
+    region: {x: [9.0, 15.0], y: [7.8, 12.0], z: [6.0, 9.0]}
+    risk_level: high
+
+  - id: roomB_2F_open
+    type: open_space
+    trigger_waypoints: [231]
+    region: {x: [9.5, 14.5], y: [0.5, 4.0], z: [3.0, 6.0]}
+    risk_level: medium
+
+  - id: corridor_corner_3F_C
+    type: corner
+    trigger_waypoints: [311]
+    region: {x: [20.0, 22.0], y: [4.2, 8.0], z: [6.0, 9.0]}
+    risk_level: high
+
+# The 2D lidar cannot see around the corner: entering any corridor marker
+# listed in trigger_waypoints deploys one anchor at the drone position so
+# that the drop behind the wall stays localised.

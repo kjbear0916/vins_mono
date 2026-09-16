@@ -1,0 +1,69 @@
+# mission_waypoints.yaml
+# Ordered list of waypoints for the exploration mission.
+# floor: floor number (1, 2, 3)
+# marker_id: marker ID to navigate toward
+# action: what to do at this waypoint
+# vertical: true if this is a vertical (stairwell) transition
+
+mission:
+  name: "3_floor_search"
+  description: "Explore all 3 floors via stairwell, detect survivors"
+
+  waypoints:
+    # 1F exploration
+    - {id: 1, floor: 1, marker_id: 100, action: "navigate", vertical: false}
+    - {id: 2, floor: 1, marker_id: 101, action: "navigate", vertical: false}
+    - {id: 3, floor: 1, marker_id: 102, action: "navigate", vertical: false}
+    - {id: 4, floor: 1, marker_id: 110, action: "explore_room", vertical: false}
+    - {id: 5, floor: 1, marker_id: 111, action: "explore_room", vertical: false}
+    - {id: 6, floor: 1, marker_id: 130, action: "explore_room", vertical: false}
+    - {id: 7, floor: 1, marker_id: 131, action: "explore_room", vertical: false}
+    - {id: 8, floor: 1, marker_id: 120, action: "explore_room", vertical: false}
+    - {id: 9, floor: 1, marker_id: 121, action: "explore_room", vertical: false}
+    - {id: 10, floor: 1, marker_id: 103, action: "navigate", vertical: false}
+    - {id: 11, floor: 1, marker_id: 104, action: "navigate", vertical: false}
+    - {id: 12, floor: 1, marker_id: 105, action: "navigate", vertical: false}
+
+    # Transition to 2F via stairwell
+    - {id: 13, floor: 1, marker_id: 109, action: "stairwell_entry", vertical: false}
+    - {id: 14, floor: 2, marker_id: 209, action: "stairwell_exit", vertical: true}
+
+    # 2F exploration
+    - {id: 15, floor: 2, marker_id: 200, action: "navigate", vertical: false}
+    - {id: 16, floor: 2, marker_id: 201, action: "navigate", vertical: false}
+    - {id: 17, floor: 2, marker_id: 210, action: "explore_room", vertical: false}
+    - {id: 18, floor: 2, marker_id: 211, action: "explore_room", vertical: false}
+    - {id: 19, floor: 2, marker_id: 230, action: "explore_room", vertical: false}
+    - {id: 20, floor: 2, marker_id: 231, action: "explore_room", vertical: false}
+    - {id: 21, floor: 2, marker_id: 220, action: "explore_room", vertical: false}
+    - {id: 22, floor: 2, marker_id: 221, action: "explore_room", vertical: false}
+    - {id: 23, floor: 2, marker_id: 202, action: "navigate", vertical: false}
+    - {id: 24, floor: 2, marker_id: 203, action: "navigate", vertical: false}
+    - {id: 25, floor: 2, marker_id: 204, action: "navigate", vertical: false}
+    - {id: 26, floor: 2, marker_id: 205, action: "navigate", vertical: false}
+
+    # Transition to 3F via stairwell
+    - {id: 27, floor: 2, marker_id: 209, action: "stairwell_entry", vertical: false}
+    - {id: 28, floor: 3, marker_id: 309, action: "stairwell_exit", vertical: true}
+
+    # 3F exploration
+    - {id: 29, floor: 3, marker_id: 300, action: "navigate", vertical: false}
+    - {id: 30, floor: 3, marker_id: 301, action: "navigate", vertical: false}
+    - {id: 31, floor: 3, marker_id: 310, action: "explore_room", vertical: false}
+    - {id: 32, floor: 3, marker_id: 311, action: "explore_room", vertical: false}
+    - {id: 33, floor: 3, marker_id: 330, action: "explore_room", vertical: false}
+    - {id: 34, floor: 3, marker_id: 331, action: "explore_room", vertical: false}
+    - {id: 35, floor: 3, marker_id: 320, action: "explore_room", vertical: false}
+    - {id: 36, floor: 3, marker_id: 321, action: "explore_room", vertical: false}
+    - {id: 37, floor: 3, marker_id: 302, action: "navigate", vertical: false}
+    - {id: 38, floor: 3, marker_id: 303, action: "navigate", vertical: false}
+    - {id: 39, floor: 3, marker_id: 304, action: "navigate", vertical: false}
+    - {id: 40, floor: 3, marker_id: 305, action: "navigate", vertical: false}
+
+    # Return to 1F and land
+    - {id: 41, floor: 3, marker_id: 309, action: "stairwell_entry", vertical: false}
+    - {id: 42, floor: 2, marker_id: 209, action: "stairwell_exit", vertical: true}
+    - {id: 43, floor: 2, marker_id: 209, action: "stairwell_entry", vertical: false}
+    - {id: 44, floor: 1, marker_id: 109, action: "stairwell_exit", vertical: true}
+    - {id: 45, floor: 1, marker_id: 101, action: "return_to_start", vertical: false}
+    - {id: 46, floor: 1, marker_id: 100, action: "land", vertical: false}

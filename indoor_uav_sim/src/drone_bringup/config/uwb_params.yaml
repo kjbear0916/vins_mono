@@ -1,0 +1,21 @@
+# uwb_params.yaml
+# Parameters for UWB ranging simulation
+
+uwb:
+  effective_range: 15.0       # meters
+  noise_std: 0.2             # meters, Gaussian noise std dev
+  min_anchors_for_fix: 4     # minimum anchors for unique 3D fix (3 anchors is underdetermined in 3D)
+  anchor_deploy_on_trigger: true
+  deploy_visual_model: true   # spawn Gazebo model for each anchor
+
+  # Trilateration
+  trilateration:
+    method: least_squares     # least_squares | algebraic
+    max_iterations: 100
+    residual_threshold: 0.5
+
+  # Pose fusion
+  fusion:
+    aruco_lost_frames: 5      # frames without ArUco before switching to UWB
+    aruco_recover_frames: 3   # frames with ArUco before switching back
+    aruco_confidence_min: 0.3 # minimum ArUco confidence to trust

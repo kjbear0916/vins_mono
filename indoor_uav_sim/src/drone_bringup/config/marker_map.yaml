@@ -1,0 +1,99 @@
+# marker_map.yaml
+# marker_id = floor(1 digit) * 100 + room(1 digit)*10 + waypoint_index(1 digit)
+# Room 9 = stairwell/atrium. IDs 900..999 = survivor markers.
+#
+# Marker pose is the FLOOR-MOUNTED world pose (nadir camera reads floor
+# markers, spec section 5.5). z datum per floor = walking surface + 0.05:
+#   1F -> 0.25, 2F -> 3.25, 3F -> 6.25  (surface = storey*3 + 0.2)
+# Flight target altitudes are NOT these z values; see navigation_params.yaml.
+#
+# Stairwell markers: 109 sits on the solid F1 slab at the shaft centre
+# (x[-8,-6], y[-4,0]); 209/309 sit just EAST of the F2/F3 shaft opening so a
+# nadir camera re-acquires them after the vertical climb.
+
+markers:
+  # ===== 1F (walking surface z=0.2, marker datum 0.25) =====
+  # Room 0: corridor (markers along y=-1)
+  100: {x: -8.0, y: -1.0, z: 0.25, yaw: 0.0}
+  101: {x: -5.0, y: -1.0, z: 0.25, yaw: 0.0}
+  102: {x: -2.0, y: -1.0, z: 0.25, yaw: 0.0}
+  103: {x: 1.0,  y: -1.0, z: 0.25, yaw: 0.0}
+  104: {x: 4.0,  y: -1.0, z: 0.25, yaw: 0.0}
+  105: {x: 7.0,  y: -1.0, z: 0.25, yaw: 0.0}
+
+  # Room 1: Room A (west room strip)
+  110: {x: -8.0, y: -4.5, z: 0.25, yaw: 0.0}
+  111: {x: -6.0, y: -3.5, z: 0.25, yaw: 0.0}
+  112: {x: -8.0, y: -3.5, z: 0.25, yaw: 0.0}
+
+  # Room 2: Room B (east room strip)
+  120: {x: 6.0,  y: -3.5, z: 0.25, yaw: 0.0}
+  121: {x: 8.0,  y: -4.5, z: 0.25, yaw: 0.0}
+  122: {x: 6.0,  y: -4.5, z: 0.25, yaw: 0.0}
+
+  # Room 3: open area (centre room strip)
+  130: {x: 0.0,  y: -3.5, z: 0.25, yaw: 0.0}
+  131: {x: 2.0,  y: -4.5, z: 0.25, yaw: 0.0}
+  132: {x: 0.0,  y: -4.5, z: 0.25, yaw: 0.0}
+
+  # Room 9: stairwell entry (1F, shaft centre, solid slab)
+  109: {x: -7.0, y: -2.0, z: 0.25, yaw: 1.5708}
+
+  # ===== 2F (marker datum 3.25) =====
+  # Room 0: corridor
+  200: {x: -8.0, y: -1.0, z: 3.25, yaw: 0.0}
+  201: {x: -5.0, y: -1.0, z: 3.25, yaw: 0.0}
+  202: {x: -2.0, y: -1.0, z: 3.25, yaw: 0.0}
+  203: {x: 1.0,  y: -1.0, z: 3.25, yaw: 0.0}
+  204: {x: 4.0,  y: -1.0, z: 3.25, yaw: 0.0}
+  205: {x: 7.0,  y: -1.0, z: 3.25, yaw: 0.0}
+
+  # Room 1: Room A
+  210: {x: -8.0, y: -4.5, z: 3.25, yaw: 0.0}
+  211: {x: -6.0, y: -3.5, z: 3.25, yaw: 0.0}
+  212: {x: -8.0, y: -3.5, z: 3.25, yaw: 0.0}
+
+  # Room 2: Room B
+  220: {x: 6.0,  y: -3.5, z: 3.25, yaw: 0.0}
+  221: {x: 8.0,  y: -4.5, z: 3.25, yaw: 0.0}
+  222: {x: 6.0,  y: -4.5, z: 3.25, yaw: 0.0}
+
+  # Room 3: open area
+  230: {x: 0.0,  y: -3.5, z: 3.25, yaw: 0.0}
+  231: {x: 2.0,  y: -4.5, z: 3.25, yaw: 0.0}
+  232: {x: 0.0,  y: -4.5, z: 3.25, yaw: 0.0}
+
+  # Room 9: stairwell entry (2F, just east of shaft opening)
+  209: {x: -6.5, y: -1.0, z: 3.25, yaw: 1.5708}
+
+  # ===== 3F (marker datum 6.25) =====
+  # Room 0: corridor
+  300: {x: -8.0, y: -1.0, z: 6.25, yaw: 0.0}
+  301: {x: -5.0, y: -1.0, z: 6.25, yaw: 0.0}
+  302: {x: -2.0, y: -1.0, z: 6.25, yaw: 0.0}
+  303: {x: 1.0,  y: -1.0, z: 6.25, yaw: 0.0}
+  304: {x: 4.0,  y: -1.0, z: 6.25, yaw: 0.0}
+  305: {x: 7.0,  y: -1.0, z: 6.25, yaw: 0.0}
+
+  # Room 1: Room A
+  310: {x: -8.0, y: -4.5, z: 6.25, yaw: 0.0}
+  311: {x: -6.0, y: -3.5, z: 6.25, yaw: 0.0}
+  312: {x: -8.0, y: -3.5, z: 6.25, yaw: 0.0}
+
+  # Room 2: Room B
+  320: {x: 6.0,  y: -3.5, z: 6.25, yaw: 0.0}
+  321: {x: 8.0,  y: -4.5, z: 6.25, yaw: 0.0}
+  322: {x: 6.0,  y: -4.5, z: 6.25, yaw: 0.0}
+
+  # Room 3: open area
+  330: {x: 0.0,  y: -3.5, z: 6.25, yaw: 0.0}
+  331: {x: 2.0,  y: -4.5, z: 6.25, yaw: 0.0}
+  332: {x: 0.0,  y: -4.5, z: 6.25, yaw: 0.0}
+
+  # Room 9: stairwell entry (3F, just east of shaft opening)
+  309: {x: -6.5, y: -1.0, z: 6.25, yaw: 1.5708}
+
+  # ===== Survivor markers (900..999) =====
+  901: {x: -7.5, y: -4.2, z: 0.25, yaw: 0.0}
+  902: {x: 7.5,  y: -4.2, z: 3.25, yaw: 0.0}
+  903: {x: 1.0,  y: -4.2, z: 6.25, yaw: 0.0}
