@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>pose_fusion</name>
+  <version>1.0.0</version>
+  <description>Fusion of ArUco and UWB pose estimates with confidence-based switching</description>
+  <maintainer email="dev@disaster-drone.sim">disaster_drone</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclpy</depend>
+  <depend>geometry_msgs</depend>
+  <depend>drone_msgs</depend>
+  <depend>numpy</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

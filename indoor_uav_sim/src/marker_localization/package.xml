@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>marker_localization</name>
+  <version>1.0.0</version>
+  <description>ArUco marker detection and pose estimation</description>
+  <maintainer email="dev@disaster-drone.sim">disaster_drone</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>drone_msgs</depend>
+  <depend>opencv-contrib-python</depend>
+  <depend>numpy</depend>
+  <depend>PyYAML</depend>
+  <depend>transforms3d</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
