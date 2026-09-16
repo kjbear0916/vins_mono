@@ -1,0 +1,62 @@
+# Same services, bridge networking + published UDP ports for Docker Desktop
+# (macOS/Windows) where host networking is not available.
+# Usage: docker compose -f docker-compose.bridge.yml up
+
+x-disaster-base: &disaster-base
+  build: .
+  environment: &base-env
+    - DISPLAY=${DISPLAY:-:0}
+    - ROS_DOMAIN_ID=0
+    - PYTHONUNBUFFERED=1
+    - GZ_SIM_RESOURCE_PATH=/workspace/disaster_drone_ws/src/drone_bringup/models:/workspace/disaster_drone_ws/src/drone_bringup/worlds:/opt/PX4-Autopilot/Tools/simulation/gz/models
+  volumes: &base-volumes
+    - ./src:/workspace/disaster_drone_ws/src
+    - ./tools:/workspace/disaster_drone_ws/tools
+    - ./artifacts:/workspace/disaster_drone_ws/artifacts
+    - ./logs:/workspace/disaster_drone_ws/logs
+    - /tmp/.X11-unix:/tmp/.X11-unix:rw
+  ipc: host
+  init: true
+
+services:
+  gazebo:
+    <<: *disaster-base
+    container_name: disaster_gazebo
+    ports:
+      - "14540:14540/udp"
+      - "14557:14557/udp"
+    networks: [drone_net]
+    command: >
+      bash -c "
+        set -euo pipefail
+        ln -sfn /workspace/disaster_drone_ws/src/drone_bringup/worlds/$${PX4_GZ_WORLD}.sdf
+              /opt/PX4-Autopilot/Tools/simulation/gz/worlds/$${PX4_GZ_WORLD}.sdf
+        cd /opt/PX4-Autopilot
+        export PX4_GZ_WORLD=$${PX4_GZ_WORLD:-three_floor_building}
+        make px4_sitl gz_x500
+      "
+
+  ros_nodes:
+    <<: *disaster-base
+    container_name: disaster_ros_nodes
+    depends_on:
+      - gazebo
+    networks: [drone_net]
+    command: >
+      bash -c "
+        set -euo pipefail
+        sleep 5
+        source /workspace/disaster_drone_ws/install/setup.bash || true
+        ros2 launch drone_bringup full_system.launch.py
+      "
+
+  dev:
+    <<: *disaster-base
+    container_name: disaster_dev
+    profiles: ["dev"]
+    networks: [drone_net]
+    command: ["bash"]
+
+networks:
+  drone_net:
+    driver: bridge

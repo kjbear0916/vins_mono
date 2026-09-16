@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Force Garden libs for commands that must talk to the gz-sim7/PX4 transport13 stack.
+# - gz sim  -> libgz-sim  major 7 (garden), 8 (harmonic)
+# - gz model-> libgz-gui  major 7 (garden), 8 (harmonic)
+# - gz topic/service/log -> libgz-transport major 13 (garden), 14 (harmonic)
+set -u
+first="${1:-}"
+case "$first" in
+  sim|model)
+    shift
+    exec /usr/bin/gz "$first" --force-version 7 "$@"
+    ;;
+  topic|service|log)
+    shift
+    exec /usr/bin/gz "$first" --force-version 13 "$@"
+    ;;
+  *)
+    exec /usr/bin/gz "$@"
+    ;;
+esac

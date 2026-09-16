@@ -1,0 +1,10 @@
+.git
+.gitignore
+**/__pycache__
+**/*.pyc
+phase0
+logs
+artifacts
+*.log
+.tmp
+.DS_Store
