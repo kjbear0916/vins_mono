@@ -98,6 +98,11 @@ PC 連上該 AP（無網際網路的純 AP），測通：
      約 1/4 畫面）。
   5. 曝光/對比穩定，無運動模糊（錄影時慢移）。
 
+**畫面右側 REQ 面板**逐項列出完成要求：`edge-fill`(外角貼邊<24px)、
+`tilt>=2`、`sample n/30`、`NEAR/MID/FAR`、`GRID 3x3`；**全綠才會自動存檔
+並列印 gate 明細 + `OK PASS`**。按 q 提前離開會在終端印出 MISSING 清單
+（如缺 `edge-fill(near)`=棋盤沒近到貼邊，回去補拍）。
+
 即時引導錄影：
   python vo/calibrate_guided.py --url http://192.168.4.1:81/stream ^
       --pattern 5x4 --square 25 --samples 30 ^
@@ -118,8 +123,9 @@ PC 連上該 AP（無網際網路的純 AP），測通：
     → --z-hint 是錄影當下的板距獨立估計（例如 rig 幾何 0.8m）；
       fx 錯誤時 median solvePnP z 會偏離（fx 越高 z 越低）。
 
-完成判據：v2 npz 產生、calib_sanity 全 PASS、fx 落在合理帶（約 282-900，
-以 59°~20° HFOV 合理區間 + z-hint 交叉驗證後定案）。
+完成判據：v2 npz 產生、**`calibrate_guided` 印出 `OK PASS`**、calib_sanity 全
+PASS、fx 落在合理帶（約 282-900，以 59°~20° HFOV 合理區間 + z-hint 交叉
+驗證後定案）。
 
 ---
 

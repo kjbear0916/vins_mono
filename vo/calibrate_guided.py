@@ -6,20 +6,29 @@ in-plane/out-of-plane tilt), and only keeps a sample when it adds a
 combination not seen yet -- so you move the board until the HUD is all
 green instead of shooting hundreds of near-duplicate poses.
 
-HUD (upscaled window):
-  SAMPLE n/30        how many unique poses kept
-  + z: 近/中/遠       depth buckets still missing
-  + loc 3x3 dots     green = a pose covered that part of the frame
-  + tilt meter       wide out each axis -> more tilt diversity
-  when a frame ADDS a sample it flashes "ADD" in green; when the set is
-  complete it saves the NPZ and prints RMS automatically.
+The right-hand REQ panel lists every requirement that must be completed
+before the tool auto-saves and prints OK PASS:
+
+  edge-fill      at least one pose with an outer corner < ~24px from a
+                 frame edge (obs#0024: without near/edge coverage fx
+                 escapes to ~2000 and cannot separate from distortion)
+  tilt >=2       at least two poses tilted >=~30deg out of the image plane
+  sample n/N     N unique poses kept (default 30)
+  NEAR/MID/FAR   depth buckets: NEAR = board spans >=70% of frame width,
+                 MID 35-70%, FAR <35%
+  GRID 3x3       every 3x3 frame-location cell covered
+
+Left pane = live camera + board + counter + a one-line hint of what to add.
+Right pane = REQ checklist; when every dot is green the tool auto-saves,
+calibrates, and prints gate lines followed by a final OK PASS / FAIL.
 
 Controls:
-  q / ESC   quit now and calibrate with samples so far
+  q / ESC   quit now and calibrate with samples so far (prints what's missing)
   a         force-add current pose even if it duplicates a bucket
   s         save the raw current frame to --save-dir
 """
 import argparse
+import math
 import os
 import re
 import time
@@ -27,7 +36,13 @@ import time
 import cv2
 import numpy as np
 
-FX_GUESS = 380.0  # true fx (from printed/measured 30mm-board run); z binning
+FX_GUESS = 380.0  # rough fx used for ppm->z display only; bins are pixel-based
+FONT = cv2.FONT_HERSHEY_SIMPLEX
+GREEN = (60, 215, 60)
+RED = (60, 60, 255)
+WHITE = (255, 255, 255)
+YELLOW = (0, 220, 255)
+GRAY = (200, 200, 200)
 
 
 def parse_pattern(s):
@@ -108,6 +123,77 @@ def board_pose(cc, pattern, square=30.0):
     return z_cm, ang, tilt01, (min(cx, 2), min(cy, 2))
 
 
+def depth_label(mn, mx, frame_w=320):
+    span = float(max(mx[0] - mn[0], mx[1] - mn[1]))
+    ratio = span / frame_w
+    if ratio >= 0.70:
+        return "NEAR"
+    if ratio >= 0.35:
+        return "MID"
+    return "FAR"
+
+
+def corner_margin(xys):
+    return min(float(xys[:, 0].min()), 319.0 - xys[:, 0].max(),
+               float(xys[:, 1].min()), 239.0 - xys[:, 1].max())
+
+
+def missing_list(edge_near, tilt_count, tilt_need, depth_bins,
+                 uncovered_cells, n_add, samples_n):
+    m = []
+    if not edge_near:
+        m.append("edge-fill(near)")
+    if tilt_count < tilt_need:
+        m.append("tilt %d/%d" % (tilt_count, tilt_need))
+    for k, v in depth_bins.items():
+        if not v:
+            m.append(k)
+    if uncovered_cells:
+        m.append("grid cells %d" % len(uncovered_cells))
+    if n_add < samples_n:
+        m.append("sample %d/%d" % (n_add, samples_n))
+    return m
+
+
+def draw_req_panel(panel, n_add, samples_n, edge_near, tilt_count, tilt_need,
+                   depth_bins, uncovered_cells, missing):
+    panel[:] = (22, 22, 22)
+    y = 16
+    cv2.putText(panel, "REQUIRED: all green -> SAVE",
+                (6, y), FONT, 0.4, WHITE, 1)
+    y += 20
+
+    def row(label, ok, fold=(FONT, 0.4)):
+        nonlocal y
+        col = GREEN if ok else GRAY
+        cv2.circle(panel, (12, y + 3), 3, col, -1)
+        cv2.putText(panel, label, (22, y + 8), fold[0], fold[1], col, 1)
+        y += 18
+
+    row("edge-fill (corner<24px)", edge_near)
+    row("tilt >=%d (%d)" % (tilt_need, tilt_count), tilt_count >= tilt_need)
+    row("sample %d/%d" % (n_add, samples_n), n_add >= samples_n)
+    y += 2
+    for k, v in depth_bins.items():
+        row(k, v)
+    y += 4
+    cv2.putText(panel, "GRID 3x3", (6, y), FONT, 0.4, WHITE, 1)
+    y += 10
+    ox, oy = 12, y
+    for r in range(3):
+        for c in range(3):
+            col = GREEN if (c, r) not in uncovered_cells else RED
+            cv2.circle(panel, (ox + c * 12 + 4, oy + r * 12 + 4), 4, col, -1)
+    y += 3 * 12 + 10
+    if not missing:
+        cv2.putText(panel, "ALL PASS", (6, y), FONT, 0.6, GREEN, 2)
+    else:
+        cv2.putText(panel, "MISSING:", (6, y), FONT, 0.42, YELLOW, 1)
+        for i, mline in enumerate(missing[:3]):
+            cv2.putText(panel, mline[:21], (6, y + 14 + i * 14),
+                        FONT, 0.34, YELLOW, 1)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--url", default=r"http://192.168.4.1:81/stream")
@@ -117,9 +203,14 @@ def main():
     ap.add_argument("--out", default=r"D:\Things\vo\calibration_esp32_qvga_v2.npz")
     ap.add_argument("--save-dir", default=r"D:\Things\vo\guided_raw")
     ap.add_argument("--blur-min", type=float, default=30.0)
+    ap.add_argument("--edge-px", type=float, default=24.0,
+                    help="outer-corner-to-edge margin counting as near-fill (px)")
+    ap.add_argument("--tilt-min", type=float, default=0.12,
+                    help="tilt01 threshold for a tilted pose (~30deg)")
+    ap.add_argument("--tilt-count", type=int, default=2,
+                    help="how many tilted poses are required")
     ap.add_argument("--z-hint", type=float, default=None,
-                    help="if set, stop only after all 9 loc cells AND z bins "
-                         "are covered (then cross-check vs this distance)")
+                    help="metres; final gate cross-checks median board distance")
     a = ap.parse_args()
 
     os.makedirs(a.save_dir, exist_ok=True)
@@ -130,11 +221,13 @@ def main():
 
     win = "guided calib -- q quit, a force-add, s save"
     cv2.namedWindow(win, cv2.WINDOW_NORMAL)
-    cv2.resizeWindow(win, 960, 720)
+    cv2.resizeWindow(win, 1180, 600)
 
-    samples = {}          # bucket-tuple -> (obj_points entry, frame jpg)
+    samples = {}          # bucket-tuple -> (obj_points entry, frame corners, z_cm)
     uncovered_cells = {(c, r) for r in range(3) for c in range(3)}
-    z_bins = {"近20-35": False, "中35-50": False, "遠50-65": False}
+    depth_bins = {"NEAR": False, "MID": False, "FAR": False}
+    edge_near = False
+    tilt_count = 0
     n_add = 0
     n_seen = 0
     saved = 0
@@ -157,82 +250,70 @@ def main():
                 gray, cc, (11, 11), (-1, -1),
                 (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001))
             z_cm, ang, tilt01, cell = board_pose(cc, pattern, a.square)
-            zb = "近20-35" if z_cm < 35 else ("中35-50" if z_cm < 50 else "遠50-65")
+            depth = depth_label(cc.reshape(-1, 2).min(axis=0),
+                                cc.reshape(-1, 2).max(axis=0))
 
-            # ---- quality gates: only a clean, in-frame, well-sized board
-            # ---- is allowed to enter the sample pool
             xys = cc.reshape(-1, 2)
             mn, mx = xys.min(axis=0), xys.max(axis=0)
             in_frame = mn[0] >= 2 and mx[0] <= 317 and mn[1] >= 2 and mx[1] <= 237
             ppm_ok = 10.0 <= (FX_GUESS * a.square / (z_cm * 10.0)) <= 38.0
             gate_ok = is_sharp and in_frame and ppm_ok
             if gate_ok:
-                bucket = (zb, round(ang / 22.5) * 22.5, round(tilt01 * 8) / 8, cell)
+                bucket = (depth, round(ang / 22.5) * 22.5,
+                          round(tilt01 * 8) / 8, cell)
             else:
                 bucket = None
 
             added = False
             if gate_ok and bucket not in samples:
-                samples[bucket] = (obj.copy(), cc.copy())
+                samples[bucket] = (obj.copy(), cc.copy(), z_cm)
                 n_add += 1
                 uncovered_cells.discard(cell)
-                z_bins[zb] = True
+                depth_bins[depth] = True
+                if corner_margin(xys) <= a.edge_px:
+                    edge_near = True
+                if tilt01 >= a.tilt_min:
+                    tilt_count += 1
                 added = True
-                last_stat = "ADD %s z=%.0fcm tilt=%.2f cell%s" % (
-                    zb, z_cm, tilt01, cell)
+                last_stat = "ADD %s z=%.0fcm tilt=%.2f edge=%.0fpx cell%s" % (
+                    depth, z_cm, tilt01, corner_margin(xys), cell)
             elif not gate_ok:
                 reason = ("" if is_sharp else "blur ") + (
                     "" if in_frame else "off-frame ") + (
                     "" if ppm_ok else "bad-size ")
-                last_stat = "reject(%s)%s z=%.0fcm" % (reason, zb, z_cm)
+                last_stat = "reject(%s)%s z=%.0fcm" % (reason, depth, z_cm)
             else:
                 last_stat = "dup %s z=%.0fcm tilt=%.2f cell%s" % (
-                    zb, z_cm, tilt01, cell)
+                    depth, z_cm, tilt01, cell)
 
             cv2.drawChessboardCorners(img, pattern, cc, found)
         else:
             last_stat = "no board"
 
-        # ---- HUD ----
+        missing = missing_list(edge_near, tilt_count, a.tilt_count, depth_bins,
+                               uncovered_cells, n_add, a.samples)
+        all_ok = not missing
+
         cv2.rectangle(img, (0, 0), (319, 12), (0, 0, 0), -1)
-        cv2.putText(img, "SAMPLE %d/%d fps=%.0f blur=%.0f" % (
-            n_add, a.samples, fps, blur),
-            (4, 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 255, 0), 1)
+        cv2.putText(img, "SAMPLE %d/%d fps=%.0f blur=%.0f %s" % (
+            n_add, a.samples, fps, blur, "ALL-PASS!" if all_ok else ""),
+            (4, 10), FONT, 0.35, GREEN if all_ok else WHITE, 1)
 
-        # 3x3 location dots
-        ox, oy = 4, 20
-        for cy in range(3):
-            for cx in range(3):
-                done = (cx, cy) not in uncovered_cells
-                col = (60, 215, 60) if done else (60, 60, 255)
-                cv2.circle(img, (ox + cx * 12 + 6, oy + cy * 12 + 6),
-                           4, col, -1)
-        cv2.putText(img, "cells", (ox + 46, oy + 6),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 255, 255), 1)
+        panel = np.zeros((img.shape[0], 152, 3), np.uint8)
+        draw_req_panel(panel, n_add, a.samples, edge_near, tilt_count,
+                       a.tilt_count, depth_bins, uncovered_cells, missing)
+        canvas = np.hstack((img, panel))
 
-        # z bins
-        yy = 46
-        for i, (k, v) in enumerate(z_bins.items()):
-            col = (60, 215, 60) if v else (200, 200, 60)
-            cv2.putText(img, k, (4, yy + i * 12),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.35, col, 1)
+        if all_ok:
+            cv2.rectangle(canvas, (0, 0), (canvas.shape[1] - 1,
+                                           canvas.shape[0] - 1),
+                          GREEN, 3)
+        cv2.putText(canvas, last_stat[:60], (4, 130),
+                    FONT, 0.4, WHITE, 1)
+        cv2.putText(canvas, "q quit | a force-add | s save", (4, 146),
+                    FONT, 0.35, GRAY, 1)
 
-        # hint + status
-        need_z = [k for k, v in z_bins.items() if not v]
-        if uncovered_cells or need_z:
-            hint = "MOVE: 缺 " + ", ".join(need_z)
-            if uncovered_cells:
-                hint += " + 補 " + ",".join(
-                    "L%dT%d" % (c + 1, r + 1) for (c, r)
-                    in sorted(uncovered_cells))
-            cv2.putText(img, hint, (4, 100), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.4, (0, 220, 255), 1)
-        cv2.putText(img, last_stat[:54], (4, 114),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
-        cv2.putText(img, "q quit | a force-add | s save", (4, 128),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.35, (128, 128, 128), 1)
-
-        cv2.imshow(win, img)
+        cv2.imshow(win, canvas)
         key = cv2.waitKey(1) & 0xFF
         if key in (27, ord("q")):
             break
@@ -245,16 +326,26 @@ def main():
         if key == ord("a") and bucket is not None:
             bucket = tuple(("force",) + bucket[1:])
             if bucket not in samples:
-                samples[bucket] = (obj.copy(), cc.copy())
+                samples[bucket] = (obj.copy(), cc.copy(), z_cm)
                 n_add += 1
+                depth_bins[depth] = True
+                if corner_margin(xys) <= a.edge_px:
+                    edge_near = True
+                if tilt01 >= a.tilt_min:
+                    tilt_count += 1
                 last_stat = "FORCE-ADD"
                 print(f"force add -> {n_add} samples", flush=True)
 
-        if n_add >= a.samples and not uncovered_cells and not need_z:
+        if all_ok:
             print("ALL REQUIREMENTS MET - calibrating...", flush=True)
             break
 
     cv2.destroyAllWindows()
+
+    missing = missing_list(edge_near, tilt_count, a.tilt_count, depth_bins,
+                           uncovered_cells, n_add, a.samples)
+    if missing:
+        print("WARNING: quit before completing: %s" % "; ".join(missing))
 
     N = len(samples)
     if N < 5:
@@ -273,11 +364,41 @@ def main():
     print("\nunique poses=%d  RMS(pix)=%.4f" % (N, rms))
     print("K =\n%s" % K)
     print("dist = %s" % np.round(dist.ravel(), 6))
+
+    fx = float(K[0, 0])
+    cx = float(K[0, 2])
+    hfov = 2.0 * math.degrees(math.atan(cx / max(1e-6, fx)))
+    rms_ok = rms < 2.0
+    fx_ok = 200.0 <= fx <= 1200.0
+    hfov_ok = 25.0 <= hfov <= 75.0
+    z_ok = True
+    if a.z_hint is not None:
+        zs = np.median([v[2] for v in samples.values()]) / 100.0
+        z_ok = 0.5 * a.z_hint <= zs <= 2.0 * a.z_hint
+        print("median board z ~ %.2f m (z-hint %.2f m) -> %s" % (
+            zs, a.z_hint, "consistent" if z_ok else "DRIFT"))
+
+    def gate(name, ok):
+        print("  [%s] %s" % ("PASS" if ok else "FAIL", name))
+
+    gate("rms %.3f < 2.0" % rms, rms_ok)
+    gate("fx  %.0f in [200,1200]" % fx, fx_ok)
+    gate("HFOV %.1f deg in [25,75]" % hfov, hfov_ok)
+    if a.z_hint is not None:
+        gate("z-hint %.1f m" % a.z_hint, z_ok)
+
+    all_pass = rms_ok and fx_ok and hfov_ok and z_ok
     np.savez(a.out, camera_matrix=K, dist_coeffs=dist, rms=rms,
              image_size=np.array([320, 240]),
              pattern=np.array(pattern), square=np.array([a.square]))
     print("saved", a.out)
-    return 0
+    if all_pass:
+        print("\n====== OK PASS ======")
+        print("next: python vo/calib_sanity.py %s --clip <clip> --z-hint <m>" % a.out)
+        return 0
+    print("\n====== RESULT: FAIL ======")
+    print("redo D: board must reach the frame edges (near-fill), keep zones/tilt")
+    return 2
 
 
 if __name__ == "__main__":
