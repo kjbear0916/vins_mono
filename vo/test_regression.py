@@ -419,5 +419,39 @@ class TestIndoorGps(unittest.TestCase):
                         % (got, fx))
 
 
+class TestCalibrateGuidedGates(unittest.TestCase):
+    """calibrate_guided REQ gating (obs 0024): depth buckets, edge-fill
+    margin and missing-list composition are pure functions -- pin them so
+    the guided HUD cannot regress to a zone-only gate that lets fx escape."""
+
+    def test_depth_buckets(self):
+        import numpy as _np
+        from calibrate_guided import depth_label as dl
+        for mn, mx, want in (((0, 100), (256, 160), "NEAR"),
+                             ((30, 60), (190, 120), "MID"),
+                             ((80, 110), (150, 130), "FAR")):
+            xys = _np.array([(mn[0], mn[1]), (mx[0], mx[1])], float)
+            self.assertEqual(dl(xys.min(axis=0), xys.max(axis=0)), want)
+
+    def test_corner_margin_is_min_edge_distance(self):
+        import numpy as _np
+        from calibrate_guided import corner_margin as cm
+        xys = _np.array([[5.0, 3.0], [310.0, 230.0], [150.0, 100.0]])
+        self.assertEqual(cm(xys), 3.0)
+
+    def test_missing_list_composes_requirements(self):
+        from calibrate_guided import missing_list as ml
+        done = ml(True, 2, 2, {"NEAR": True, "MID": True, "FAR": True},
+                  set(), 30, 30)
+        self.assertEqual(done, [])
+        miss = ml(False, 1, 2, {"NEAR": False, "MID": True, "FAR": True},
+                  {(0, 0), (2, 2)}, 12, 30)
+        self.assertIn("edge-fill(near)", miss)
+        self.assertIn("tilt 1/2", miss)
+        self.assertIn("NEAR", miss)
+        self.assertIn("grid cells 2", miss)
+        self.assertIn("sample 12/30", miss)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -161,6 +161,17 @@ bracket 後,0.15 差距 2.59° 合法 PASS,0.30 才觸發 VO 追蹤崩壞 FAIL)�
      E sanity→F 量座標入 `marker_positions.json`→G validation,全程照 RUNBOOK。
      regression 09-18 實跑 **26/26 PASS**(288.6s)。
 
+(12) **09-23(軟體補完 obs #0024 的 HUD「邊緣覆蓋」限制)**:`calibrate_guided.py`
+     升級為 **REQ 面板門控**——右側面板逐項列出必須完成條件(`edge-fill`(外角距
+     邊緣 <24px)、`tilt >=2`(≈30° 斜)、`sample n/30`、`NEAR/MID/FAR`、
+     `GRID 3x3`),全綠才自動存檔、跑 8 條閘門(rms<2.0、fx∈[200,1200]、
+     HFOV∈[25,75]、z-hint 交叉驗證)並輸出 **`OK PASS`/`FAIL`**;fx/HFOV 閘門
+     剛好拒收 >900 的壞 focal 族(與 FOV 篩子一致),`--out` 預設即
+     `calibration_esp32_qvga_v2.npz`。純函數門控(depth_label/corner_margin/
+     missing_list)以 **3 項新測試**收進 `test_regression.py`,**實跑
+     29/29 全過**(125.9s);報告 v1.2 之 26/26 保留為 09-18 快照,`HARDWARE_
+     PHASE_RUNBOOK.md` 完成條件同步改為「REQ 全綠 + OK PASS」。
+
 ---
 
 ## 接下來的建議順序
