@@ -1,0 +1,9 @@
+# .gitignore for VINS-Mono research project
+data/rosbags/*.bag
+data/results/*.json
+data/results/*.csv
+data/plots/*
+*.pyc
+__pycache__/
+.vscode/
+*.log

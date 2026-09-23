@@ -1,0 +1,48 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="iso">
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+    <physics type="ode">
+      <max_step_size>0.002</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>500</real_time_update_rate>
+    </physics>
+    <model name="iris">
+      <pose>0 0 0.1 0 0 0</pose>
+      <link name='/imu_link'>
+        <inertial>
+          <mass>0.015</mass>
+          <inertia>
+            <ixx>1e-5</ixx>
+            <iyy>1e-5</iyy>
+            <izz>1e-5</izz>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyz>0</iyz>
+          </inertia>
+        </inertial>
+      </link>
+      <plugin name='groundtruth_plugin' filename='libgazebo_groundtruth_plugin.so'>
+        <robotNamespace>iris</robotNamespace>
+        <bodyName>/imu_link</bodyName>
+      </plugin>
+      <plugin name='imu_plugin' filename='libgazebo_imu_plugin.so'>
+        <robotNamespace>iris</robotNamespace>
+        <linkName>/imu_link</linkName>
+      </plugin>
+      <plugin name='mag_plugin' filename='libgazebo_magnetometer_plugin.so'>
+        <robotNamespace>iris</robotNamespace>
+        <linkName>/imu_link</linkName>
+      </plugin>
+      <plugin name='baro_plugin' filename='libgazebo_barometer_plugin.so'>
+        <robotNamespace>iris</robotNamespace>
+        <linkName>/imu_link</linkName>
+      </plugin>
+    </model>
+  </world>
+</sdf>

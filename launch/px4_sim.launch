@@ -1,0 +1,33 @@
+<launch>
+  <!-- PX4 SITL + Gazebo launch with custom lighting world -->
+  <!-- Usage: roslaunch vins_research px4_sim.launch world:=light_low -->
+
+  <arg name="world" default="light_high"/>
+  <arg name="sdf" default="$(find px4)/Tools/sitl_gazebo/models/iris/iris.sdf"/>
+  <arg name="x" default="0"/>
+  <arg name="y" default="0"/>
+  <arg name="z" default="0"/>
+  <arg name="R" default="0"/>
+  <arg name="P" default="0"/>
+  <arg name="Y" default="0"/>
+
+  <arg name="config" default="$(find vins_research)/config/sim_config.yaml"/>
+
+  <!-- Actually use PX4's dedicated launch structure -->
+  <include file="$(find px4)/launch/mavros_posix_sitl.launch">
+    <arg name="world" value="$(arg world)"/>
+    <arg name="sdf" value="$(arg sdf)"/>
+    <arg name="x" value="$(arg x)"/>
+    <arg name="y" value="$(arg y)"/>
+    <arg name="z" value="$(arg z)"/>
+    <arg name="R" value="$(arg R)"/>
+    <arg name="P" value="$(arg P)"/>
+    <arg name="Y" value="$(arg Y)"/>
+  </include>
+
+  <!-- VINS-Mono -->
+  <include file="$(find vins_mono)/launch/vins_mono.launch">
+    <arg name="config_file" value="$(arg config)"/>
+  </include>
+
+</launch>
