@@ -1,0 +1,51 @@
+version: "3.8"
+
+# 室內救災無人機模擬 — 雙 service 拆法 (規格 §4)
+# sitl : PX4 SITL + Gazebo Harmonic (headless 預設)
+# ros  : ROS2 Jazzy 節點 + ros_gz bridge + MAVSDK
+#
+# Linux host / WSL2 (Ubuntu 24.04) 上執行:
+#   docker compose build
+#   docker compose up sitl     # 終端機 A
+#   docker compose up ros      # 終端機 B
+# GUI 環境變數 (DISPLAY / WAYLAND / WSLg) 依實作自行注入, 見 .env.example
+
+services:
+  sitl:
+    build:
+      context: .
+      dockerfile: sitl.Dockerfile
+    container_name: disaster_sitl
+    privileged: true
+    ipc: host
+    network_mode: host
+    stdin_open: true
+    tty: true
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - HEADLESS=${HEADLESS:-1}
+      - PX4_SIM_MODEL=${PX4_SIM_MODEL:-building_x500}
+      - PX4_GZ_WORLD=${PX4_GZ_WORLD:-building}
+    volumes:
+      - ../:/root/disaster_drone_ws
+    command: [/root/disaster_drone_ws/docker/entrypoint_sitl.sh]
+
+  ros:
+    build:
+      context: .
+      dockerfile: ros.Dockerfile
+    container_name: disaster_ros
+    privileged: true
+    ipc: host
+    network_mode: host
+    stdin_open: true
+    tty: true
+    depends_on:
+      - sitl
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - HEADLESS=${HEADLESS:-1}
+      - PX4_SIM_MODEL=${PX4_SIM_MODEL:-building_x500}
+    volumes:
+      - ../:/root/disaster_drone_ws
+    command: [/root/disaster_drone_ws/docker/setup_ws.sh]

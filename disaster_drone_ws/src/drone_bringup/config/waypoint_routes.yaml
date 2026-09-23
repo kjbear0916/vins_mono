@@ -1,0 +1,155 @@
+floors:
+  - 1
+  - 2
+  - 3
+atrium_entry_room_code: 9
+floor_1:
+  -
+    type: 'marker'
+    id: 101
+  -
+    type: 'marker'
+    id: 102
+  -
+    type: 'marker'
+    id: 103
+  -
+    type: 'marker'
+    id: 104
+  -
+    type: 'marker'
+    id: 105
+  -
+    type: 'marker'
+    id: 106
+  -
+    type: 'marker'
+    id: 107
+  -
+    type: 'marker'
+    id: 108
+  -
+    type: 'marker'
+    id: 111
+  -
+    type: 'marker'
+    id: 112
+  -
+    type: 'marker'
+    id: 113
+  -
+    type: 'marker'
+    id: 114
+  -
+    type: 'marker'
+    id: 115
+  -
+    type: 'marker'
+    id: 116
+  -
+    type: 'marker'
+    id: 109
+  -
+    type: 'atrium_climb'
+    from_floor: 1
+    hold_xy: '[10.0, 5.0]'
+    exit_xy: '[10.0, 2.2]'
+    to_floor: 2
+floor_2:
+  -
+    type: 'marker'
+    id: 201
+  -
+    type: 'marker'
+    id: 202
+  -
+    type: 'marker'
+    id: 203
+  -
+    type: 'marker'
+    id: 204
+  -
+    type: 'marker'
+    id: 205
+  -
+    type: 'marker'
+    id: 206
+  -
+    type: 'marker'
+    id: 207
+  -
+    type: 'marker'
+    id: 208
+  -
+    type: 'marker'
+    id: 211
+  -
+    type: 'marker'
+    id: 212
+  -
+    type: 'marker'
+    id: 213
+  -
+    type: 'marker'
+    id: 214
+  -
+    type: 'marker'
+    id: 215
+  -
+    type: 'marker'
+    id: 216
+  -
+    type: 'marker'
+    id: 209
+  -
+    type: 'atrium_climb'
+    from_floor: 2
+    hold_xy: '[10.0, 5.0]'
+    exit_xy: '[10.0, 2.2]'
+    to_floor: 3
+floor_3:
+  -
+    type: 'marker'
+    id: 301
+  -
+    type: 'marker'
+    id: 302
+  -
+    type: 'marker'
+    id: 303
+  -
+    type: 'marker'
+    id: 304
+  -
+    type: 'marker'
+    id: 305
+  -
+    type: 'marker'
+    id: 306
+  -
+    type: 'marker'
+    id: 307
+  -
+    type: 'marker'
+    id: 308
+  -
+    type: 'marker'
+    id: 311
+  -
+    type: 'marker'
+    id: 312
+  -
+    type: 'marker'
+    id: 313
+  -
+    type: 'marker'
+    id: 314
+  -
+    type: 'marker'
+    id: 315
+  -
+    type: 'marker'
+    id: 316
+  -
+    type: 'marker'
+    id: 309

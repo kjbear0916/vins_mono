@@ -1,0 +1,79 @@
+%YAML:1.0
+
+#common parameters
+imu_topic: "/mavros/imu/data_raw"
+image_topic: "/iris_fpv_cam/usb_cam/image_raw"
+output_path: "/data/results/"
+
+#camera calibration (Gazebo fpv_cam: 320x240, hfov 1.047 => fx/fy 277.19)
+model_type: PINHOLE
+camera_name: sim_camera
+image_width: 320
+image_height: 240
+distortion_parameters:
+   k1: 0.0
+   k2: 0.0
+   p1: 0.0
+   p2: 0.0
+projection_parameters:
+   fx: 277.191356
+   fy: 277.191356
+   cx: 160.0
+   cy: 120.0
+
+# Extrinsic parameter between IMU and Camera.
+estimate_extrinsic: 0
+#Rotation from camera frame to imu frame, imu^R_cam (identity: co-located)
+extrinsicRotation: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [1.0, 0.0, 0.0,
+          0.0, 1.0, 0.0,
+          0.0, 0.0, 1.0]
+#Translation from camera frame to imu frame, imu^T_cam
+extrinsicTranslation: !!opencv-matrix
+   rows: 3
+   cols: 1
+   dt: d
+   data: [0.0, 0.0, 0.0]
+
+#feature tracker parameters
+max_cnt: 150
+min_dist: 30
+freq: 10
+F_threshold: 1.0
+show_track: 0
+equalize: 1
+fisheye: 0
+
+#optimization parameters
+max_solver_time: 0.04
+max_num_iterations: 8
+keyframe_parallax: 10.0
+
+#imu parameters
+acc_n: 0.1
+gyr_n: 0.01
+acc_w: 0.002
+gyr_w: 0.0003
+g_norm: 9.81
+
+#loop closure parameters
+loop_closure: 0
+load_previous_pose_graph: 0
+fast_relocalization: 0
+pose_graph_save_path: "/data/results/pose_graph/"
+
+#unsynchronization parameters
+estimate_td: 1
+td: 0.0
+
+#rolling shutter parameters
+rolling_shutter: 0
+rolling_shutter_tr: 0
+
+#visualization parameters
+save_image: 0
+visualize_imu_forward: 0
+visualize_camera_size: 0.4

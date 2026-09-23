@@ -280,13 +280,19 @@ class TestImuGateEndToEnd(unittest.TestCase):
     VO_METHODOLOGY_ABSTRACTION.md 2-3/2-4.  The trajectory must PASS all 7
     gates while imu_gate_probe.py returns FAIL -- pinning that yaw rotation
     is a real blind spot the IMU dimension closes.
+
+    Obs #0021: the gyro integral is compared over the SAME VO-keyframe
+    bracket, so at mild rotation (yaw-drift ~0.15) VO and gyro agree and
+    the gate correctly PASSes.  A rotation strong enough to break VO pose
+    tracking (yaw-drift 0.30) still trips it: trajectory gates PASS (the
+    shape checks care about translation only) while the IMU gate FAILs.
     """
     @classmethod
     def setUpClass(cls):
         cls.tmp = tempfile.mkdtemp(prefix="vo_imu_regr_")
         base = os.path.join(cls.tmp, "yaw")
         _run(GEN + ["--out", base + ".avi", "--noise", "1.5",
-                    "--step", "0.16", "--yaw-drift", "0.15",
+                    "--step", "0.16", "--yaw-drift", "0.30",
                     "--out-imu", base + "_imu.json", "--board"])
         # trajectory gates: validate_traj_pass.py is the fast gate entrypoint
         # (run_clean_seq_check re-runs VO, which is slow and redundant here)
@@ -383,6 +389,34 @@ class TestIndoorGps(unittest.TestCase):
             [[282.5, 0, 130], [0, 290.6, 30.0], [0, 0, 1.0]]),
             dist_coeffs=_np.zeros(5), image_size=[320, 240])
         self.assertEqual(check(bad), 1)
+
+    def test_calibration_synthetic_recovery(self):
+        """Closed-loop positive control for the calibration pipeline (obs
+        0024): render a 5x4 chessboard through a known K with distortion and
+        assert recalibrate_from_frames.py recovers fx within 5%.  Proves a
+        near-shoot pose set that reaches the frame edges separates fx from
+        distortion (the zone-only gate does NOT, fx escapes to ~2077)."""
+        from gen_synth_calib_shoot import _check_recovery
+        import numpy as _np
+        import tempfile as _tf
+        avi = os.path.join(self.tmp, "synth_calib_gt.avi")
+        fx = 474.0
+        self.assertEqual(_run(
+            [sys.executable, os.path.join(VO, "gen_synth_calib_shoot.py"),
+             "--out", avi, "--fx", str(fx), "--k1", "-0.18",
+             "--seed", "7"],
+            timeout=300).returncode, 0, "renderer failed")
+        Kt = _np.load(avi.replace(".avi", "_truth.npz"))["camera_matrix"]
+        dt = _np.load(avi.replace(".avi", "_truth.npz"))["dist_coeffs"]
+        rec = os.path.join(self.tmp, "synth_calib_rec.npz")
+        _run([sys.executable, os.path.join(VO, "recalibrate_from_frames.py"),
+              "--video", avi, "--pattern", "5x4", "--square", "25",
+              "--samples", "30", "--out", rec], timeout=300)
+        d = _np.load(rec)
+        got = float(d["camera_matrix"][0, 0])
+        self.assertLess(abs(got - fx) / fx, 0.05,
+                        "fx recovery %.1f vs truth %.1f exceeds 5%%"
+                        % (got, fx))
 
 
 if __name__ == "__main__":

@@ -2,12 +2,20 @@
 <sdf version="1.9">
   <world name="three_floor_building">
 
-    <plugin filename="gz-sim-physics" name="gz::sim::systems::Physics">
-      <gravity>0 0 -9.8</gravity>
-    </plugin>
-    <plugin filename="gz-sim-user-commands" name="gz::sim::systems::UserCommands"/>
-    <plugin filename="gz-sim-scene-broadcaster" name="gz::sim::systems::SceneBroadcaster"/>
+    <gravity>0 0 -9.8</gravity>
+    <physics name="default_physics" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
     <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact"/>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+    <plugin filename="gz-sim-air-pressure-system" name="gz::sim::systems::AirPressure"/>
+    <plugin filename="gz-sim-air-speed-system" name="gz::sim::systems::AirSpeed"/>
+    <plugin filename="gz-sim-navsat-system" name="gz::sim::systems::NavSat"/>
+    <plugin filename="gz-sim-magnetometer-system" name="gz::sim::systems::Magnetometer"/>
     <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
       <render_engine>ogre2</render_engine>
     </plugin>
@@ -27,6 +35,14 @@
       <specular>0.2 0.2 0.2 1</specular>
       <direction>-0.5 0.1 -0.9</direction>
     </light>
+
+  <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <world_frame_orientation>ENU</world_frame_orientation>
+      <latitude_deg>39.9042</latitude_deg>
+      <longitude_deg>116.4074</longitude_deg>
+      <elevation>0</elevation>
+    </spherical_coordinates>
 
   <light type="point" name="pt_1F">
     <pose>0 0 2.9 0 0 0</pose>

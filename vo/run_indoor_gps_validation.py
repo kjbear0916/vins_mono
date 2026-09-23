@@ -162,7 +162,7 @@ def run_envelope():
                 worsts.append(float(np.linalg.norm(pos - p_c) * 1000))
             worst_per_sigma.append(int(round(max(worsts))))
         rows.append((d, int(round(px_size)), *worst_per_sigma))
-    return depths, sigmas, rows
+    return depths, sigmas, rows, N
 
 
 # ── main ───────────────────────────────────────────────────────────────
@@ -194,8 +194,9 @@ def main():
     print("overall: %s" % ("ALL PASS" if all_pass else "FAILURES"))
 
     # ── pose-error envelope sweep ──────────────────────────────────────
-    print("\n--- pose error envelope (15 cm marker, yaw 8°, N=%d) ---" % 12)
-    depths, sigmas, rows = run_envelope()
+    depths, sigmas, rows, n_trials = run_envelope()
+    print("\n--- pose error envelope (15 cm marker, yaw 8°, N=%d) ---"
+          % n_trials)
     colw = [10, 8] + [10] * len(sigmas)
     hdr = "depth(m)".ljust(colw[0]) + "px_size".ljust(colw[1])
     for σ in sigmas:

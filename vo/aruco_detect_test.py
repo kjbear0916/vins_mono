@@ -47,7 +47,7 @@ def main():
 
     det = make_detector(a.dict)
 
-    if a.snapshot <= 0 and not any(ch in a.url for ch in (".png", ".jpg")):
+    if not any(ch in a.url for ch in (".png", ".jpg")):
         from video_source import create_source
         src = create_source("esp32", url=a.url)
     else:

@@ -12,6 +12,8 @@ set(msg_files
   "msg/SurvivorReport.msg"
   "msg/MissionStatus.msg"
   "msg/FusedPose.msg"
+  "msg/AnchorDeployment.msg"
+  "msg/LoomingThreat.msg"
 )
 
 set(srv_files

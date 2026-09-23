@@ -1,0 +1,47 @@
+zones:
+  -
+    id: 'atrium_1F'
+    type: 'open_space'
+    trigger_waypoint: 109
+    risk_level: 'high'
+    radius_m: 5
+    note: 'open vertical shaft, marker-free void'
+  -
+    id: 'atrium_door_corner_1F'
+    type: 'corner'
+    trigger_waypoint: 104
+    risk_level: 'medium'
+    radius_m: 2.5
+  -
+    id: 'atrium_2F'
+    type: 'open_space'
+    trigger_waypoint: 209
+    risk_level: 'high'
+    radius_m: 5
+    note: 'open vertical shaft, marker-free void'
+  -
+    id: 'atrium_door_corner_2F'
+    type: 'corner'
+    trigger_waypoint: 204
+    risk_level: 'medium'
+    radius_m: 2.5
+  -
+    id: 'atrium_3F'
+    type: 'open_space'
+    trigger_waypoint: 309
+    risk_level: 'high'
+    radius_m: 5
+    note: 'open vertical shaft, marker-free void'
+  -
+    id: 'atrium_door_corner_3F'
+    type: 'corner'
+    trigger_waypoint: 304
+    risk_level: 'medium'
+    radius_m: 2.5
+  -
+    id: 'demo_blind_2F_room2'
+    type: 'manual_blind'
+    trigger_waypoint: 206
+    risk_level: 'manual'
+    radius_m: 3
+    note: 'Phase 5 demo: temporarily shutter markers near 2F room 2'

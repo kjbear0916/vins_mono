@@ -1,0 +1,19 @@
+PAGES=34
+MEDIABOX=595.3x841.9
+A4_CHECK=PASS
+PASS  text[室內無人機自主導航之感知定位子系統]
+PASS  text[Bundle Adjustment]
+PASS  text[17/17]
+PASS  text[2.4]
+PASS  text[154]
+PASS  text[108/201]
+PASS  text[431]
+PASS  text[k3]
+PASS  text[1640]
+PASS  text[seq_real_14]
+PASS  text[76.9]
+PASS  text[Sim3]
+PASS  text[52 毫米]
+PASS  text[ArUco]
+PASS  text[P1]
+TOC_PRESENT=PASS

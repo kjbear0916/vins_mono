@@ -1,0 +1,435 @@
+dictionary: '7X7_1000'
+marker_size_m: 0.25
+markers:
+  101:
+    id: 101
+    x: 2
+    y: 1.5
+    z: 0.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  102:
+    id: 102
+    x: 4
+    y: 1.5
+    z: 0.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  103:
+    id: 103
+    x: 6
+    y: 1.5
+    z: 0.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  104:
+    id: 104
+    x: 8
+    y: 1.5
+    z: 0.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  105:
+    id: 105
+    x: 12
+    y: 1.5
+    z: 0.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  106:
+    id: 106
+    x: 14
+    y: 1.5
+    z: 0.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  107:
+    id: 107
+    x: 16
+    y: 1.5
+    z: 0.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  108:
+    id: 108
+    x: 18
+    y: 1.5
+    z: 0.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  109:
+    id: 109
+    x: 10
+    y: 2.2
+    z: 0.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  111:
+    id: 111
+    x: 2
+    y: 8.5
+    z: 0.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  112:
+    id: 112
+    x: 5
+    y: 11
+    z: 0.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  113:
+    id: 113
+    x: 7.4
+    y: 7
+    z: 0.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  114:
+    id: 114
+    x: 12.6
+    y: 7
+    z: 0.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  115:
+    id: 115
+    x: 16
+    y: 11
+    z: 0.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  116:
+    id: 116
+    x: 18
+    y: 6
+    z: 0.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  201:
+    id: 201
+    x: 2
+    y: 1.5
+    z: 3.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  202:
+    id: 202
+    x: 4
+    y: 1.5
+    z: 3.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  203:
+    id: 203
+    x: 6
+    y: 1.5
+    z: 3.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  204:
+    id: 204
+    x: 8
+    y: 1.5
+    z: 3.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  205:
+    id: 205
+    x: 12
+    y: 1.5
+    z: 3.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  206:
+    id: 206
+    x: 14
+    y: 1.5
+    z: 3.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  207:
+    id: 207
+    x: 16
+    y: 1.5
+    z: 3.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  208:
+    id: 208
+    x: 18
+    y: 1.5
+    z: 3.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  209:
+    id: 209
+    x: 10
+    y: 2.2
+    z: 3.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  211:
+    id: 211
+    x: 2
+    y: 8.5
+    z: 3.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  212:
+    id: 212
+    x: 5
+    y: 11
+    z: 3.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  213:
+    id: 213
+    x: 7.4
+    y: 7
+    z: 3.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  214:
+    id: 214
+    x: 12.6
+    y: 7
+    z: 3.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  215:
+    id: 215
+    x: 16
+    y: 11
+    z: 3.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  216:
+    id: 216
+    x: 18
+    y: 6
+    z: 3.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  301:
+    id: 301
+    x: 2
+    y: 1.5
+    z: 6.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  302:
+    id: 302
+    x: 4
+    y: 1.5
+    z: 6.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  303:
+    id: 303
+    x: 6
+    y: 1.5
+    z: 6.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  304:
+    id: 304
+    x: 8
+    y: 1.5
+    z: 6.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  305:
+    id: 305
+    x: 12
+    y: 1.5
+    z: 6.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  306:
+    id: 306
+    x: 14
+    y: 1.5
+    z: 6.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  307:
+    id: 307
+    x: 16
+    y: 1.5
+    z: 6.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  308:
+    id: 308
+    x: 18
+    y: 1.5
+    z: 6.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  309:
+    id: 309
+    x: 10
+    y: 2.2
+    z: 6.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  311:
+    id: 311
+    x: 2
+    y: 8.5
+    z: 6.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  312:
+    id: 312
+    x: 5
+    y: 11
+    z: 6.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  313:
+    id: 313
+    x: 7.4
+    y: 7
+    z: 6.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  314:
+    id: 314
+    x: 12.6
+    y: 7
+    z: 6.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  315:
+    id: 315
+    x: 16
+    y: 11
+    z: 6.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  316:
+    id: 316
+    x: 18
+    y: 6
+    z: 6.35
+    yaw: 0
+    kind: 'waypoint'
+    size: 0.25
+    dict: '7X7_1000'
+  900:
+    id: 900
+    x: 3
+    y: 12.5
+    z: 0.35
+    yaw: 0
+    kind: 'survivor'
+    size: 0.25
+    dict: '7X7_1000'
+  901:
+    id: 901
+    x: 10
+    y: 6
+    z: 3.35
+    yaw: 0
+    kind: 'survivor'
+    size: 0.25
+    dict: '7X7_1000'
+  902:
+    id: 902
+    x: 17
+    y: 12
+    z: 6.35
+    yaw: 0
+    kind: 'survivor'
+    size: 0.25
+    dict: '7X7_1000'

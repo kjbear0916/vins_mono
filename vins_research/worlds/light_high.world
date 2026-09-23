@@ -1,0 +1,51 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="light_high">
+
+    <!-- Physics -->
+    <physics name="1ms" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <!-- High illumination: bright ambient + strong directional light -->
+    <light type="directional" name="sun">
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>1.0 1.0 1.0 1</diffuse>
+      <specular>1.0 1.0 1.0 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- Bright ambient light -->
+    <light type="ambient" name="ambient_bright">
+      <ambient>0.8 0.8 0.8 1</ambient>
+    </light>
+
+    <!-- Ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- Sun model for visual reference -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Default wind -->
+    <wind>
+      <vertical_velocity>0</vertical_velocity>
+    </wind>
+
+    <!-- Physics engine gravity -->
+    <gravity>0 0 -9.81</gravity>
+    <magnetic_field>0 0 0</magnetic_field>
+
+  </world>
+</sdf>

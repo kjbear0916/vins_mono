@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-colcon-common-extensions python3-rosdep python3-pip \
     python3-empy python3-jsonschema python3-packaging python3-setuptools \
     ccache lsb-release sudo \
-    libeigen3-dev libgeographic-dev \
+    libeigen3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # ------------------------------------------------ PX4 SITL (build only)
@@ -56,8 +56,10 @@ RUN test -x /opt/PX4-Autopilot/build/px4_sitl_default/bin/px4 \
     && echo "PX4 SITL binary present" || (echo "PX4 binary missing"; exit 1)
 
 # ------------------------------------------------------------ python deps
+# apt-installed numpy/scipy/opencv carry no RECORD, so pip --ignore-installed
+# replaces them without an uninstall round-trip.
 COPY requirements.txt /tmp/requirements.txt
-RUN pip3 install --break-system-packages --no-cache-dir -r /tmp/requirements.txt
+RUN pip3 install --break-system-packages --ignore-installed --no-cache-dir -r /tmp/requirements.txt
 
 # ------------------------------------------------------------- workspace
 WORKDIR ${WS}

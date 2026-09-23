@@ -1,0 +1,6 @@
+string state
+int32 current_floor
+int32 current_waypoint
+int32 total_waypoints
+int32 deployed_anchors
+string note

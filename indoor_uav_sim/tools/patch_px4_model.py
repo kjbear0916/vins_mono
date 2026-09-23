@@ -24,6 +24,7 @@ import argparse
 from pathlib import Path
 
 MARKER = "<!-- disaster-drone sensors (patch_px4_model.py) -->"
+ODOM_MARKER = "<!-- disaster-drone odometry (patch_px4_model.py) -->"
 
 SENSORS_XML = """
   <!-- disaster-drone sensors (patch_px4_model.py) -->
@@ -108,20 +109,37 @@ SENSORS_XML = """
   </joint>
 """
 
+ODOM_XML = f"""
+  {ODOM_MARKER}
+  <plugin filename="gz-sim-odometry-publisher-system"
+          name="gz::sim::systems::OdometryPublisher">
+    <dimensions>3</dimensions>
+    <odom_frame>world</odom_frame>
+    <robot_base_frame>base_link</robot_base_frame>
+  </plugin>
+"""
+
 
 def patch(model_sdf: Path) -> bool:
     if not model_sdf.exists():
         raise FileNotFoundError(model_sdf)
     text = model_sdf.read_text(encoding="utf-8")
-    if MARKER in text:
-        print("already patched; no change")
+    changed = False
+    if MARKER not in text:
+        close = "</model>"
+        if close not in text:
+            raise ValueError(f"{model_sdf}: no </model> found")
+        idx = text.rindex(close)
+        text = text[:idx] + SENSORS_XML + "\n" + text[idx:]
+        changed = True
+    if ODOM_MARKER not in text:
+        close = "</model>"
+        idx = text.rindex(close)
+        text = text[:idx] + ODOM_XML + "\n" + text[idx:]
+        changed = True
+    if not changed:
+        print("already fully patched; no change")
         return False
-
-    close = "</model>"
-    if close not in text:
-        raise ValueError(f"{model_sdf}: no </model> found")
-    idx = text.rindex(close)
-    text = text[:idx] + SENSORS_XML + "\n" + text[idx:]
     model_sdf.write_text(text, encoding="utf-8")
     print(f"patched {model_sdf}")
     return True

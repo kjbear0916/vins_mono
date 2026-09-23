@@ -1,0 +1,86 @@
+PASS  封面主標題
+PASS  封面副標題
+PASS  封面次標題 專題報告
+PASS  封面佔位欄位（待填）
+PASS  摘要
+PASS  摘要數據 17/17
+PASS  摘要數據 2.4–2.8 毫米
+PASS  摘要數據 154 毫米
+PASS  關鍵詞
+PASS  目錄標題
+PASS  TOC 功能變數
+PASS  章節一 研究背景與動機
+PASS  章節二 研究範圍界定
+PASS  章節三 系統架構總覽
+PASS  章節四 核心技術方法
+PASS  章節五 實驗結果
+PASS  章節六 延伸模組
+PASS  章節七 視覺化與導航模擬
+PASS  章節八 研究貢獻總結
+PASS  章節九 限制與未來工作
+PASS  章節十 開源實作參考
+PASS  章節十一 結論
+PASS  3.1.1 PnP 架構
+PASS  Bootstrap 死鎖
+PASS  BA 100 倍改善
+PASS  七道驗證閘門
+PASS  合成 ATE
+PASS  回歸 26/26
+PASS  真機 seq_real_14
+PASS  棋盤格 108/201
+PASS  431 個三維地圖點
+PASS  26 個關鍵幀
+PASS  Pre/Post BA
+PASS  RMS 0.87
+PASS  P1-P7 結果
+PASS  76.9%
+PASS  60 倍落差
+PASS  敏感度表 cy=30.6
+PASS  敏感度表 154.19
+PASS  敏感度表 4.5%
+PASS  焦距畸變耦合 k3
+PASS  Sim3 對齊
+PASS  標記 0.000 毫米
+PASS  端到端 52 毫米
+PASS  5/5 閘門
+PASS  26/26 回歸
+PASS  敏感度表 focal 假說
+PASS  敏感度表 fx−z 退化
+PASS  待實體驗證
+PASS  限制 捲尺 ±5–10
+PASS  航點導航模擬
+PASS  7.2 模擬章節
+PASS  7.2 ROS2/Gazebo/PX4
+PASS  7.2 三層樓建築
+PASS  7.2 53 顆 ArUco
+PASS  7.2 46 航點
+PASS  7.2 UWB 單元測試
+PASS  7.2 誠實揭露
+PASS  7.3 救災價值
+PASS  7.3 降低人員風險
+PASS  7.3 臨時 GPS
+PASS  7.3 機器先行人後進
+PASS  1.1 救災動機
+PASS  9.4 模擬待辦
+PASS  附錄 A
+PASS  附錄表格 VSLAM
+PASS  參考文獻
+PASS  參考文獻條目
+PASS  10.1 開源實作參考
+PASS  開源 ORB-SLAM2
+PASS  開源 ORB-SLAM3
+PASS  開源 VINS-Mono
+PASS  開源 OpenVINS
+PASS  開源 DSO
+PASS  開源 DBoW2
+PASS  開源 AprilTag
+PASS  評估工具 evo
+PASS  5.4 公開基準對照
+PASS  基準 EuRoC
+PASS  survey 引用
+PASS  表 10-1 開源實作參考
+PASS  表 5-1 基準精度
+PASS  開源位址 stars
+TABLE_COUNT=6 EXPECTED=6
+COVER_FIELD_ORDER=PASS
+TOTAL_FAILS=0

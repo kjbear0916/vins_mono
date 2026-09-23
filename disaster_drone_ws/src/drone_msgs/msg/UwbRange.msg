@@ -1,0 +1,3 @@
+builtin_interfaces/Time stamp
+int32 anchor_id
+float32 range_m

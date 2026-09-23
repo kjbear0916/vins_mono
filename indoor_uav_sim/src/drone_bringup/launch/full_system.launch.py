@@ -73,6 +73,21 @@ def generate_launch_description():
             parameters=[{
                 "safety_distance": 1.5,
                 "slow_distance": 2.5,
+                "vision_threat_threshold": 0.35,
+                "vision_avoidance_gain": 1.2,
+            }],
+            output="screen",
+        ),
+        Node(
+            package="obstacle_avoidance",
+            executable="looming_detector_node.py",
+            name="looming_detector",
+            parameters=[{
+                "camera_topic": "/drone/camera/front/image_raw",
+                "publish_topic": "/drone/threat/looming",
+                "hfov_deg": 80.0,
+                "threshold": 0.35,
+                "confirm_frames": 3,
             }],
             output="screen",
         ),
@@ -116,7 +131,7 @@ def generate_launch_description():
             executable="drone_control_node.py",
             name="drone_control",
             parameters=[{
-                "connection_url": "udpin://0.0.0.0:14540",
+                "connection_url": "udp://0.0.0.0:14540",
                 "cmd_vel_topic": "/drone/cmd_vel",
                 "command_topic": "/mission/command",
                 "takeoff_alt_m": 1.5,

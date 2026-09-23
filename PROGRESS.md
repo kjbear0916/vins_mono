@@ -70,7 +70,9 @@ VALIDATION.md 4.4):seq_real_10「stepwise→尾段退化跳點」、seq_real_12�
 (3) 反結果:軌跡內生統計(形狀/干預)與 ATE 相關 ≤0.43,誤差為
 **非剛體形變**(Umeyama Sim3 對齊後仍殘留);
 (4) IMU 旋轉一致性閘門合成首驗`imu_gate_probe.py`:yaw-drift 序列
-7 閘門 PASS 但 IMU gate FAIL(12.45°>5°),證明外部參考正交性。
+7 閘門 PASS 但 IMU gate FAIL(23.33°>5° at drift 0.30),證明外部參考
+正交性(obs #0021 後 gyro 只在 VO keyframe bracket 積分,0.15 慢速旋轉
+2.59° 合法 PASS;0.30 才暴露 VO 追蹤崩壞)。
 所有發現 codified 進 regression(20/20 全過)。
 
 **09-13 加碼完成(純軟件,室內 GPS 標記定位,報告已同步)**:以 ESP32-CAM
@@ -97,6 +99,11 @@ yaw per-marker deg)正確載入與索引(6 標記示範);
 (7) 已併入 regression(`test_regression.py` 新增 `TestIndoorGps` 5 項:
 偵測探針/pose 自測/sim3 恒等/管線自測/calib-sanity 正對照),**全套
 25/25 全過(25 tests,466s)**——之後改共用座標數學不再需要單獨手跑。
+09-13 追補:`align_sim3_demo.py` 自測從恒等 sim3/共用面點集升級為
+非平凡 sim3(scale 0.8、斜軸旋轉 37°、平移)＋三維分部點集,真正考驗
+縮放/旋轉恢復(obs #0021b;原恒等自測對縮放/旋轉恢復毫無壓力);
+`TestImuGateEndToEnd` 的 yaw-drift 參數 0.15→0.30(ob #0021 修正公平
+bracket 後,0.15 差距 2.59° 合法 PASS,0.30 才觸發 VO 追蹤崩壞 FAIL)。
 (8) **09-13 補查(重要)**:嘗試直接從 seq_real_14 的 109 幀棋盤視圖重估
     QVGA v2 內參失敗——主點置中後 fx 收斂到 899、dist k3=-1640,低 RMS
     卻不合理(focal 被換進畸變);**對照 VGA 標定(calibration_esp32.npz,
@@ -115,10 +122,44 @@ yaw per-marker deg)正確載入與索引(6 標記示範);
     交叉驗證**(獨立距離檢驗 solvePnP 中位數 z)。物理傾向(59°+~1m rig+800mm)
     支持 fx≈282 家族,但僅條件式——最終仍待多姿態標定錄影 + 錄後雙重把關
     (見 FINAL_REPORT §7.5-3)。
+(10) **09-13(合成封閉測試,obs #0024)**:建立 `gen_synth_calib_shoot.py`
+     ——用**已知 K** 渲染 5x4/25mm 棋盤、含畸形 k1=-0.18 的姿態多樣錄影,
+     跑 `recalibrate_from_frames.py` 封閉驗證。**關鍵發現:姿態多樣性閘門
+     （5 zones+tilt+spread）全過仍讓 fx 逃逸到 2077/904、dist 補償到
+     169/2461——因為 5 個 zone 全在畫面中央 ~150px 盤內,corner 從未
+     靠近圖像邊緣(r_max≈150px < 影像半對角線 200px),fx–畸變在內部
+     區域完全可交換(病根正是 #0018/#0019);無畸變同姿態即完美恢復
+     (fx 475.4)。**修法:近距拍攝讓最外圍 corner 接近畫面邊緣**——
+     近距 220-300mm + 近/中/遠後,所有 flags(free5/k1-only/fix-pp)都
+     恢復 fx≈477(誤差<1%)。已將此封閉測試收進 regression(26/26)與
+     `gen_synth_calib_shoot.py --selftest`。**錄影 SOP 守則:棋盤靠近鏡頭
+     直到外框幾乎填滿畫面→近/中/遠→±30-45° 傾斜;`calibrate_guided.py`
+     的即時 HUD 應補「邊緣覆蓋」限制(zone 覆蓋≠徑向覆蓋)**。
 剩餘硬體步驟:印標記並實量邊長(--marker-m)、PC 連 `RatMonitor_Setup` AP、
 實測 `aruco_detect_test.py --snapshot 60`、**多姿態 QVGA 棋盤標定錄影**得
 `calibration_esp32_qvga_v2.npz`(現 npz 之 cy=30.6 為寬高顛倒殘骸 + fx=282
 未獲獨立證實,obs #0012;產生器已修,需重標定才有正確內參)。
+**執行順序請照 `HARDWARE_PHASE_RUNBOOK.md`**(D 標定錄影最優先,守則:
+棋盤填滿畫面→5 區→±30-45°→近中遠;obs #0024 邊緣覆蓋缺失會讓 fx 逃逸)。
+
+(11) **09-18(軟體收尾至定稿,交付物重 build v1.2)**:完成主專題軟體側最後收尾——
+     ① `report_content.py` 升 **v1.2**:回歸測試數字統一為 **26/26**(原正文 20/20、
+     疊代版 25/25 兩處殘留,與實跑 `test_regression.py` 26 tests 一致,同步更新
+     `verify_docx.py` 的 4 處斷言);② 摘要與 5.2 的真機 ATE **明確標註「以儲存
+     fx=282 為前提,跨 focal 假說為 154→606mm 區間」**,硬體 D 步定案前不得當
+     定值引用;③ 4.4.1 表 4-2 敏感度表**補齊 focal 假說欄**(fx=282→154.19 /
+     fx=474→290.81 / fx=900→565.82 / fx=948→605.80 mm)並以文字敘述「fx–z
+     退化 + FOV/z-hint 交叉驗證」,口試稿同步 25/25→26/26。**重新產出四件套
+     (md/docx/pdf/pptx)並全數通過 verify**:docx 84/84、pdf 34 頁 A4 PASS、
+     pptx 18 頁無重疊(focal 假說新斷言皆 PASS)。
+     ④ **硬體可印資產補齊**:`vo/gen_print_board.py` 產 `markers/chessboard_print_A4.png`
+     (300dpi A4、5x4 棋盤、**25mm 方格 + 內建 100mm 比例尺**,cv2 偵測 20/20 角
+     點全過);`vo/gen_marker_sheet.py` 產 6 張單張 **15cm A4 marker**(id 0–5 各自
+     偵測正確)+ `marker_sheet_6up_A4.png` 速掃版(單頁 6 個 id 全中)。
+     **剩餘硬體步驟僅剩**:**印資產**→實量邊長/比例尺(--marker-m)→DPC 連
+     `RatMonitor_Setup` AP→**D 標定錄影**(`calibration_esp32_qvga_v2.npz`)→
+     E sanity→F 量座標入 `marker_positions.json`→G validation,全程照 RUNBOOK。
+     regression 09-18 實跑 **26/26 PASS**(288.6s)。
 
 ---
 

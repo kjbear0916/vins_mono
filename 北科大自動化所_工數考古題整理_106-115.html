@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>北科大自動化所 工程數學考古題整理（106–115）</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --card: #ffffff;
+    --ink: #1f2430;
+    --muted: #5b6472;
+    --line: #e3e6ef;
+    --accent: #1d4ed8;
+    --accent-soft: #eef3ff;
+    --dup: #b91c1c;
+    --dup-soft: #fef2f2;
+    --dup-line: #fecaca;
+    --near: #b45309;
+    --near-soft: #fffbeb;
+    --near-line: #fde68a;
+    --ok: #15803d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", "Heiti TC", sans-serif;
+    line-height: 1.7;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 24px 18px 64px; }
+  header.hero {
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    color: #fff;
+    border-radius: 14px;
+    padding: 32px 28px;
+    margin-bottom: 26px;
+  }
+  header.hero h1 { margin: 0 0 8px; font-size: 26px; line-height: 1.4; }
+  header.hero p { margin: 4px 0; opacity: .92; font-size: 14px; }
+  header.hero a { color: #fff; }
+  .tag { display: inline-block; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 2px 12px; font-size: 12px; margin-top: 10px; margin-right: 6px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 22px 24px; margin-bottom: 22px; }
+  h2 { font-size: 20px; margin: 0 0 16px; padding-bottom: 10px; border-bottom: 2px solid var(--accent); }
+  h2 .no { color: var(--accent); margin-right: 8px; }
+  h3 { font-size: 16px; margin: 20px 0 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 10px 0 4px; }
+  th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--accent-soft); font-weight: 600; }
+  tr:nth-child(even) td { background: #fafbfe; }
+  .dup-row { background: var(--dup-soft) !important; }
+  .near-row { background: var(--near-soft) !important; }
+  .badge { display: inline-block; font-size: 12px; border-radius: 6px; padding: 1px 8px; font-weight: 600; white-space: nowrap; }
+  .badge.dup { background: var(--dup-soft); color: var(--dup); border: 1px solid var(--dup-line); }
+  .badge.near { background: var(--near-soft); color: var(--near); border: 1px solid var(--near-line); }
+  .badge.ok { background: #f0fdf4; color: var(--ok); border: 1px solid #bbf7d0; }
+  .warn { background: #fffbeb; border: 1px solid var(--near-line); border-left: 4px solid var(--near); padding: 10px 14px; border-radius: 8px; font-size: 13px; color: #78350f; margin: 8px 0 14px; }
+  .q { margin: 0 0 12px; padding-left: 2px; }
+  .q .tt { font-weight: 600; }
+  .q ul { margin: 4px 0 0; padding-left: 22px; }
+  .formula { font-family: "Cambria Math", "Times New Roman", Georgia, serif; font-style: italic; }
+  .ybox { margin-bottom: 18px; }
+  .ybox h4 { margin: 0 0 6px; font-size: 15px; color: var(--accent); }
+  .ybox .file { font-size: 12px; color: var(--muted); margin-left: 8px; font-weight: normal; }
+  footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 8px; }
+  ul.tight { margin: 6px 0; padding-left: 22px; }
+  .scroll { overflow-x: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>國立臺北科技大學｜自動化科技研究所<br>工程數學 考古題整理（106–115 學年度）</h1>
+  <p>來源：<a href="https://library.ntut.edu.tw/p/405-1024-108726,c15226.php">北科大圖書資訊處 · 考古題</a></p>
+  <p>整理日期：2026-09-20 ｜ 共 10 份試題，逐題整理＋重複比對</p>
+  <span class="tag">完全重複 2 組</span>
+  <span class="tag">近相同 2 組</span>
+  <span class="tag">證明題共用敘述池</span>
+  <span class="tag">每年必考：Laplace・特徵值・常係數 ODE</span>
+</header>
+
+<div class="warn">⚠ 來源為掃描 PDF，經 OCR 整理。矩陣內數字、指數/上下標等符號可能有誤讀，準備時請以原始 PDF 為準。</div>
+
+<section>
+  <h2><span class="no">一、</span>各年度速覽</h2>
+  <div class="scroll">
+  <table>
+    <tr><th>學年度</th><th>檔案</th><th>題數</th><th>主要考點</th></tr>
+    <tr><td>106</td><td>106AT01.pdf</td><td>4</td><td>e^A 三種方法、Fourier 級數＋級數求和、常係數 ODE、Laplace</td></tr>
+    <tr><td>107</td><td>107aAT01.pdf</td><td>5</td><td>矩陣秩、齊次線性方程組、一階非線性 ODE、矩陣方程 AX=B、行列式</td></tr>
+    <tr><td>108</td><td>108AT01.pdf</td><td>6</td><td>一階線性 IVP、特徵值特徵向量、Aⁿ、Fourier 級數＋π²/12、Laplace、y''−3y'+2y</td></tr>
+    <tr><td>109</td><td>109AT01.pdf</td><td>5</td><td>y''−3y'+2y 初值、Laplace 聯立系統、證明/反證 4 則、Cayley–Hamilton、離婚人口模型</td></tr>
+    <tr><td>110</td><td>110AT01.pdf</td><td>5</td><td>LU 分解未知數、AᵀA/AAᵀ 特徵值、線性獨立與 nullity、行列式、線性變換幾何描述</td></tr>
+    <tr><td>111</td><td>111AT01.pdf</td><td>5</td><td>證明/反證 4 則、離婚人口模型、特徵值特徵向量、ODE 初值、Laplace＋δ</td></tr>
+    <tr><td>112</td><td>112AT01.pdf</td><td>5</td><td>證明/反證 5 則、Hermitian 矩陣特徵值、高階常係數 ODE、Laplace 聯立系統、Span 正交基底＋投影</td></tr>
+    <tr><td>113</td><td>113AT01.pdf</td><td>6</td><td>常係數 ODE、矩陣可逆性、平面 S 的基底＋點投影、Euler–Cauchy、聯立系統、Laplace</td></tr>
+    <tr><td>114</td><td>114AT01.pdf</td><td>8</td><td>高階/變係數 ODE、初值題、Laplace 聯立系統、逆矩陣、(AB⁻¹)ᵀ、對稱矩陣真偽選項、真假多選題</td></tr>
+    <tr><td>115</td><td>115AT01.pdf</td><td>6+</td><td>對稱矩陣真偽選項、真假多選題、一階 IVP、反 Laplace、特徵值特徵向量、Aᵏ</td></tr>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2><span class="no">二、</span>逐年逐題</h2>
+
+  <div class="ybox">
+    <h4>106 學年度（4 題）<span class="file">106AT01.pdf</span></h4>
+    <p class="q"><span class="tt">1.(36%)</span> 求 e<sup>A</sup>，要求用<strong>三種不同方法</strong>，A 為 2×2 矩陣「4 −5／1 −2」類。</p>
+    <p class="q"><span class="tt">2.(8%+8%+8%)</span> (a) 求 f(t)=|t|, −π&lt;t&lt;π 的 Fourier 級數；(b)(c) 利用結果求兩個數列和（級數求和，ζ(2) 類）。</p>
+    <p class="q"><span class="tt">3.(12%+12%)</span> 解微分方程：
+      <ul>
+        <li>(a) <span class="formula">y'' − 3y' + 2y = 8eˣ + 4x + 1</span></li>
+        <li>(b) <span class="formula">y' + 2y = x·y³</span>（伯努利類，⚠ 原式 OCR 模糊）</li>
+      </ul></p>
+    <p class="q"><span class="tt">4.(16%)</span> 以 Laplace 解 <span class="formula">y'' + y' + 1.25y = 0</span>，y(0)=1, y'(0)=−0.5。</p>
+  </div>
+
+  <div class="ybox">
+    <h4>107 學年度（5 題）<span class="file">107aAT01.pdf</span></h4>
+    <p class="q"><span class="tt">1.(20%)</span> 給某 8×8 矩陣 A（含 −1、0、1 的分塊矩陣，⚠ 內容 OCR 模糊）：(a) rank(A)；(b) rank(A+Aᵀ)。</p>
+    <p class="q"><span class="tt">2.(20%)</span> 求齊次線性方程組所有解：<span class="formula">x₁−2x₂+x₃=0；2x₁−3x₂+4x₃=0；3x₁−5x₂+5x₃=0</span>。</p>
+    <p class="q"><span class="tt">3.(20%)</span> 求一階微分方程通解（形如 <span class="formula">dy/dx = (eˣ + y − 1)/yᵏ</span>，⚠ 原式 OCR 模糊）。</p>
+    <p class="q"><span class="tt">4.(20%)</span> 給 A、B 兩矩陣（A: 2×2，B: 2×3），求 X 使 AX = B。</p>
+    <p class="q"><span class="tt">5.(20%)</span> (a)(b) 各 10%，計算兩矩陣的行列式（5×5、4×4 含三角區塊）。</p>
+  </div>
+
+  <div class="ybox">
+    <h4>108 學年度（6 題）<span class="file">108AT01.pdf</span></h4>
+    <p class="q"><span class="tt">1.(10%+10%)</span> 解初值問題：
+      <ul>
+        <li>(a) <span class="formula">y' = 2y/x + x²eˣ</span>，y(2)=0（⚠ RHS 尾項 OCR 模糊）</li>
+        <li>(b) <span class="formula">y' = −3x²y + xe⁽ˣ³⁾</span>，y(0)=−1</li>
+      </ul></p>
+    <p class="q"><span class="tt">2.(12%)</span> 求 A = [[2,−1],[1,4]]（⚠ 元素 OCR 模糊）的特徵值與特徵向量。</p>
+    <p class="q"><span class="tt">3.(15%)</span> 計算 Aⁿ，A 為 2×2 矩陣（⚠ 內容 OCR 模糊）。</p>
+    <p class="q"><span class="tt">4.(15%+6%)</span> (a) 求 f(t)=t, −1&lt;t&lt;1（週期 2）的 Fourier 級數；(b) 由 (a) 證明 <span class="formula">1 − 1/4 + 1/9 − 1/16 + ⋯ = π²/12</span>。</p>
+    <p class="q"><span class="tt">5.(15%)</span> 以 Laplace 解 <span class="formula">y'' + 9y = 1 + t</span>，y(0)=−1, y'(0)=1。</p>
+    <p class="q"><span class="tt">6.(18%)</span> 解 <span class="formula">y'' − 3y' + 2y = sin(eˣ)</span>（變異參數法，令 u=eˣ）。</p>
+  </div>
+
+  <div class="ybox">
+    <h4>109 學年度（5 題）<span class="file">109AT01.pdf</span></h4>
+    <p class="q"><span class="tt">1.(20%)</span> 解 <span class="formula">y'' − 3y' + 2y = 2x + 8sin(2x)</span>，y(0)=?, y'(0)=0。</p>
+    <p class="q"><span class="tt">2.(20%)</span> 以 Laplace 解聯立初值系統：dx/dt 與 dy/dt 的一階線性系統，x(0)=2, y(0)=2。<span class="badge dup">與 112-4 重複</span></p>
+    <p class="q"><span class="tt">3.(20%＝5%×4)</span> 證明或反證：
+      <ul>
+        <li>(1) n×n 矩陣 A 有 n 個相異特徵值 ⇔ A 可對角化（偽）</li>
+        <li>(2) 假設逆矩陣存在，<span class="formula">(A⁻¹+B⁻¹)⁻¹ = A(A+B)⁻¹B</span></li>
+        <li>(3) v₁,v₂,v₃ ∈ ℝⁿ 線性獨立 ⇒ w₁=v₁+v₂, w₂=v₂+v₃, w₃=v₃+v₁ 也線性獨立</li>
+        <li>(4) A、B 為 n×n，(AB)⁻¹ 相關恆等式</li>
+      </ul></p>
+    <p class="q"><span class="tt">4.(15%)</span> 以<strong>Cayley–Hamilton</strong>定理求 e^(At) 類（⚠ 矩陣 OCR 模糊）。</p>
+    <p class="q"><span class="tt">5.(25%)</span> 某城 30% 已婚婦女每年離婚、20% 單身婦女每年結婚；已婚 8000 人、單身 2000 人，總人口不變。(1) 求 5 年後的已婚/單身人數 (10%)；(2) 此比例維持下長期趨勢 (15%)。<span class="badge dup">與 111-2 重複</span></p>
+  </div>
+
+  <div class="ybox">
+    <h4>110 學年度（5 題）<span class="file">110AT01.pdf</span></h4>
+    <p class="q"><span class="tt">1.(20%)</span> A = LU（L、U 內含未知數 x,y,z,u,v,w）：(a) 求 x+y+z+u+v+w；(b) 求 B 之逆或證明不可逆（連帶的未知數項）。</p>
+    <p class="q"><span class="tt">2.(20%)</span> A = [[1,2],[2,4],[3,6]]：(a) 求 AᵀA 的特徵值；(b) 求 AAᵀ 的完整正交特徵向量組。</p>
+    <p class="q"><span class="tt">3.(10%+10%)</span> (a) 直線 2x+3y=1，求與其垂直之向量並說明理由；(b) A 為 m×n 且行向量線性獨立，問 nullity(A) 為何。</p>
+    <p class="q"><span class="tt">4.(10%+10%)</span> 求行列式：(a) 階梯/三角 5×5 矩陣（[[4,0,…],[6,7,0,…],…]）；(b) 含參數 b 的 4×4 矩陣。</p>
+    <p class="q"><span class="tt">5.(20%)</span> A 為 2×2（⚠ 內容模糊），T(x)=Ax, T: ℝ²→ℝ²：(a) 幾何描述 T；(b) 計算 A²⁰¹¹。</p>
+  </div>
+
+  <div class="ybox">
+    <h4>111 學年度（5 題）<span class="file">111AT01.pdf</span></h4>
+    <p class="q"><span class="tt">1.(20%＝5%×4)</span> 證明或反證（需證明或反例，不許只答 True/False）：
+      <ul>
+        <li>(1) A、B 為 2×2 矩陣，<span class="formula">(A+B)ᵀ = Aᵀ + Bᵀ</span>（真）</li>
+        <li>(2) X 為 n×n 正交矩陣 ⇒ rank X = n（真）</li>
+        <li>(3) Ax=b，A 為 m×n，若 rank(A)=n 則有解</li>
+        <li>(4) (4,2,3)、(2,3,2)、(2,−5,3) 線性相依</li>
+      </ul></p>
+    <p class="q"><span class="tt">2.(20%)</span> 離婚/結婚人口模型：30%/20%，已婚 8000、單身 2000，總人口不變。求 5 年後人數與長期趨勢。<span class="badge dup">與 109-5 重複</span></p>
+    <p class="q"><span class="tt">3.(10%+10%)</span> 求下列矩陣的特徵方程式、特徵值與特徵向量：(1) [[3,0],[8,−1]] 類；(2) [[2,2],[−1,5]] 類（⚠ 元素 OCR 模糊）。</p>
+    <p class="q"><span class="tt">4.(20%)</span> 解 ODE 初值問題（形如 y'''−…y''+…y'+y = eˣ 類，⚠ OCR 模糊）。</p>
+    <p class="q"><span class="tt">5.(20%)</span> 以 Laplace 解 <span class="formula">y'' + y = δ(x−1)</span>，0&lt;x&lt;2，邊界條件 y(0)=0、y(2)=0。</p>
+  </div>
+
+  <div class="ybox">
+    <h4>112 學年度（5 題）<span class="file">112AT01.pdf</span></h4>
+    <p class="q"><span class="tt">1.(25%＝5%×5)</span> 證明或反證：
+      <ul>
+        <li>(1) T 為線性轉換，{v₁,v₂,v₃} 線性相依 ⇒ {T(v₁),T(v₂),T(v₃)} 也線性相依（真）</li>
+        <li>(2) n×n A 有 n 個相異特徵值 ⇔ A 可對角化（偽）</li>
+        <li>(3) <span class="formula">(A⁻¹+B⁻¹)⁻¹ = A(A+B)⁻¹B</span></li>
+        <li>(4) cos(x) 與 sin(x) 線性相依（偽）</li>
+        <li>(5) Ax=b，A 為 m×n，若 rank(A)=n 則有解</li>
+      </ul></p>
+    <p class="q"><span class="tt">2.(10%+10%)</span> A = [[4,1+i],[1−i,4]]（Hermitian 類，⚠ 元素 OCR 模糊）、B≈A⁻¹ 類：(1) 求 A 特徵值/特徵向量與 det(A)；(2) 同理 B。</p>
+    <p class="q"><span class="tt">3.(20%)</span> 求 <span class="formula">y⁽⁴⁾ + 11y''' + 36y'' + 16y' − 64y = −3eˣ + 2cos(2x)</span> 的通解。</p>
+    <p class="q"><span class="tt">4.(20%)</span> 以 Laplace 解聯立初值系統（dx/dt、dy/dt 一階線性系統），x(0)=2, y(0)=2。<span class="badge dup">與 109-2 重複</span></p>
+    <p class="q"><span class="tt">5.(10%+5%)</span> S = Span{(3,1,1), (1,1,1,1), (−1,5,2,2)} ⊂ ℝ⁴，b=(4,−1,5,1)：(1) 求 S 的正交規格化基底；(2) 求 b 投影到 S。</p>
+  </div>
+
+  <div class="ybox">
+    <h4>113 學年度（6 題）<span class="file">113AT01.pdf</span></h4>
+    <p class="q"><span class="tt">1.(16%)</span> 解 <span class="formula">y'' − y' − 2y = 2x² + 5</span>（⚠ RHS 尾項 OCR 模糊）。</p>
+    <p class="q"><span class="tt">2.(6%+6%)</span> 判斷下列矩陣是否可逆並說明：([[1,3,−1],[2,1,4],[−2,2,−1]])、([[1,3,0],[2,1,1],[−2,2,0]])。</p>
+    <p class="q"><span class="tt">3.(6%+6%)</span> S 為平面 x+3y−z=0：(a) 求 S 的一組基底；(b) 求點 (0,1,2) 到平面 S 的投影。</p>
+    <p class="q"><span class="tt">4.(16%)</span> 解<strong>Euler–Cauchy</strong>方程式 <span class="formula">x²y'' − 2xy' + 2y = ln(x) + 1</span>。</p>
+    <p class="q"><span class="tt">5.(20%)</span> 解聯立系統：<span class="formula">y₁' = 3y₁ + 4y₂；y₂' = 3y₁ + 2y₂</span>；y₁(0)=6, y₂(0)=1。</p>
+    <p class="q"><span class="tt">6.(24%)</span> 以 Laplace 解初值問題：<span class="formula">y'' + 4y' + 3y = eˣ</span>，y(0)=0, y'(0)=2（⚠ RHS OCR 模糊）。</p>
+  </div>
+
+  <div class="ybox">
+    <h4>114 學年度（8 題）<span class="file">114AT01.pdf ⚠ 版面兩欄，題號排序以原 PDF 為準</span></h4>
+    <p class="q"><span class="tt">1.(20%)</span> 求一階/高階微分方程通解（⚠ OCR 模糊）。</p>
+    <p class="q"><span class="tt">2.(10%)</span> 解初值問題，含 y(2)=0（⚠ OCR 模糊）。</p>
+    <p class="q"><span class="tt">3.(20%)</span> 以 Laplace 解聯立系統：<span class="formula">y₁' + 2y₁ − 3y₂ = 0；y₂' − 4y₁ + y₂ = 0；y₁(0)=4, y₂(0)=3</span>。</p>
+    <p class="q"><span class="tt">4.(5%)</span> 求矩陣 A 的逆矩陣 A⁻¹（⚠ 內容 OCR 模糊）。</p>
+    <p class="q"><span class="tt">5.(5%)</span> 給 A、B，求 (AB⁻¹)ᵀ 類。</p>
+    <p class="q"><span class="tt">6.(10%+10%)</span> A = [5,?；?,?]（2×2）：(a) 求特徵值 (10%) 與特徵向量；(b) 求 P 使 P⁻¹AP 為對角矩陣。</p>
+    <p class="q"><span class="tt">7.(15%)</span> A 為 3×3 對稱實矩陣，特徵值為 1,4,9，對應特徵向量為 (1,1,1)ᵀ、(1,−1,0)ᵀ、(0,0,1)ᵀ 類；選項 (A) a=2 (B) a=b (C) c=9 (D) d=0 (E) e=1，判斷何者為真並說明。<span class="badge near">與 115-1 同題型</span></p>
+    <p class="q"><span class="tt">8.(5%)</span> 下列哪些敘述為真（需說明）：(A) A=[[1,a₁,a₂],…] det(A)=1+a₂a₁ 類；(B) det(A+cdᵀ)=det(A)(1+dᵀx)；(C) 4×4 正交投影 Q=I−uuᵀ ⇒ det(Q)+rank(Q)=4；(D) 可構造 3×3 Hermitian 使 det(A)=1+i；(E) 以上皆非。<span class="badge dup">與 115-2 相同</span></p>
+  </div>
+
+  <div class="ybox">
+    <h4>115 學年度（6 題）<span class="file">115AT01.pdf ⚠ 版面兩欄</span></h4>
+    <p class="q"><span class="tt">1.(15%)</span> A = [[a,b,c],[b,d,e],[c,e,f]] 3×3 對稱實矩陣，特徵值 1,4,9，對應特徵向量 (1,1,1) 類；選項 (A) a=5/2 (B) b=d (C) c=9 (D) f=0 (E) e=1，判斷何者為真並說明。<span class="badge near">與 114-7 同題型</span></p>
+    <p class="q"><span class="tt">2.(15%)</span> 下列哪些敘述為真（需說明）：(A) 4×4 正交投影 Q=I−uuᵀ ⇒ det(Q)+rank(Q)=4；(B) A=[[1,a₁,a₂],…] det(A)=1+a₂a₁；(C) det(A+cdᵀ)=det(A)(1+dᵀx)；(D) 可構造 3×3 Hermitian 使 det(A)=1+i；(E) 以上皆非。<span class="badge dup">與 114-8 相同</span></p>
+    <p class="q"><span class="tt">3.(15%)</span> 解初值問題：<span class="formula">y' + 2x³y = 0</span>（或 y'+2xy=…，⚠ OCR 模糊），y(0)=1。</p>
+    <p class="q"><span class="tt">4.(20%)</span> 求反 Laplace 變換 y(t)：Y(s) = ξ/(s²+4)（⚠ 分子 OCR 模糊）。</p>
+    <p class="q"><span class="tt">5.(20%)</span> A = [[1,2],[3,4]] 類，求特徵值與特徵向量。</p>
+    <p class="q"><span class="tt">6.(15%)</span> A = [[…]] 含零矩陣區塊（⚠ 內容模糊），計算 Aᵏ（冪次計算）。</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="no">三、</span>重複與高度相似考題</h2>
+
+  <h3>A. 完全重複（同題，逐字相同）</h3>
+  <div class="scroll">
+  <table>
+    <tr><th>#</th><th>考點</th><th>出現位置</th><th>備註</th></tr>
+    <tr class="dup-row"><td>1</td><td><strong>離婚/結婚人口模型</strong>（30% 離婚、20% 結婚、已婚 8000／單身 2000、總人口固定：求 5 年後＋長期趨勢）</td><td><strong>109 第 5 題（25%）＝ 111 第 2 題（20%）</strong></td><td>敘述完全一致，僅配分不同</td></tr>
+    <tr class="dup-row"><td>2</td><td><strong>Laplace 解聯立一階線性系統</strong>（dx/dt、dy/dt，初值 x(0)=2, y(0)=2）</td><td><strong>109 第 2 題 ＝ 112 第 4 題</strong></td><td>系統式與初值相同（OCR 結構一致）</td></tr>
+  </table>
+  </div>
+
+  <h3>B. 同一題型、同一組選項（近相同）</h3>
+  <div class="scroll">
+  <table>
+    <tr><th>#</th><th>考點</th><th>出現位置</th><th>差異</th></tr>
+    <tr class="near-row"><td>3</td><td><strong>3×3 對稱矩陣 A、特徵值 1,4,9、給特徵向量，判斷 5 選項誰為真</strong></td><td><strong>114 第 7 題 ＝ 115 第 1 題</strong></td><td>僅選項微調：a=2→a=5/2、a=b→b=d、d=0→f=0；共同選項 c=9、e=1 不變</td></tr>
+    <tr class="near-row"><td>4</td><td><strong>真假多選題（4 敘述＋None of the above）</strong>：det 矩陣、det(A+cdᵀ) 引理、投影矩陣 det(Q)+rank(Q)=4、Hermitian det=1+i</td><td><strong>114 第 8 題 ＝ 115 第 2 題</strong></td><td>四個敘述完全相同，只是順序不同</td></tr>
+  </table>
+  </div>
+
+  <h3>C. prove/disprove 證明題組：共用敘述池（109／111／112 互竄）</h3>
+  <div class="scroll">
+  <table>
+    <tr><th>敘述</th><th>109</th><th>111</th><th>112</th><th>真假</th></tr>
+    <tr><td>n×n A 有 n 個相異特徵值 ⇔ A 可對角化</td><td>3-(1)</td><td>—</td><td>1-(2)</td><td><span class="badge dup">偽（經典反例）</span></td></tr>
+    <tr><td>(A⁻¹+B⁻¹)⁻¹ = A(A+B)⁻¹B</td><td>3-(2)</td><td>—</td><td>1-(3)</td><td><span class="badge ok">真</span></td></tr>
+    <tr><td>Ax=b，A m×n，rank(A)=n ⇒ 有解</td><td>—</td><td>1-(3)</td><td>1-(5)</td><td><span class="badge ok">真</span></td></tr>
+    <tr><td>(A+B)ᵀ = Aᵀ+Bᵀ</td><td>—</td><td>1-(1)</td><td>—</td><td><span class="badge ok">真</span></td></tr>
+    <tr><td>正交矩陣 rank X = n</td><td>—</td><td>1-(2)</td><td>—</td><td><span class="badge ok">真</span></td></tr>
+    <tr><td>{v₁,v₂,v₃} 相依 ⇒ {T(v₁),T(v₂),T(v₃)} 相依</td><td>—</td><td>—</td><td>1-(1)</td><td><span class="badge ok">真</span></td></tr>
+    <tr><td>cos(x)、sin(x) 線性相依</td><td>—</td><td>—</td><td>1-(4)</td><td><span class="badge dup">偽</span></td></tr>
+    <tr><td>三元一次式線性相依判定</td><td>—</td><td>1-(4)</td><td>—</td><td>—</td></tr>
+    <tr><td>v₁,v₂,v₃ 獨立 ⇒ v₁+v₂, v₂+v₃, v₃+v₁ 獨立</td><td>3-(3)</td><td>—</td><td>—</td><td><span class="badge ok">真</span></td></tr>
+  </table>
+  </div>
+
+  <h3>D. 形式上重複的高頻考點（同名目、換常數）</h3>
+  <ul class="tight">
+    <li><strong>同一個數算子 y'' − 3y' + 2y 搭配不同 RHS</strong>：106-3a（8eˣ+4x+1）、108-6（sin eˣ）、109-1（2x+8sin 2x）。同一齊次算子，換右手邊。</li>
+    <li><strong>Laplace 解初值</strong>：106-4、108-5、111-5（含 δ(x−1)，Green 函數味）、113-6、115-4（反 Laplace）＋系統題 109-2／112-4／114-3。幾乎每年必考。</li>
+    <li><strong>特徵值／特徵向量</strong>：108-2、111-3、112-2（Hermitian）、113-5、114-6、115-5。</li>
+    <li><strong>Fourier 級數＋釣出經典級數和</strong>：106-2（|t| → π²/8 類）、108-4（t → π²/12）。</li>
+    <li><strong>e^A ／ Aⁿ ／ Cayley–Hamilton／矩陣冪</strong>：106-1（e^A 三法）、108-3（Aⁿ）、109-4（Cayley–Hamilton）、115-6（Aᵏ）。</li>
+    <li><strong>行列式／可逆性</strong>：107-5、110-4、113-2。</li>
+    <li><strong>投影與正交化</strong>：110-2（AᵀA／AAᵀ）、112-5（Span 基底＋投影）、113-3（平面投影）。</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="no">四、</span>備考建議（依出現頻率）</h2>
+  <ol class="tight">
+    <li><strong>第二階常係數 ODE（特徵方程式、待定係數、變異參數）＋ Laplace 解初值</strong>：每年必考，把 <span class="formula">y''−3y'+2y</span> 這個算子的所有 RHS 變化練熟。</li>
+    <li><strong>特徵值／特徵向量、矩陣對角化（含 Hermitian／對稱）</strong>：幾乎每年，出題量大。</li>
+    <li><strong>證明／反證題</strong>：109、111、112 連三年考，敘述池重複率高，把「相異特徵值 ⇔ 可對角化為偽」「(A⁻¹+B⁻¹)⁻¹=A(A+B)⁻¹B」等幾則記熟可直接得分。</li>
+    <li><strong>一階聯立線性系統 + Laplace</strong>：109、112、113、114 都出現。</li>
+    <li><strong>Fourier 級數：只考 |t|、t 兩類＋級數求和</strong>（π²/8、π²/12），準備成本極低。</li>
+    <li><strong>線性代數基本運算</strong>（行列式、逆矩陣、秩、LU）：110 以後比重上升，注意 LU 分解未知數求值這類新型題。</li>
+  </ol>
+</section>
+
+<footer>
+  資料來源：<a href="https://library.ntut.edu.tw/p/405-1024-108726,c15226.php">國立臺北科技大學圖書資訊處・考古題</a> ｜ 整理 2026-09-20
+</footer>
+</div>
+</body>
+</html>

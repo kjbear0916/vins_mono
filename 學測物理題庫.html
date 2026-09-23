@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>學測物理題庫集 - 互動練習版</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family:'Segoe UI','Microsoft JhengHei',sans-serif; max-width:860px; margin:0 auto; padding:24px 20px 60px; line-height:1.75; color:#222; background:#f5f6f8; }
+  h1 { color:#1a5fb4; text-align:center; border-bottom:3px solid #1a5fb4; padding-bottom:10px; }
+  h2 { color:#2a7f3f; border-left:5px solid #2a7f3f; padding:4px 10px; margin-top:38px; background:#eef6f0; border-radius:0 6px 6px 0; }
+  h3 { color:#1a5fb4; }
+  .controls { position:sticky; top:0; background:#f5f6f8; padding:8px 0; z-index:50; border-bottom:1px solid #dde; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .controls button { padding:7px 14px; border:none; border-radius:6px; cursor:pointer; color:#fff; font-size:14px; }
+  .btn-open { background:#1a5fb4; } .btn-close { background:#ca3b3b; } .btn-shuffle { background:#7a3fa0; } .btn-percent{ background:#1a8f5f; } .btn-reset{ background:#888; }
+  table { border-collapse:collapse; width:100%; margin:14px 0; }
+  th,td { border:1px solid #bbb; padding:7px 10px; text-align:left; }
+  th { background:#e3edf7; }
+  details { margin:12px 0; background:#fff; border:1px solid #d4d9e0; border-radius:10px; padding:10px 16px; transition:border .2s; }
+  details > summary { cursor:pointer; color:#1a5fb4; font-weight:bold; outline:none; }
+  details[open] { border-color:#2a7f3f; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+  .q { font-weight:bold; color:#000; }
+  blockquote { border-left:4px solid #ccc; margin:12px 0; padding:8px 16px; background:#eee; color:#555; }
+  hr { border:none; border-top:1px dashed #aaa; margin:22px 0; }
+  .ans { margin-top:6px; background:#f2fbf4; border-left:3px solid #2a7f3f; padding:8px 12px; border-radius:4px; }
+  .chapter-tag { display:inline-block; background:#e8f0fd; color:#1a5fb4; font-size:12px; padding:2px 8px; border-radius:10px; margin-right:6px; }
+  code, pre { background:#f0f0f0; border-radius:4px; }
+  code { padding:1px 5px; } pre { padding:8px; overflow-x:auto; }
+  .progress { font-size:14px; color:#666; margin-left:auto; }
+  ul { padding-left:24px; }
+</style>
+</head>
+<body>
+<h1>📚 學測自然科物理題庫集（108課綱）</h1>
+<blockquote><strong>使用說明</strong>：涵蓋學測物理全部六大章節，每題可點「查看答案」展開詳解。可<a href="#" onclick="shuffleAll();return false;">打亂題序</a>反覆練習，並統計答對率。</blockquote>
+
+<div class="controls">
+  <button class="btn-open" onclick="toggleAll(true)">全部展開</button>
+  <button class="btn-close" onclick="toggleAll(false)">全部收合</button>
+  <button class="btn-shuffle" onclick="shuffleAll()">🔀 打亂題序</button>
+  <button class="btn-percent" onclick="resetScore()">🔄 重設答對率</button>
+  <span class="progress" id="scoreInfo"></span>
+</div>
+
+<div id="quiz"></div>
+
+<script>
+const QUESTIONS = [
+{ch:"第一章 科學的態度與方法", t:"觀念 1-1：SI 單位制度", q:"下列何者不是 SI 基本單位？", opts:["(A) 公尺 (m)","(B) 公斤 (kg)","(C) 牛頓 (N)","(D) 秒 (s)","(E) 安培 (A)"], a:"(C) 牛頓是導出單位（1 N = 1 kg·m/s²），其餘皆為 SI 基本單位。"},
+{ch:"第一章 科學的態度與方法", t:"觀念 1-1：SI 單位制度", q:"「力」的 SI 單位為牛頓（N），若以基本單位表示，1 N 等於？", opts:["(A) kg·m/s","(B) kg·m/s²","(C) kg·m²/s²","(D) kg·m²/s³"], a:"(B) F = ma → kg × m/s² = kg·m/s²"},
+{ch:"第一章 科學的態度與方法", t:"觀念 1-1：SI 單位制度", q:"關於 SI 單位的敘述，下列何者正確？", opts:["(A) 安培是導出單位","(B) 莫耳是 SI 基本單位之一","(C) 溫度的基本單位是華氏度","(D) 光燭（candela）不屬於 SI 基本單位"], a:"(B) SI 七個基本單位：公尺、公斤、秒、安培、克爾文、莫耳、光燭。"},
+{ch:"第一章 科學的態度與方法", t:"觀念 1-2：物理學簡史與科學方法", q:"誰被稱為「實驗物理學之父」，並提出物體在無外力作用下會保持等速直線運動的觀念？", opts:["(A) 牛頓","(B) 伽利略","(C) 亞里斯多德","(D) 愛因斯坦"], a:"(B) 伽利略透過理想實驗推翻亞里斯多德的觀點，奠定慣性原理的基礎。"},
+{ch:"第一章 科學的態度與方法", t:"觀念 1-2：物理學簡史與科學方法", q:"下列哪一個步驟最能體現科學方法中「控制變因」的精神？", opts:["(A) 閱讀相關文獻","(B) 同時改變多個條件觀察結果","(C) 每次只改變一個變因，其餘保持不變","(D) 根據直覺提出結論"], a:"(C) 控制變因法要求每次實驗只改變一個變因，以確定該變因對結果的影響。"},
+
+{ch:"第二章 物質的組成與交互作用", t:"觀念 2-1：原子結構與發現", q:"下列哪一個實驗證明了原子核的存在？", opts:["(A) 湯姆森陰極射線實驗","(B) 密立坎油滴實驗","(C) 拉塞福 α 粒子散射實驗","(D) 布朗運動實驗"], a:"(C) 拉塞福的 α 粒子散射實驗中，少數 α 粒子大幅偏轉甚至反彈，證明原子內部有質量集中、體積極小的原子核。"},
+{ch:"第二章 物質的組成與交互作用", t:"觀念 2-1：原子結構與發現", q:"關於密立坎油滴實驗，下列敘述何者正確？", opts:["(A) 測量了電子的質量","(B) 測量了基本電量 e 的值","(C) 證實了原子核的存在","(D) 發現了 X 射線"], a:"(B) 密立坎油滴實驗精確測量了基本電荷量 e ≈ 1.6 × 10⁻¹⁹ C。"},
+{ch:"第二章 物質的組成與交互作用", t:"觀念 2-1：原子結構與發現", q:"原子由原子核與電子組成，原子核內包含：", opts:["(A) 質子與電子","(B) 質子與中子","(C) 中子與電子","(D) 僅質子"], a:"(B) 原子核由質子（帶正電）和中子（不帶電）組成，電子在核外繞行。"},
+{ch:"第二章 物質的組成與交互作用", t:"觀念 2-2：微觀世界與分子運動", q:"根據動力分子理論，理想氣體的分子平均動能與下列何者成正比？", opts:["(A) 分子質量","(B) 絕對溫度","(C) 氣體體積","(D) 氣體壓力"], a:"(B) 平均動能 = (3/2)kT，與絕對溫度 T 成正比。"},
+{ch:"第二章 物質的組成與交互作用", t:"觀念 2-2：微觀世界與分子運動", q:"在相同溫度下，氦氣（4 g/mol）與氮氣（28 g/mol）的分子平均速率何者較大？", opts:["(A) 氦氣較大","(B) 氮氣較大","(C) 兩者相同","(D) 無法判斷"], a:"(A) 平均速率 v = √(3RT/M)，分子量 M 越小，平均速率越大。氦氣較小，速率較大。"},
+{ch:"第二章 物質的組成與交互作用", t:"觀念 2-2：微觀世界與分子運動", q:"下列關於布朗運動的敘述，何者正確？", opts:["(A) 布朗運動是分子的運動","(B) 布朗運動是懸浮微粒受到分子撞擊而產生不規則運動","(C) 溫度降低，布朗運動會更劇烈","(D) 布朗運動直接證明了原子的存在"], a:"(B) 布朗運動是懸浮微粒因受周圍分子不規則撞擊而產生的運動，間接證明分子存在。"},
+{ch:"第二章 物質的組成與交互作用", t:"觀念 2-3：四大基本交互作用", q:"維持原子核穩定的主要作用力是：", opts:["(A) 引力","(B) 電磁力","(C) 強核力","(D) 弱核力"], a:"(C) 強核力是四大基本力中最強的，負責將質子和中子束縛在原子核內。"},
+{ch:"第二章 物質的組成與交互作用", t:"觀念 2-3：四大基本交互作用", q:"下列哪一種交互作用的影響範圍最短？", opts:["(A) 引力","(B) 電磁力","(C) 強核力","(D) 弱核力"], a:"(C) 強核力的作用範圍極短（約 10⁻¹⁵ m），僅在原子核尺度內有效。"},
+
+{ch:"第三章 物體的運動", t:"觀念 3-1：直線運動", q:"一個物體從靜止開始做等加速度運動，加速度為 4 m/s²，經過 3 秒後的速度為：", opts:["(A) 4 m/s","(B) 8 m/s","(C) 12 m/s","(D) 36 m/s"], a:"(C) v = v₀ + at = 0 + 4 × 3 = 12 m/s"},
+{ch:"第三章 物體的運動", t:"觀念 3-1：直線運動", q:"一個物體以初速 20 m/s 做等減速運動，加速度為 −5 m/s²，物體完全停止所需時間為：", opts:["(A) 2 s","(B) 4 s","(C) 5 s","(D) 10 s"], a:"(B) t = (v − v₀)/a = (0 − 20)/(−5) = 4 s"},
+{ch:"第三章 物體的運動", t:"觀念 3-1：直線運動", q:"一個物體的 v-t 圖為一條斜率為正的直線，則該物體做何種運動？", opts:["(A) 等速度運動","(B) 等加速度運動","(C) 加速度遞增的運動","(D) 減速運動"], a:"(B) v-t 圖的斜率代表加速度，斜率為正的直線表示加速度為正且恆定，即等加速度運動。"},
+{ch:"第三章 物體的運動", t:"觀念 3-2：牛頓運動定律", q:"牛頓第二運動定律的公式為何？", opts:["(A) F = mv","(B) F = ma","(C) F = m/v","(D) F = v/a"], a:"(B) F = ma，力等於質量乘以加速度。"},
+{ch:"第三章 物體的運動", t:"觀念 3-2：牛頓運動定律", q:"一個 5 kg 的物體受到 20 N 的水平力作用在無摩擦平面，加速度為：", opts:["(A) 0.25 m/s²","(B) 4 m/s²","(C) 25 m/s²","(D) 100 m/s²"], a:"(B) a = F/m = 20/5 = 4 m/s²"},
+{ch:"第三章 物體的運動", t:"觀念 3-2：牛頓運動定律", q:"關於牛頓第三運動定律，下列敘述何者正確？", opts:["(A) 作用力與反作用力作用在同一物體上","(B) 作用力與反作用力大小相等、方向相反","(C) 作用力與反作用力可以互相抵銷","(D) 只有在靜止時才有作用力與反作用力"], a:"(B) 作用力與反作用力大小相等、方向相反、作用於不同物體，且同時產生。"},
+{ch:"第三章 物體的運動", t:"觀念 3-2：牛頓運動定律", q:"一個 10 kg 物體放在粗糙水平面上，動摩擦係數 0.3，以 50 N 水平力拉動，加速度為？（g=10）", opts:["(A) 2 m/s²","(B) 5 m/s²","(C) 8 m/s²","(D) 11 m/s²"], a:"(A) 摩擦力=0.3×10×10=30N，合力=50−30=20N，a=20/10=2 m/s²"},
+{ch:"第三章 物體的運動", t:"觀念 3-3：拋體運動", q:"一個物體以初速 30 m/s 水平拋出，不計空氣阻力，3 秒後水平速度為：", opts:["(A) 0 m/s","(B) 10 m/s","(C) 30 m/s","(D) 39 m/s"], a:"(C) 水平方向不受力，水平速度保持不變，仍為 30 m/s。"},
+{ch:"第三章 物體的運動", t:"觀念 3-3：拋體運動", q:"一個球以 20 m/s 垂直上拋，不計空氣阻力（g=10），球能到達的最大高度為：", opts:["(A) 10 m","(B) 20 m","(C) 40 m","(D) 80 m"], a:"(B) v²=v₀²−2gh → 0=400−20h → h=20 m"},
+{ch:"第三章 物體的運動", t:"觀念 3-3：拋體運動", q:"斜向拋射的物體，若不計空氣阻力，下列敘述何者正確？", opts:["(A) 水平速度會逐漸減小","(B) 頂點處的垂直速度最大","(C) 頂點處的垂直速度為零","(D) 落地速度一定等於初速"], a:"(C) 頂點處垂直分速度為零，僅剩水平分速度。水平速度恆不變。"},
+{ch:"第三章 物體的運動", t:"觀念 3-4：圓周運動與萬有引力", q:"一個物體做等速率圓周運動，其向心加速度的方向為：", opts:["(A) 與速度方向相同","(B) 與速度方向相反","(C) 指向圓心","(D) 背離圓心"], a:"(C) 向心加速度永遠指向圓心，改變速度方向但不改變速率。"},
+{ch:"第三章 物體的運動", t:"觀念 3-4：圓周運動與萬有引力", q:"地球人造衛星圓形軌道半徑增大為 4 倍，則運行速率變為原來的：", opts:["(A) 2 倍","(B) 4 倍","(C) 1/2 倍","(D) 1/4 倍"], a:"(C) 由 GMm/r²=mv²/r 得 v=√(GM/r)，r 變 4 倍時 v 變 √(1/4)=1/2 倍。"},
+{ch:"第三章 物體的運動", t:"觀念 3-4：圓周運動與萬有引力", q:"關於克卜勒行星運動定律，下列敘述何者正確？", opts:["(A) 行星軌道是正圓","(B) 行星與太陽連線在等時間內掃過等面積","(C) 公轉週期與軌道半長軸成正比","(D) 離太陽越遠公轉週期越短"], a:"(B) 克卜勒第二定律：行星與太陽連線在等時間內掃過相等面積。T²∝a³，離太陽越遠週期越長。"},
+
+{ch:"第四章 電與磁的統一", t:"觀念 4-1：電場與電力", q:"兩個帶正電點電荷 Q₁、Q₂（Q₂=2Q₁），兩者間電力為 F，則 Q₁ 受到的電力為何？", opts:["(A) F","(B) 2F","(C) F/2","(D) 無法判斷"], a:"(A) 依牛頓第三定律，作用力與反作用力大小相等，皆為 F。"},
+{ch:"第四章 電與磁的統一", t:"觀念 4-1：電場與電力", q:"庫侖定律 F=kQ₁Q₂/r²，若兩電荷距離增大為 3 倍，電力變為原來的：", opts:["(A) 1/3","(B) 1/6","(C) 1/9","(D) 1/27"], a:"(C) F∝1/r²，r 變 3 倍時 F 變 1/9 倍。"},
+{ch:"第四章 電與磁的統一", t:"觀念 4-2：電流磁效應", q:"通有電流的導線周圍會產生磁場，此現象由誰首先發現？", opts:["(A) 法拉第","(B) 安培","(C) 奧斯特","(D) 馬克士威"], a:"(C) 1820 年奧斯特發現通電導線能使附近磁針偏轉，即電流磁效應。"},
+{ch:"第四章 電與磁的統一", t:"觀念 4-2：電流磁效應", q:"長直導線通電流 I，距離 r 處磁場 B 與何者成正比？", opts:["(A) I × r","(B) I / r","(C) I / r²","(D) I² / r"], a:"(B) B=μ₀I/(2πr)，B 與 I 成正比、與 r 成反比。"},
+{ch:"第四章 電與磁的統一", t:"觀念 4-3：電磁感應", q:"依法拉第電磁感應定律，感應電動勢的大小與下列何者成正比？", opts:["(A) 磁通量本身","(B) 磁通量的變化率","(C) 磁場大小","(D) 線圈面積"], a:"(B) ε=−dΦB/dt，感應電動勢與磁通量變化率成正比。"},
+{ch:"第四章 電與磁的統一", t:"觀念 4-3：電磁感應", q:"線圈在均勻磁場中旋轉，若旋轉頻率增為 2 倍，感應電動勢最大值變為：", opts:["(A) 不變","(B) 2 倍","(C) 4 倍","(D) 1/2 倍"], a:"(B) ε₀=NBAω，ω=2πf，頻率加倍→ω加倍→ε₀加倍。"},
+{ch:"第四章 電與磁的統一", t:"觀念 4-3：電磁感應", q:"楞次定律指出感應電流的方向為：", opts:["(A) 使磁通量增加","(B) 使磁通量不變","(C) 使磁通量的變化減小","(D) 使磁通量的變化增加"], a:"(C) 楞次定律：感應電流方向會產生磁場，以抵抗引起感應的磁通量變化。"},
+{ch:"第四章 電與磁的統一", t:"觀念 4-4：波動現象", q:"水波從深水區進入淺水區時，下列何者會改變？", opts:["(A) 頻率","(B) 波速","(C) 波長不會改變","(D) 頻率和波速都不變"], a:"(B) 波進入另一介質時頻率不變、波速改變，波長也改變（λ=v/f）。"},
+{ch:"第四章 電與磁的統一", t:"觀念 4-4：波動現象", q:"兩組相同水波產生器產生的水波，某些區域振幅增大、某些減小，此現象稱為：", opts:["(A) 繞射","(B) 共振","(C) 干涉","(D) 折射"], a:"(C) 兩組波源疊加，形成建設性干涉和破壞性干涉。"},
+{ch:"第四章 電與磁的統一", t:"觀念 4-4：波動現象", q:"聲波從空氣中進入水中，下列何者保持不變？", opts:["(A) 波速","(B) 波長","(C) 頻率","(D) 振幅"], a:"(C) 波從一介質進入另一介質時，頻率永遠不變（由波源決定）。"},
+{ch:"第四章 電與磁的統一", t:"觀念 4-5：都卜勒效應", q:"救護車以速度 v 向你駛來，你聽到的警笛聲頻率會：", opts:["(A) 變高","(B) 變低","(C) 不變","(D) 先變高再變低"], a:"(A) 都卜勒效應：波源接近觀察者時，頻率變高。"},
+{ch:"第四章 電與磁的統一", t:"觀念 4-5：都卜勒效應", q:"音源固定不動，觀察者以速度 v 靠近音源，聽到的頻率 f' 與原頻率 f 的關係：", opts:["(A) f' > f","(B) f' < f","(C) f' = f","(D) 無法判斷"], a:"(A) 觀察者靠近波源，單位時間內接收到較多波數，頻率變高。"},
+
+{ch:"第五章 能量", t:"觀念 5-1：力學能守恆", q:"一個 2 kg 物體從 10 m 高處自由落下（不計空氣阻力，g=10），落地時的動能為：", opts:["(A) 100 J","(B) 200 J","(C) 400 J","(D) 800 J"], a:"(B) 能量守恆：KE=mgh=2×10×10=200 J"},
+{ch:"第五章 能量", t:"觀念 5-1：力學能守恆", q:"彈簧彈性常數 k=100 N/m，壓縮 0.2 m 後釋放，恢復原長時物體動能為：", opts:["(A) 0.4 J","(B) 2 J","(C) 4 J","(D) 20 J"], a:"(B) 彈性位能=½kx²=½(100)(0.2)²=2 J，全部轉為動能。"},
+{ch:"第五章 能量", t:"觀念 5-1：力學能守恆", q:"關於能量守恆定律，下列敘述何者正確？", opts:["(A) 能量可以被消滅","(B) 能量只能從一種形式轉換為另一種形式，總量不變","(C) 任何過程能量都會增加","(D) 能量守恆只在密封系統中成立"], a:"(B) 能量不生不滅，只能從一種形式轉換為另一種形式，封閉系統中總能量恆定。"},
+{ch:"第五章 能量", t:"觀念 5-2：功與功率", q:"一個 10 N 的力沿水平方向推動物體 5 m（方向與位移同向），此力所做的功為：", opts:["(A) 2 J","(B) 5 J","(C) 15 J","(D) 50 J"], a:"(D) W=F·d·cosθ=10×5×cos0°=50 J"},
+{ch:"第五章 能量", t:"觀念 5-2：功與功率", q:"工人在 10 秒內將 50 kg 箱子提升 3 m（g=10），平均功率為：", opts:["(A) 15 W","(B) 50 W","(C) 150 W","(D) 500 W"], a:"(C) W=mgh=50×10×3=1500 J，P=W/t=1500/10=150 W"},
+{ch:"第五章 能量", t:"觀念 5-3：核能與電磁輻射", q:"核分裂與核融合相比，下列敘述何者正確？", opts:["(A) 核融合釋放的能量更多","(B) 核分裂釋放的能量更多","(C) 兩者釋放的能量相同","(D) 兩者都不會釋放能量"], a:"(A) 單位質量的核融合釋放能量比核分裂更多，太陽能量即來自核融合。"},
+{ch:"第五章 能量", t:"觀念 5-3：核能與電磁輻射", q:"太陽能電池主要利用哪一種原理將光能轉換為電能？", opts:["(A) 光電效應","(B) 電磁感應","(C) 熱電效應","(D) 壓電效應"], a:"(A) 太陽能電池利用光電效應（半導體 p-n 接面）將光能轉換為電能。"},
+{ch:"第五章 能量", t:"觀念 5-3：核能與電磁輻射", q:"下列哪一種能源屬於再生能源？", opts:["(A) 石油","(B) 天然氣","(C) 風力","(D) 核能"], a:"(C) 風力來自大氣自然循環，取之不盡，屬於再生能源；其餘皆非再生。"},
+
+{ch:"第六章 量子現象", t:"觀念 6-1：黑體輻射與普朗克量子論", q:"普朗克提出能量量子化假說，主要是為了解釋：", opts:["(A) 光電效應","(B) 黑體輻射的能量分佈","(C) 原子光譜","(D) 康卜頓效應"], a:"(B) 1900 年普朗克為解決黑體輻射的「紫外線災難」，提出能量量子化假說 E=nhf。"},
+{ch:"第六章 量子現象", t:"觀念 6-1：黑體輻射與普朗克量子論", q:"普朗克的量子假說認為電磁波的能量為：", opts:["(A) 連續的","(B) 量子化的，E=nhf","(C) 與波長無關","(D) 只在高頻時量子化"], a:"(B) 普朗克假說：能量只能以 hf 的整數倍存在，E=nhf（n=1,2,3,...）。"},
+{ch:"第六章 量子現象", t:"觀念 6-2：光電效應", q:"光電效應實驗中，若入射光頻率低於金屬臨界頻率，則：", opts:["(A) 會有光電子射出但動能很小","(B) 完全沒有光電子射出","(C) 光電子動能與光強有關","(D) 光電子動能與頻率無關"], a:"(B) 頻率低於臨界頻率時，光子能量不足以使電子逸出，完全不產生光電效應。"},
+{ch:"第六章 量子現象", t:"觀念 6-2：光電效應", q:"愛因斯坦光電方程式 KEmax=hf−W，若入射光頻率增為 2 倍，則光電子最大動能：", opts:["(A) 也變為 2 倍","(B) 變為大於 2 倍","(C) 變為小於 2 倍","(D) 無法確定，視功函數而定"], a:"(D) KEmax=hf−W，KEmax 的變化取決於 W 的值，不同金屬功函數不同。"},
+{ch:"第六章 量子現象", t:"觀念 6-2：光電效應", q:"關於光電效應，下列敘述何者正確？", opts:["(A) 光越強，光電子最大動能越大","(B) 光頻率越高，光電流越大","(C) 光電子最大動能只與光頻率有關，與光強無關","(D) 光電效應可用古典波動理論完整解釋"], a:"(C) 光電子最大動能只取決於入射光頻率和金屬功函數，與光強無關（光強只影響光電流大小）。"},
+{ch:"第六章 量子現象", t:"觀念 6-3：波耳模型與原子光譜", q:"波耳氫原子模型中，電子在不同能階間跳躍時會發射或吸收：", opts:["(A) 連續光譜","(B) 特定頻率的光子","(C) β 粒子","(D) γ 射線"], a:"(B) 電子從高能階跳至低能階時，發射光子的能量等於兩能階能量差，對應特定頻率。"},
+{ch:"第六章 量子現象", t:"觀念 6-3：波耳模型與原子光譜", q:"氫原子電子從 n=4 跳到 n=2 能階時發射的光屬於：", opts:["(A) 紫外線區（來曼系）","(B) 可見光區（巴爾默系）","(C) 紅外線區（帕邢系）","(D) X 射線"], a:"(B) 跳到 n=2 的所有躍遷皆屬巴爾默系，位於可見光區。"},
+{ch:"第六章 量子現象", t:"觀念 6-4：物質波與波粒二象性", q:"德布羅意提出物質波概念，認為：", opts:["(A) 只有光具有波動性","(B) 所有物質都具有波動性","(C) 只有電子具有波動性","(D) 波動性只在微觀世界中存在"], a:"(B) 德布羅意假說：任何具有動量 p 的物體都具有波動性，波長 λ=h/p。"},
+{ch:"第六章 量子現象", t:"觀念 6-4：物質波與波粒二象性", q:"質量 m、速度 v 的粒子，其德布羅意波長為：", opts:["(A) λ=mv/h","(B) λ=h/(mv)","(C) λ=h·mv","(D) λ=m/(hv)"], a:"(B) λ=h/p=h/(mv)，波長與動量成反比。"},
+{ch:"第六章 量子現象", t:"觀念 6-4：物質波與波粒二象性", q:"關於波粒二象性，下列敘述何者正確？", opts:["(A) 光只是波不是粒子","(B) 電子只是粒子不是波","(C) 微觀粒子同時具有波動性與粒子性","(D) 宏觀物體也明顯展現波動性"], a:"(C) 波粒二象性是微觀世界基本特性，光和物質都同時具有波動性與粒子性；宏觀物體物質波波長極短，無法觀察波動性。"},
+
+{ch:"🔥 綜合模擬題", t:"跨章節整合", q:"一個物體在無摩擦斜面上滑下，以力學能守恆觀點分析，下列何者正確？", opts:["(A) 動能增、位能增","(B) 動能減、位能增","(C) 動能增、位能減，力學能守恆","(D) 動能不變、位能減少"], a:"(C) 下滑時高度降低位能減少、速度增加動能增加，總力學能不變。"},
+{ch:"🔥 綜合模擬題", t:"跨章節整合", q:"帶正電粒子在電場中從高電位處移動到低電位處，此粒子電位能：", opts:["(A) 增加","(B) 減少","(C) 不變","(D) 先增後減"], a:"(B) 正電荷從高電位移至低電位，電場對正電荷做正功，電位能減少。"},
+{ch:"🔥 綜合模擬題", t:"跨章節整合", q:"一簡諧運動的彈簧振體，下列何處動能最大？", opts:["(A) 最大位移處","(B) 平衡位置","(C) 任何位置都相同","(D) 無法判斷"], a:"(B) 平衡位置處彈簧無形變（位能=0），動能最大；最大位移處速度為 0。"},
+{ch:"🔥 綜合模擬題", t:"跨章節整合", q:"關於電磁波，下列敘述何者正確？", opts:["(A) 電磁波傳播需要介質","(B) 電磁波是橫波","(C) 電磁波中電場與磁場互相平行","(D) 所有電磁波在真空中速率都不同"], a:"(B) 電磁波是橫波，電場與磁場互相垂直且垂直於傳播方向。所有電磁波在真空中速率皆為光速 c≈3×10⁸ m/s。"}
+];
+
+let order = QUESTIONS.map((_, i) => i);
+const score = {};
+
+function shuffleArray(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+
+function render(){
+  const quiz = document.getElementById('quiz');
+  quiz.innerHTML = '';
+  let currentCh = '';
+  order.forEach(idx => {
+    const q = QUESTIONS[idx];
+    if(q.ch !== currentCh){ currentCh = q.ch; const h=document.createElement('h2'); h.textContent=q.ch; quiz.appendChild(h); }
+    const d = document.createElement('details');
+    d.style.marginTop='10px';
+    const sum = document.createElement('summary');
+    sum.innerHTML = '<span class="chapter-tag">'+q.t+'</span> '+escapeHtml(q.q);
+    const body = document.createElement('div');
+    body.className='ans';
+    body.innerHTML = '<strong>答案：</strong>'+escapeHtml(q.a);
+    const optsP = document.createElement('p');
+    optsP.innerHTML = q.opts.map(o=>escapeHtml(o)).join('<br>');
+    d.appendChild(sum);
+    const qBody=document.createElement('p');
+    qBody.className='q';
+    qBody.textContent='💡 '+q.q;
+    d.appendChild(qBody);
+    d.appendChild(optsP);
+    d.appendChild(body);
+    d.addEventListener('toggle', ()=>{ if(d.open && score[idx]===undefined){ if(confirm('這題你答對了嗎？\n\n「確定」=答對，記入答對率\n「取消」=答錯或不計')){ score[idx]=true; } else { score[idx]=false; } updateScore(); } });
+    quiz.appendChild(d);
+  });
+  updateScore();
+}
+
+function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function toggleAll(open){ document.querySelectorAll('details').forEach(d=>{ if(open) d.setAttribute('open',''); else d.removeAttribute('open'); }); }
+
+function shuffleAll(){ order = shuffleArray([...Array(QUESTIONS.length).keys()]); render(); }
+
+function resetScore(){
+  for(const k in score){ delete score[k]; }
+  render();
+  document.querySelectorAll('details').forEach(d=>d.removeAttribute('open'));
+}
+
+function updateScore(){
+  const done = Object.values(score).length;
+  const correct = Object.values(score).filter(v=>v===true).length;
+  const info = document.getElementById('scoreInfo');
+  info.textContent = done ? ('已作答 '+done+' 題，答對 '+correct+' 題（'+(done?Math.round(correct/done*100):0)+'%）') : '點開答案即自動計分';
+}
+
+render();
+</script>
+</body>
+</html>

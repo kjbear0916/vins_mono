@@ -20,7 +20,9 @@ Usage (generated rotation-free + yaw cases, gates + IMU verdicts):
   python gen_synth_seq.py --out _adv/imu_baseline.avi --board \
       --yaw-drift 0.0    --out-imu _adv/imu_baseline_imu.json
   python gen_synth_seq.py --out _adv/imu_yaw15.avi   --board \
-      --yaw-drift 0.15   --out-imu _adv/imu_yaw15_imu.json   (deg/s)
+      --yaw-drift 0.30   --out-imu _adv/imu_yaw15_imu.json   (rad/s;
+      the regression uses 0.30: trajectory gates PASS yet the IMU gate
+      FAILs.  Stored _adv/imu_yaw15 at 0.6 breaks VO tracking entirely)
   python imu_gate_probe.py --video _adv/imu_yaw15.avi \
       --gyro _adv/imu_yaw15_imu.json
 """

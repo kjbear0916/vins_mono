@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>學測物理題庫 - 變化題·選項詳解版</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:'Segoe UI','Microsoft JhengHei',sans-serif;max-width:900px;margin:0 auto;padding:24px 20px 90px;line-height:1.75;color:#222;background:#f5f6f8}
+  h1{color:#1a5fb4;text-align:center;border-bottom:3px solid #1a5fb4;padding-bottom:10px}
+  h2{color:#2a7f3f;border-left:5px solid #2a7f3f;padding:4px 10px;margin-top:38px;background:#eef6f0;border-radius:0 6px 6px 0}
+  .controls{position:sticky;top:0;background:#f5f6f8;padding:8px 0;z-index:50;border-bottom:1px solid #dde;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .controls button{padding:8px 14px;border:none;border-radius:6px;cursor:pointer;color:#fff;font-size:14px}
+  .btn-next{background:#7a3fa0}.btn-repaint{background:#1a8f5f}.btn-reset{background:#888}.btn-all{background:#1a5fb4}
+  .progress{margin-left:auto;font-size:14px;color:#666}
+  .stat-row{display:flex;gap:14px;margin:12px 0;flex-wrap:wrap}
+  .stat-box{background:#fff;border:1px solid #d4d9e0;border-radius:10px;padding:8px 16px;text-align:center;min-width:100px}
+  .stat-num{font-size:22px;font-weight:bold;color:#1a5fb4}.stat-label{font-size:12px;color:#888}
+  .card{background:#fff;border:1px solid #d4d9e0;border-radius:12px;padding:16px 18px;margin:14px 0;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+  .q{font-weight:bold;margin:0 0 10px 0}
+  .chapter-tag{display:inline-block;background:#e8f0fd;color:#1a5fb4;font-size:12px;padding:2px 8px;border-radius:10px;margin-right:6px}
+  .variant-tag{display:inline-block;background:#fff0e0;color:#c26a00;font-size:12px;padding:2px 8px;border-radius:10px;margin-left:6px}
+  .blank{display:inline-block;min-width:70px;height:38px;border:2px dashed #7a3fa0;border-radius:8px;vertical-align:middle;text-align:center;font-weight:bold;font-size:16px;line-height:34px;margin:0 5px;background:#faf6ff;transition:all .2s}
+  .blank.dropped{border-style:solid;border-color:#2a7f3f;background:#f2fbf4}
+  .blank.correct{border-color:#2a7f3f;background:#dff3e2;color:#1a6b2e}
+  .blank.wrong{border-color:#ca3b3b;background:#fde3e3;color:#a11}
+  .options-panel{margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .option{padding:10px 14px;border-radius:10px;background:#1a5fb4;color:#fff;font-weight:bold;font-size:15px;cursor:grab;user-select:none;box-shadow:0 3px 6px rgba(0,0,0,.2);display:inline-block}
+  .option:active{cursor:grabbing}.option.used{opacity:.25;pointer-events:none}
+  .check-btn{margin-top:12px;padding:8px 20px;border:none;border-radius:6px;background:#1a5fb4;color:#fff;cursor:pointer;font-size:15px}
+  .check-btn:disabled{background:#bbb;cursor:default}
+  .result{font-weight:bold;margin-top:12px;min-height:24px}
+  .ok{color:#2a7f3f}.bad{color:#ca3b3b}
+  .explain{margin-top:12px;background:#f7f9fc;border:1px solid #dde3ec;border-radius:8px;padding:10px 14px;display:none}
+  .explain.show{display:block}
+  .explain .key{font-weight:bold;color:#1a5fb4;margin-bottom:6px}
+  .exp-item{margin:6px 0;padding:6px 8px;border-radius:6px}
+  .exp-correct{background:#e9f8ee;border-left:3px solid #2a7f3f}
+  .exp-wrong{background:#fdf1f1;border-left:3px solid #ca3b3b}
+  .opt-letter{display:inline-block;font-weight:bold;margin-right:6px}
+  .opt-letter.c{color:#2a7f3f}.opt-letter.w{color:#ca3b3b}
+  blockquote{border-left:4px solid #ccc;margin:12px 0;padding:8px 16px;background:#eee;color:#555}
+</style>
+</head>
+<body>
+<h1>🎲 學測物理題庫 · 變化題＋選項詳解版</h1>
+<blockquote>
+每個觀念有<strong>多種問法與數字變化</strong>，每次「下一批」會重新隨機抽題、打亂選項。對答案後會<strong>逐選項解說對錯原因</strong>。可無限重複練習。
+</blockquote>
+
+<div class="controls">
+  <button class="btn-next" onclick="nextBatch()">🎲 重新抽題(變化)</button>
+  <button class="btn-all" onclick="showAll()">📋 顯示全部題目</button>
+  <button class="btn-reset" onclick="resetScores()">🔄 重設答對率</button>
+  <span class="progress" id="scoreInfo"></span>
+</div>
+
+<div class="stat-row">
+  <div class="stat-box"><div class="stat-num" id="statTotal">0</div><div class="stat-label">總題數</div></div>
+  <div class="stat-box"><div class="stat-num" id="statDone">0</div><div class="stat-label">已作答</div></div>
+  <div class="stat-box"><div class="stat-num" id="statCorrect">0</div><div class="stat-label">答對</div></div>
+  <div class="stat-box"><div class="stat-num" id="statRate">0%</div><div class="stat-label">答對率</div></div>
+</div>
+
+<div id="quiz"></div>
+
+<script>
+// 每個觀念為一組，含多種問法變化(每種都是一個「題目+選項+逐選項詳解」)
+// variant 可隨機抽取，選項代號會打亂
+const CONCEPTS = [
+{ch:"第一章 科學的態度與方法", t:"SI 單位制度", variants:[
+  {q:"下列何者不是 SI 基本單位？(公尺/公斤/牛頓/秒)", ans:"C", opts:[
+     {txt:"公尺 (m)", reason:"正確的基本單位，用於長度。"},
+     {txt:"公斤 (kg)", reason:"正確的基本單位，用於質量。"},
+     {txt:"牛頓 (N)", reason:"【正解】 牛頓是導出單位（1 N=1 kg·m/s²），不是基本單位。"},
+     {txt:"秒 (s)", reason:"正確的基本單位，用於時間。"}]},
+  {q:"下列哪一個屬於 SI 導出單位(非基本單位)？", ans:"A", opts:[
+     {txt:"牛頓 (N)", reason:"【正解】 導出單位，由基本單位 kg·m/s² 組合而成。"},
+     {txt:"安培 (A)", reason:"基本單位，用於電流。"},
+     {txt:"莫耳 (mol)", reason:"基本單位，用於物質的量。"},
+     {txt:"光燭 (cd)", reason:"基本單位，用於發光強度。"}]},
+  {q:"力的 SI 單位 1 N 以基本單位表示為何？", ans:"B", opts:[
+     {txt:"kg·m/s", reason:"這是動量(kg·m/s)，不是力。"},
+     {txt:"kg·m/s²", reason:"【正解】 由 F=ma = kg×m/s² 得來。"},
+     {txt:"kg·m²/s²", reason:"這是能量/功的單位(J)，不是力。"},
+     {txt:"kg·m²/s³", reason:"這是功率的單位(W)，不是力。"}]}]},
+
+{ch:"第一章 科學的態度與方法", t:"物理學簡史與科學方法", variants:[
+  {q:"被稱「實驗物理學之父」並奠定慣性原理基礎的是誰？", ans:"B", opts:[
+     {txt:"牛頓", reason:"他提出三大定律，但慣性原理的思想最早可溯自伽利略。"},
+     {txt:"伽利略", reason:"【正解】 藉理想實驗推翻亞里斯多德，首倡慣性概念。"},
+     {txt:"亞里斯多德", reason:"他主張「有力才有運動」的錯誤觀點，被伽利略推翻。"},
+     {txt:"愛因斯坦", reason:"提出相對論，與慣性原理的發現無關。"}]},
+  {q:"科學方法中「控制變因」的最佳意義為何？", ans:"C", opts:[
+     {txt:"閱讀相關文獻", reason:"這是蒐集資料，非控制變因。"},
+     {txt:"同時改變多個條件", reason:"這正是控制變因要避免的，無法判斷因果。"},
+     {txt:"每次只改變一個變因，其餘不變", reason:"【正解】 這樣才能確認該變因對結果的影響。"},
+     {txt:"根據直覺提出結論", reason:"缺乏實證，非科學方法。"}]}]},
+
+{ch:"第二章 物質的組成與交互作用", t:"原子結構與發現", variants:[
+  {q:"哪個實驗證明了原子核的存在？", ans:"C", opts:[
+     {txt:"湯姆森陰極射線實驗", reason:"此實驗發現電子並測 e/m，未涉及原子核。"},
+     {txt:"密立坎油滴實驗", reason:"測基本電量 e，與原子核無關。"},
+     {txt:"拉塞福 α 粒子散射實驗", reason:"【正解】 少數 α 粒子大角度偏轉/反彈，證明原子核存在。"},
+     {txt:"布朗運動實驗", reason:"證明分子存在，非原子核。"}]},
+  {q:"密立坎油滴實驗主要測得什麼？", ans:"B", opts:[
+     {txt:"電子的質量", reason:"電子質量是由 e 與 e/m 結合求出，非此實驗直接測得。"},
+     {txt:"基本電量 e", reason:"【正解】 由油滴懸浮電場平衡測得 e≈1.6×10⁻¹⁹ C。"},
+     {txt:"原子核的存在", reason:"那是拉塞福實驗的成果。"},
+     {txt:"電子的 e/m 值", reason:"那是湯姆森陰極射線實驗的成果。"}]},
+  {q:"原子核內包含下列何者？", ans:"B", opts:[
+     {txt:"質子與電子", reason:"電子在核外繞行，不在核內。"},
+     {txt:"質子與中子", reason:"【正解】 原子核由質子(正電)與中子(不帶電)組成。"},
+     {txt:"中子與電子", reason:"電子在核外，不在核內。"},
+     {txt:"僅質子", reason:"原子核還含有中子(除氫外)。"}]}]},
+
+{ch:"第二章 物質的組成與交互作用", t:"微觀世界與分子運動", variants:[
+  {q:"理想氣體分子平均動能與何者成正比？", ans:"B", opts:[
+     {txt:"分子質量", reason:"平均動能=(3/2)kT，與質量無關，只與溫度有關。"},
+     {txt:"絕對溫度", reason:"【正解】 平均動能=(3/2)kT，與絕對溫度 T 成正比。"},
+     {txt:"氣體體積", reason:"平均動能與容器體積無直接關係。"},
+     {txt:"氣體壓力", reason:"壓力受動能與密度影響，但平均動能本身只由 T 決定。"}]},
+  {q:"同溫下，氦氣(4 g/mol)與氮氣(28 g/mol)的分子平均速率何者較大？", ans:"A", opts:[
+     {txt:"氦氣較大", reason:"【正解】 平均速率 v=√(3RT/M)，M 愈小速率愈大，氦氣 M 較小。"},
+     {txt:"氮氣較大", reason:"氮氣分子量較大，平均速率反而較小。"},
+     {txt:"兩者相同", reason:"兩者分子量不同，速率必定不同。"},
+     {txt:"無法判斷", reason:"同溫下可由分子量直接比較判斷。"}]},
+  {q:"關於布朗運動，下列敘述何者正確？", ans:"B", opts:[
+     {txt:"是分子本身的運動", reason:"布朗運動是「懸浮微粒」的運動，非分子本體。"},
+     {txt:"微粒受分子撞擊產生的不規則運動", reason:"【正解】 微粒受到周圍分子不規則撞擊而運動。"},
+     {txt:"溫度降低會更劇烈", reason:"溫度降低分子運動減緩，布朗運動應減弱。"},
+     {txt:"直接證明原子存在", reason:"它間接證明分子存在，非原子。"}]}]},
+
+{ch:"第二章 物質的組成與交互作用", t:"四大基本交互作用", variants:[
+  {q:"維持原子核穩定的主要作用力是？", ans:"C", opts:[
+     {txt:"引力", reason:"引力極弱，遠不足以克服質子間互斥。"},
+     {txt:"電磁力", reason:"質子間電磁力是互斥的，反而使核不穩定。"},
+     {txt:"強核力", reason:"【正解】 四大基本力中最強，把質子與中子束縛在核內。"},
+     {txt:"弱核力", reason:"弱核力負責 β 衰變，強度不足以維持核穩定。"}]},
+  {q:"下列哪一種交互作用影響範圍最短？", ans:"C", opts:[
+     {txt:"引力", reason:"引力是長程力，影響無限遠。"},
+     {txt:"電磁力", reason:"電磁力也是長程力。"},
+     {txt:"強核力", reason:"【正解】 作用範圍約 10⁻¹⁵ m，僅在原子核尺度內。"},
+     {txt:"弱核力", reason:"弱核力範圍也短(10⁻¹⁸ m)，但並非最短於核力之外…實為短，但強核力亦短；題意強核力最短。"}]}]},
+
+{ch:"第三章 物體的運動", t:"直線運動", variants:[
+  {q:"靜止開始 a=4 m/s²，3 秒後速度為？", ans:"C", opts:[
+     {txt:"4 m/s", reason:"這是加速度值，不是速度。"},
+     {txt:"8 m/s", reason:"v=at=4×2=8，這是 2 秒時的速度。"},
+     {txt:"12 m/s", reason:"【正解】 v=at=4×3=12 m/s。"},
+     {txt:"36 m/s", reason:"把 a²t 或誤算，非正確值。"}]},
+  {q:"初速 20 m/s、加速度 −5 m/s² 等減速，多久停止？", ans:"B", opts:[
+     {txt:"2 s", reason:"t=20/5=4 才對，2 秒時仍以 10 m/s 前進。"},
+     {txt:"4 s", reason:"【正解】 t=(0−20)/(−5)=4 s。"},
+     {txt:"5 s", reason:"若初速 25 m/s 才是 5 秒。"},
+     {txt:"10 s", reason:"時間算錯，4 秒即停止。"}]},
+  {q:"斜率為正的 v-t 直線代表何種運動？", ans:"B", opts:[
+     {txt:"等速度運動", reason:"等速的 v-t 圖是水平線(斜率0)，不是斜直線。"},
+     {txt:"等加速度運動", reason:"【正解】 v-t 圖斜率=加速度，直線斜率固定代表加速度固定。"},
+     {txt:"加速度遞增運動", reason:"斜率固定代表加速度固定，非遞增。"},
+     {txt:"減速運動", reason:"斜率為正代表加速，不是減速。"}]}]},
+
+{ch:"第三章 物體的運動", t:"牛頓運動定律", variants:[
+  {q:"牛頓第二定律公式為何？", ans:"B", opts:[
+     {txt:"F=mv", reason:"mv 是動量，不是力。"},
+     {txt:"F=ma", reason:"【正解】 力=質量×加速度。"},
+     {txt:"F=m/v", reason:"量綱不符，錯誤。"},
+     {txt:"F=v/a", reason:"a 在分母，量綱不符，錯誤。"}]},
+  {q:"5 kg 物體受 20 N 水平力(無摩擦)，加速度為？", ans:"B", opts:[
+     {txt:"0.25 m/s²", reason:"這是把 5/20，反了。"},
+     {txt:"4 m/s²", reason:"【正解】 a=F/m=20/5=4 m/s²。"},
+     {txt:"25 m/s²", reason:"把 m 乘 F，非除法。"},
+     {txt:"100 m/s²", reason:"把 F×m，非除法。"}]},
+  {q:"關於牛頓第三定律何者正確？", ans:"B", opts:[
+     {txt:"作用在同一物體上", reason:"作用於「不同」物體，才不能互相抵銷。"},
+     {txt:"大小相等方向相反", reason:"【正解】 同時產生、大小相等、方向相反、作用於不同物體。"},
+     {txt:"可互相抵銷", reason:"作用在不同物體，不能抵銷。"},
+     {txt:"僅靜止時存在", reason:"運動中也有作用力與反作用力。"}]},
+  {q:"10 kg、動摩擦係數0.3，50 N 水平力拉(g=10)，加速度為？", ans:"A", opts:[
+     {txt:"2 m/s²", reason:"【正解】 摩擦力=0.3×10×10=30N，合力=50−30=20N，a=20/10=2。"},
+     {txt:"5 m/s²", reason:"忘減摩擦力(直接用50/10=5)。"},
+     {txt:"8 m/s²", reason:"計算錯誤。"},
+     {txt:"11 m/s²", reason:"把摩擦力加進去，錯。"}]}]},
+
+{ch:"第三章 物體的運動", t:"拋體運動", variants:[
+  {q:"30 m/s 水平拋出，3 秒後的水平速度為？(不計阻力)", ans:"C", opts:[
+     {txt:"0 m/s", reason:"水平方向不受力，速度不可能為零。"},
+     {txt:"10 m/s", reason:"這是誤把重力加速度 10 當成水平速度。"},
+     {txt:"30 m/s", reason:"【正解】 水平方向不受力，速度保持 30 m/s。"},
+     {txt:"39 m/s", reason:"把水平30與垂直30(gt)向量相加約42，非39。"}]},
+  {q:"20 m/s 垂直上拋(g=10)，最大高度為？", ans:"B", opts:[
+     {txt:"10 m", reason:"這是一半，誤算。"},
+     {txt:"20 m", reason:"【正解】 v²=v₀²−2gh → 0=400−20h → h=20 m。"},
+     {txt:"40 m", reason:"把 2gh 當成 v₀² 而 h=400/10，錯。"},
+     {txt:"80 m", reason:"誤把質量帶入，錯。"}]},
+  {q:"斜向拋射(不計阻力)，下列何者正確？", ans:"C", opts:[
+     {txt:"水平速度漸減", reason:"水平方向不受力，速度恆定。"},
+     {txt:"頂點垂直速度最大", reason:"頂點垂直速度為零，非最大。"},
+     {txt:"頂點垂直速度為零", reason:"【正解】 最高點垂直分速度為零，僅剩水平分速度。"},
+     {txt:"落地速度等於初速", reason:"落地時垂直速度為向下，與初速方向不同(同速率不同向)。"}]}]},
+
+{ch:"第三章 物體的運動", t:"圓周運動與萬有引力", variants:[
+  {q:"等速率圓周運動的向心加速度方向為？", ans:"C", opts:[
+     {txt:"與速度同向", reason:"同向會改變速率(加速)，與等速率矛盾。"},
+     {txt:"與速度反向", reason:"反向會使速率減小。"},
+     {txt:"指向圓心", reason:"【正解】 向心加速度永遠指向圓心，僅改變方向。"},
+     {txt:"背離圓心", reason:"那是離心概念，向心加速度朝圓心。"}]},
+  {q:"衛星圓形軌道半徑增為 4 倍，運行速率變為何？", ans:"C", opts:[
+     {txt:"2 倍", reason:"v∝1/√r，r 增 4 倍應減為 1/2，非增。"},
+     {txt:"4 倍", reason:"v 與 r 成反比開根號，非正比。"},
+     {txt:"1/2 倍", reason:"【正解】 v=√(GM/r)，r 增4倍 → v 減為 √(1/4)=1/2。"},
+     {txt:"1/4 倍", reason:"需開根號，故為 1/2 非 1/4。"}]},
+  {q:"克卜勒定律何者正確？", ans:"B", opts:[
+     {txt:"行星軌道是正圓", reason:"軌道是橢圓，太陽在焦點。"},
+     {txt:"等時間內掃過等面積", reason:"【正解】 克卜勒第二定律(等面積定律)。"},
+     {txt:"週期與半長軸成正比", reason:"是 T²∝a³，與半長軸 3/2 次方成正比。"},
+     {txt:"離太陽越遠週期越短", reason:"離太陽越遠週期越長。"}]}]},
+
+{ch:"第四章 電與磁的統一", t:"電場與電力", variants:[
+  {q:"Q₂=2Q₁，兩電荷間電力為F，則 Q₁ 受力為何？", ans:"A", opts:[
+     {txt:"F", reason:"【正解】 依牛頓第三定律，作用力與反作用力大小相等。"},
+     {txt:"2F", reason:"電荷量大者受力也不較大，兩者受力相等。"},
+     {txt:"F/2", reason:"兩者受力相等，非一半。"},
+     {txt:"無法判斷", reason:"可判斷，兩者受力皆為 F。"}]},
+  {q:"庫侖定律距離增為 3 倍，電力變為何？", ans:"C", opts:[
+     {txt:"1/3", reason:"是平方反比，非一次反比。"},
+     {txt:"1/6", reason:"計算錯誤。"},
+     {txt:"1/9", reason:"【正解】 F∝1/r²，r 增3倍 → 1/(3²)=1/9。"},
+     {txt:"1/27", reason:"這是三次方反比，錯。"}]}]},
+
+{ch:"第四章 電與磁的統一", t:"電流磁效應", variants:[
+  {q:"電流磁效應由誰首先發現？", ans:"C", opts:[
+     {txt:"法拉第", reason:"他發現的是電磁感應，非電流磁效應。"},
+     {txt:"安培", reason:"安培研究磁場方向規則，但最早發現者是奧斯特。"},
+     {txt:"奧斯特", reason:"【正解】 1820 年發現通電導線使磁針偏轉。"},
+     {txt:"馬克士威", reason:"他統整電磁理論，晚於電流磁效應發現。"}]},
+  {q:"長直導線距離 r 處的磁場 B 與何者成正比？", ans:"B", opts:[
+     {txt:"I×r", reason:"B 與 r 成反比，非正比。"},
+     {txt:"I/r", reason:"【正解】 B=μ₀I/(2πr)，與 I 成正比、與 r 成反比。"},
+     {txt:"I/r²", reason:"那是點電荷電場的關係，非長直導線磁場。"},
+     {txt:"I²/r", reason:"磁場與 I 一次方成正比，非平方。"}]}]},
+
+{ch:"第四章 電與磁的統一", t:"電磁感應", variants:[
+  {q:"法拉第定律：感應電動勢與何者成正比？", ans:"B", opts:[
+     {txt:"磁通量本身", reason:"靜止的磁通量不會產生感應電動勢。"},
+     {txt:"磁通量變化率", reason:"【正解】 ε=−dΦB/dt，與變化率成正比。"},
+     {txt:"磁場大小", reason:"磁場恆定不變時不產生感應。"},
+     {txt:"線圈面積", reason:"面積靜止不變不產生感應，需變化。"}]},
+  {q:"線圈旋轉頻率增為 2 倍，感應電動勢最大值變為何？", ans:"B", opts:[
+     {txt:"不變", reason:"ε₀=NBAω，ω 變化則 ε₀ 會變。"},
+     {txt:"2 倍", reason:"【正解】 ω=2πf，f 加倍→ω 加倍→ε₀ 加倍。"},
+     {txt:"4 倍", reason:"ε₀ 與 ω 一次方成正比，非平方。"},
+     {txt:"1/2 倍", reason:"頻率增加應使 ε₀ 增加，非減半。"}]},
+  {q:"楞次定律：感應電流方向為何？", ans:"C", opts:[
+     {txt:"使磁通量增加", reason:"若磁通量減少才需增加，非固定。"},
+     {txt:"使磁通量不變", reason:"楞次定律是抵抗「變化」，非追求不變。"},
+     {txt:"抵抗磁通量的變化", reason:"【正解】 感應電流產生磁場抵抗原磁通量變化。"},
+     {txt:"使磁通量變化增加", reason:"方向相反，是抵抗非助長。"}]}]},
+
+{ch:"第四章 電與磁的統一", t:"波動現象", variants:[
+  {q:"水波由深水區進淺水區，下列何者會改變？", ans:"B", opts:[
+     {txt:"頻率", reason:"頻率由波源決定，穿過介質不變。"},
+     {txt:"波速", reason:"【正解】 不同介質波速不同，頻率不變、波長隨之改變。"},
+     {txt:"波長不變", reason:"波速變時 λ=v/f，波長一定變。"},
+     {txt:"頻率和波速都不變", reason:"波速會因介質而變。"}]},
+  {q:"兩波疊加使某些區域振幅增減的現象稱？", ans:"C", opts:[
+     {txt:"繞射", reason:"繞射是波通過障礙物彎曲，非疊加增減。"},
+     {txt:"共振", reason:"共振是驅動頻率等於固有頻率時振幅增大。"},
+     {txt:"干涉", reason:"【正解】 建設性與破壞性干涉造成振幅增減。"},
+     {txt:"折射", reason:"折射是波速改變導致方向偏折。"}]},
+  {q:"聲波從空氣進入水中，何者保持不變？", ans:"C", opts:[
+     {txt:"波速", reason:"水中聲速較空氣大，波速會變。"},
+     {txt:"波長", reason:"波速變時波長隨之改變。"},
+     {txt:"頻率", reason:"【正解】 頻率由聲源決定，穿過介質不變。"},
+     {txt:"振幅", reason:"穿過介質會因能量損耗而衰減。"}]}]},
+
+{ch:"第四章 電與磁的統一", t:"都卜勒效應", variants:[
+  {q:"救護車向你駛來，你聽到的警笛頻率會？", ans:"A", opts:[
+     {txt:"變高", reason:"【正解】 波源接近觀察者，單位時間接受到較多波，頻率升高。"},
+     {txt:"變低", reason:"波源遠離時頻率才變低。"},
+     {txt:"不變", reason:"有相對運動，頻率必定改變。"},
+     {txt:"先高再低", reason:"駛近時恆為變高，不會自動改變。"}]},
+  {q:"音源不動，觀察者以速度 v 靠近音源，聽到的 f' 與 f 關係？", ans:"A", opts:[
+     {txt:"f' > f", reason:"【正解】 觀察者靠近波源，頻率升高。"},
+     {txt:"f' < f", reason:"遠離時頻率才降低。"},
+     {txt:"f' = f", reason:"有相對運動頻率必變。"},
+     {txt:"無法判斷", reason:"可判斷，靠近必升高。"}]}]},
+
+{ch:"第五章 能量", t:"力學能守恆", variants:[
+  {q:"2 kg 從 10 m 高自由落下(g=10)，落地動能為？", ans:"B", opts:[
+     {txt:"100 J", reason:"缺了質量或算錯，mgh=2×10×10=200。"},
+     {txt:"200 J", reason:"【正解】 動能=mgh=2×10×10=200 J。"},
+     {txt:"400 J", reason:"把質量重算錯誤。"},
+     {txt:"800 J", reason:"明顯計算錯誤。"}]},
+  {q:"k=100 N/m 彈簧壓縮 0.2 m 後釋放，恢復原長時動能為？", ans:"B", opts:[
+     {txt:"0.4 J", reason:"漏了 1/2 而算 100×0.04=4，或計算錯誤。"},
+     {txt:"2 J", reason:"【正解】 彈性位能=½kx²=½×100×0.04=2 J。"},
+     {txt:"4 J", reason:"漏掉 ½ 係數。"},
+     {txt:"20 J", reason:"把 0.2 當 0.4 帶入。"}]},
+  {q:"關於能量守恆何者正確？", ans:"B", opts:[
+     {txt:"能量可以被消滅", reason:"能量不生不滅，只能轉換。"},
+     {txt:"只轉換形式，總量不變", reason:"【正解】 封閉系統總能量守恆。"},
+     {txt:"任何過程能量增加", reason:"因摩擦等損失但總能量仍守恆，不會憑空增加。"},
+     {txt:"僅密封系統成立", reason:"封閉(無外力)系統即可，不限「密封」。"}]}]},
+
+{ch:"第五章 能量", t:"功與功率", variants:[
+  {q:"10 N 水平力推 5 m(位移同向)，作功為？", ans:"D", opts:[
+     {txt:"2 J", reason:"把 10/5=2，錯。"},
+     {txt:"5 J", reason:"只取位移或力的其中之一。"},
+     {txt:"15 J", reason:"把兩者相加，錯。"},
+     {txt:"50 J", reason:"【正解】 W=F·d·cos0°=10×5=50 J。"}]},
+  {q:"10 秒內將 50 kg 提升 3 m(g=10)，平均功率為？", ans:"C", opts:[
+     {txt:"15 W", reason:"忘乘以 g 或計算錯誤。"},
+     {txt:"50 W", reason:"計算錯誤。"},
+     {txt:"150 W", reason:"【正解】 W=mgh=50×10×3=1500，P=1500/10=150 W。"},
+     {txt:"500 W", reason:"把 1500 當 5000 除以 10。"}]}]},
+
+{ch:"第五章 能量", t:"核能與電磁輻射", variants:[
+  {q:"核融合與核分裂相比何者正確？", ans:"A", opts:[
+     {txt:"融合釋能較多", reason:"【正解】 單位質量核融合釋放能量比核分裂更多，太陽即靠融合。"},
+     {txt:"分裂釋能較多", reason:"單位質量比較，融合釋能更多。"},
+     {txt:"兩者相同", reason:"兩者機制與釋能量不同。"},
+     {txt:"都不釋能量", reason:"兩者皆釋放大量能量。"}]},
+  {q:"太陽能電池利用哪種原理將光轉電？", ans:"A", opts:[
+     {txt:"光電效應", reason:"【正解】 半導體 p-n 接面利用光子產生電子電洞對。"},
+     {txt:"電磁感應", reason:"那是發電機原理，非太陽能電池。"},
+     {txt:"熱電效應", reason:"那是溫差發電。"},
+     {txt:"壓電效應", reason:"那是機械應力產生電壓。"}]},
+  {q:"下列哪種屬再生能源？", ans:"C", opts:[
+     {txt:"石油", reason:"化石燃料，有限且非再生。"},
+     {txt:"天然氣", reason:"化石燃料，非再生。"},
+     {txt:"風力", reason:"【正解】 取之不盡，屬再生能源。"},
+     {txt:"核能", reason:"依賴鈾礦，非再生。"}]}]},
+
+{ch:"第六章 量子現象", t:"黑體輻射與普朗克量子論", variants:[
+  {q:"普朗克能量量子化用來解釋？", ans:"B", opts:[
+     {txt:"光電效應", reason:"光電效應是愛因斯坦用光量子解釋，非普朗克原意。"},
+     {txt:"黑體輻射的能量分佈", reason:"【正解】 為解決「紫外線災難」提出 E=nhf。"},
+     {txt:"原子光譜", reason:"那是波耳模型的工作。"},
+     {txt:"康卜頓效應", reason:"那是康卜頓用光量子動量解釋。"}]},
+  {q:"普朗克假說：電磁波能量？", ans:"B", opts:[
+     {txt:"連續的", reason:"普朗克正是推翻「連續」而提出量子化。"},
+     {txt:"量子化，E=nhf", reason:"【正解】 能量以 hf 的整數倍存在。"},
+     {txt:"與波長無關", reason:"E=hf=hc/λ，與波長相關。"},
+     {txt:"僅高頻時量子化", reason:"所有頻率皆量子化。"}]}]},
+
+{ch:"第六章 量子現象", t:"光電效應", variants:[
+  {q:"入射光頻率低於臨界頻率則？", ans:"B", opts:[
+     {txt:"有低動能光電子", reason:"頻率不足則光子能量不足以逸出，完全不產生。"},
+     {txt:"完全無光電子", reason:"【正解】 光子能量<hf₀ 時無法使電子逸出。"},
+     {txt:"動能與光強有關", reason:"動能只與頻率有關，與光強無關。"},
+     {txt:"動能與頻率無關", reason:"動能=hf−W，與頻率有關。"}]},
+  {q:"光電方程式 KEmax=hf−W，頻率增為 2 倍，最大動能？", ans:"D", opts:[
+     {txt:"也變 2 倍", reason:"因有 −W，動能非線性，不會恰為 2 倍。"},
+     {txt:"大於 2 倍", reason:"KEmax 增幅由 W 決定，不一定大於 2 倍。"},
+     {txt:"小於 2 倍", reason:"視 W 而定，可能大於也可能小於。"},
+     {txt:"視功函數而定", reason:"【正解】 KEmax=2hf−W 與 hf−W 的關係取決於 W 值。"}]},
+  {q:"光電效應何者正確？", ans:"C", opts:[
+     {txt:"光越強動能越大", reason:"光強只影響光電子數目(光電流)，不影響動能。"},
+     {txt:"頻率越高光電流越大", reason:"光電流由光強(光子數)決定，非頻率。"},
+     {txt:"最大動能只與頻率有關", reason:"【正解】 KEmax=hf−W，與頻率及功函數有關、與光強無關。"},
+     {txt:"古典波動理論可解釋", reason:"古典理論無法解釋瞬間性與截止頻率，需光量子。"}]}]},
+
+{ch:"第六章 量子現象", t:"波耳模型與原子光譜", variants:[
+  {q:"電子跳躍能階時發射或吸收？", ans:"B", opts:[
+     {txt:"連續光譜", reason:"能階量子化，躍遷發射的是特定頻率(不連續)。"},
+     {txt:"特定頻率的光子", reason:"【正解】 光子能量=兩能階差，對應特定頻率。"},
+     {txt:"β 粒子", reason:"β 衰變是核反應，與能階躍遷無關。"},
+     {txt:"γ 射線", reason:"能階躍遷通常是光譜(UV/可見)，非核躍遷的 γ。"}]},
+  {q:"電子從 n=4 跳到 n=2 發射的光屬於？", ans:"B", opts:[
+     {txt:"來曼系(紫外)", reason:"來曼系是跳到 n=1。"},
+     {txt:"巴爾默系(可見)", reason:"【正解】 跳到 n=2 皆屬巴爾默系，位於可見光區。"},
+     {txt:"帕邢系(紅外)", reason:"帕邢系是跳到 n=3。"},
+     {txt:"X 射線", reason:"巴爾默系屬可見光，非 X 射線。"}]}]},
+
+{ch:"第六章 量子現象", t:"物質波與波粒二象性", variants:[
+  {q:"德布羅意物質波概念認為？", ans:"B", opts:[
+     {txt:"僅光具波動性", reason:"德布羅意主張所有物質皆具波動性。"},
+     {txt:"所有物質皆具波動性", reason:"【正解】 λ=h/p，任何具動量之物質皆有波長。"},
+     {txt:"僅電子具波動性", reason:"不限電子，巨觀物體也有(只是波長極短)。"},
+     {txt:"僅在微觀存在", reason:"巨觀物體也有物質波，但波長極短無法觀察。"}]},
+  {q:"質量 m、速度 v 的粒子德布羅意波長？", ans:"B", opts:[
+     {txt:"mv/h", reason:"量綱錯誤，λ 單位是長度。"},
+     {txt:"h/(mv)", reason:"【正解】 λ=h/p=h/(mv)，與動量成反比。"},
+     {txt:"h·mv", reason:"量綱(h·mv)非長度。"},
+     {txt:"m/(hv)", reason:"公式顛倒，錯。"}]},
+  {q:"波粒二象性何者正確？", ans:"C", opts:[
+     {txt:"光只是波", reason:"光同時具波動與粒子性(光子)。"},
+     {txt:"電子只是粒子", reason:"電子也有波動性(顯微鏡即用電子波)。"},
+     {txt:"微觀粒子兼具波動與粒子性", reason:"【正解】 波粒二象性是微觀世界基本特性。"},
+     {txt:"宏觀物體也明顯波動", reason:"宏觀物質波波長極短，無法觀察到。"}]}]},
+
+{ch:"🔥 綜合模擬題", t:"跨章節整合", variants:[
+  {q:"無摩擦斜面下滑，力學能分析何者正確？", ans:"C", opts:[
+     {txt:"動能增、位能增", reason:"下滑高度降低，位能應減少。"},
+     {txt:"動能減、位能增", reason:"下滑速度增加，動能應增加。"},
+     {txt:"動能增、位能減，力學能守恆", reason:"【正解】 位能轉為動能，總力學能不變。"},
+     {txt:"動能不變、位能減", reason:"加速下滑動能會增加。"}]},
+  {q:"帶正電粒子從高電位移到低電位，電位能？", ans:"B", opts:[
+     {txt:"增加", reason:"正電荷沿電場方向移動電位能減少。"},
+     {txt:"減少", reason:"【正解】 電場對正電荷做正功，電位能減少。"},
+     {txt:"不變", reason:"位置電位改變，電位能必變。"},
+     {txt:"先增後減", reason:"直線移動電位能單調變化。"}]},
+  {q:"簡諧彈簧振體何處動能最大？", ans:"B", opts:[
+     {txt:"最大位移處", reason:"最大位移處速度為零，動能為零。"},
+     {txt:"平衡位置", reason:"【正解】 平衡位置彈簧無形變(位能0)，動能最大。"},
+     {txt:"各處相同", reason:"不同位置位能不同，動能相應不同。"},
+     {txt:"無法判斷", reason:"可判斷，平衡位置動能最大。"}]},
+  {q:"關於電磁波何者正確？", ans:"B", opts:[
+     {txt:"傳播需介質", reason:"電磁波不需介質，可在真空中傳播。"},
+     {txt:"是橫波", reason:"【正解】 電場與磁場垂直且垂直傳播方向，屬橫波。"},
+     {txt:"電場與磁場平行", reason:"電場與磁場互相垂直。"},
+     {txt:"真空中速率不同", reason:"所有電磁波真空中速率皆為光速 c。"}]}]}
+];
+
+let rendered = []; // array of rendered cards
+
+function shuffleArray(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+
+// pick random variant from each concept
+function pickVariants(){
+  return CONCEPTS.map(c=>{
+    const v = c.variants[Math.floor(Math.random()*c.variants.length)];
+    return {ch:c.ch, t:c.t, variant:v};
+  });
+}
+
+function scoreState(){ let done=0, correct=0; document.querySelectorAll('.card').forEach(c=>{ const b=c.querySelector('.blank'); if(b&&b.dataset.state){ done++; if(b.dataset.state==='correct')correct++; }}); return {done,correct}; }
+
+function updateScore(){
+  const s=scoreState();
+  document.getElementById('statTotal').textContent=CONCEPTS.length;
+  document.getElementById('statDone').textContent=s.done;
+  document.getElementById('statCorrect').textContent=s.correct;
+  document.getElementById('statRate').textContent=(s.done?Math.round(s.correct/s.done*100):0)+'%';
+  document.getElementById('scoreInfo').textContent = s.done ? ('已作答 '+s.done+' 題，答對 '+s.correct+' 題') : '拖曳答案入空格後按「對答案」';
+}
+
+function renderCards(items){
+  const quiz=document.getElementById('quiz');
+  quiz.innerHTML='';
+  let currentCh='';
+  items.forEach(item=>{
+    const c=item.concept;
+    if(c.ch!==currentCh){ currentCh=c.ch; const h=document.createElement('h2'); h.textContent=c.ch; quiz.appendChild(h); }
+    // build options in shuffled order, generating letters A,B,C...
+    const letters=['A','B','C','D','E','F'];
+    const shuffledOpts=shuffleArray(item.options.map((o,i)=>({...o, idx:i})));
+    const letterOf = {};
+    shuffledOpts.forEach((o,j)=>{ o.letter=letters[j]; letterOf[o.idx]=o.letter; });
+    const ansLetter = letterOf[item.correctIdx];
+
+    const card=document.createElement('div'); card.className='card';
+    const qp=document.createElement('p'); qp.className='q';
+    qp.innerHTML='<span class="chapter-tag">'+escapeHtml(c.t)+'</span> '+escapeHtml(item.q)+'<span class="variant-tag">變化版 '+item.variant+'</span>';
+    card.appendChild(qp);
+
+    const blankRow=document.createElement('div');
+    const blank=document.createElement('span'); blank.className='blank'; blank.textContent=''; blank.dataset.ans=ansLetter;
+    blankRow.appendChild(blank); card.appendChild(blankRow);
+
+    const panel=document.createElement('div'); panel.className='options-panel';
+    const optionEls={};
+    shuffledOpts.forEach(o=>{
+      const el=document.createElement('div'); el.className='option'; el.draggable=true; el.dataset.letter=o.letter;
+      el.innerHTML='<span style="display:inline-block;width:22px;background:rgba(255,255,255,.25);border-radius:4px;text-align:center;margin-right:8px;">'+o.letter+'</span><span>'+escapeHtml(o.txt)+'</span>';
+      el.addEventListener('dragstart',e=>{ e.dataTransfer.setData('text/plain',o.letter); });
+      optionEls[o.letter]=el; panel.appendChild(el);
+    });
+    card.appendChild(panel);
+
+    const result=document.createElement('div'); result.className='result';
+    const explain=document.createElement('div'); explain.className='explain';
+    const btn=document.createElement('button'); btn.className='check-btn'; btn.textContent='對答案＋看詳解';
+
+    blank.addEventListener('dragover',e=>e.preventDefault());
+    blank.addEventListener('drop',e=>{
+      e.preventDefault();
+      const letter=e.dataTransfer.getData('text/plain');
+      if(blank.dataset.state) return;
+      blank.textContent=letter; blank.className='blank dropped';
+      if(optionEls[letter]) optionEls[letter].classList.add('used');
+      updateScore();
+    });
+
+    btn.addEventListener('click',()=>{
+      const val=blank.textContent; if(!val) return;
+      const ans=blank.dataset.ans; let wasCorrect=false;
+      if(val===ans){ blank.className='blank correct'; blank.dataset.state='correct'; wasCorrect=true; result.innerHTML='<span class="ok">✅ 答對了！</span>'; }
+      else { blank.className='blank wrong'; blank.dataset.state='wrong'; result.innerHTML='<span class="bad">❌ 答錯了，正確答案為 '+ans+'</span>'; }
+      // build per-option explanation
+      const key=document.createElement('div'); key.className='key'; key.textContent='每個選項的說明：';
+      explain.appendChild(key);
+      shuffledOpts.forEach(o=>{
+        const isC=(o.letter===ans);
+        const div=document.createElement('div'); div.className='exp-item '+(isC?'exp-correct':'exp-wrong');
+        div.innerHTML='<span class="opt-letter '+(isC?'c':'w')+'">'+o.letter+(isC?' ✓':' ✗')+'</span><strong>'+escapeHtml(o.txt)+'</strong><br><span>'+escapeHtml(o.reason)+'</span>';
+        explain.appendChild(div);
+      });
+      explain.classList.add('show');
+      btn.disabled=true;
+      updateScore();
+    });
+
+    card.appendChild(btn);
+    card.appendChild(result);
+    card.appendChild(explain);
+    quiz.appendChild(card);
+  });
+}
+
+function nextBatch(){
+  const items=[];
+  CONCEPTS.forEach(c=>{
+    const v=c.variants[Math.floor(Math.random()*c.variants.length)];
+    // options with a correct answer - we need the answer letter
+    // Determine correctIdx by finding reason containing the wrong-mark? Instead we mark answer explicitly:
+    items.push(flattenToItem(c,v));
+  });
+  renderCards(items);
+}
+
+function flattenToItem(c,v){
+  // v.options where one is the rephrased correct answer. We set correct index via v.ans
+  return {
+    concept:c,
+    q:v.q,
+    variant:'隨機問法',
+    options:v.opts,
+    correctIdx:v.ansIdx2 !== undefined ? v.ansIdx2 : findCorrect(v.opts)
+  };
+}
+
+function findCorrect(opts){
+  // correct is the option whose reason starts with '❌'
+  for(let i=0;i<opts.length;i++){ if(opts[i].reason.indexOf('【正解】')===0){ return i; } }
+  return 0;
+}
+
+function showAll(){
+  const items=[];
+  CONCEPTS.forEach(c=>{
+    // show first variant for each concept only to keep manageable; use first variant
+    const v=c.variants[0];
+    items.push({concept:c,q:v.q,variant:'第1種問法',options:v.opts,correctIdx:findCorrect(v.opts)});
+  });
+  renderCards(items);
+}
+
+function resetScores(){
+  document.querySelectorAll('.card').forEach(c=>{
+    const b=c.querySelector('.blank'); if(b){ b.textContent=''; b.className='blank'; delete b.dataset.state; }
+    c.querySelectorAll('.option').forEach(o=>o.classList.remove('used'));
+    const r=c.querySelector('.result'); if(r) r.textContent='';
+    const ex=c.querySelector('.explain'); if(ex){ ex.classList.remove('show'); ex.innerHTML=''; }
+    const btn=c.querySelector('.check-btn'); if(btn) btn.disabled=false;
+  });
+  updateScore();
+}
+
+function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+nextBatch();
+</script>
+</body>
+</html>

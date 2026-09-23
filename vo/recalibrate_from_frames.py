@@ -67,6 +67,68 @@ def main():
         print("too few detections; cannot calibrate")
         raise SystemExit(1)
 
+    # Phase 0 gate: the classic focal-distortion degeneracy (fx~900/k3=-1640
+    # garbage that still fits a pose set with low RMS, obs #0018/#0019) comes
+    # from a pose set with no rotational/parallax diversity. Measure the
+    # diversity of the recorded poses BEFORE calibrating: board coverage of
+    # image corners+center, board tilt (K-free, from projected pixel geometry),
+    # and near/mid/far spread. Reject early so a degenerate clip can never
+    # slip a physically-implausible K through the low-RMS door.
+    _inset_w = frame_size[0] * 0.1
+    _inset_h = frame_size[1] * 0.1
+    _zones = {"TL": (_inset_w, _inset_h), "TR": (frame_size[0] - _inset_w, _inset_h),
+              "BL": (_inset_w, frame_size[1] - _inset_h),
+              "BR": (frame_size[0] - _inset_w, frame_size[1] - _inset_h),
+              "C": (frame_size[0] / 2.0, frame_size[1] / 2.0)}
+    # nominal intrinsics only for pose rotation estimation (tilt); rotation is
+    # robust to focal error unlike tvec/z, so this stays K-free in practice.
+    _nomK = np.array([[frame_size[0] / 2.0, 0, frame_size[0] / 2.0],
+                      [0, frame_size[1] / 2.0, frame_size[1] / 2.0],
+                      [0, 0, 1]], np.float64)
+    _hit_zones = set()
+    _max_tilt_deg = -1.0
+    _spans = []
+    for _fn, crn in detected:
+        c = crn.reshape(-1, 2).astype(np.float64)
+        cx, cy = float(c[:, 0].mean()), float(c[:, 1].mean())
+        for zn, (zx, zy) in _zones.items():
+            if abs(cx - zx) < frame_size[0] * 0.22 and abs(cy - zy) < frame_size[1] * 0.22:
+                _hit_zones.add(zn)
+        _spans.append(float(np.max(np.linalg.norm(c - c[0:1], axis=1))))
+        oks, _rv, _tv = cv2.solvePnP(obj_grid, c.reshape(-1, 1, 2), _nomK, None,
+                                     flags=cv2.SOLVEPNP_ITERATIVE)
+        if oks:
+            Rm, _ = cv2.Rodrigues(_rv)
+            _nz = float(np.abs(Rm[2, 2]))  # cos of tilt vs optical axis
+            _max_tilt_deg = max(_max_tilt_deg,
+                                float(np.degrees(np.arccos(np.clip(_nz, 0, 1)))))
+    _hit_zones = sorted(_hit_zones)
+    _dist_ratio = max(_spans) / max(min(_spans), 1.0)
+
+    problems = []
+    if len(detected) < 25:
+        problems.append("only %d detection frames (want >=25 samples)" % len(detected))
+    missing = [z for z in ("TL", "TR", "BL", "BR", "C") if z not in _hit_zones]
+    if missing:
+        problems.append("board never occupies zones %s (want all 5: four "
+                        "corners + centre)" % ",".join(missing))
+    if _max_tilt_deg < 30.0:
+        problems.append("max board tilt only %.1f deg (want >=30 deg, ideally "
+                        "+/-30-45)" % max(_max_tilt_deg, 0.0))
+    if _dist_ratio < 1.5:
+        problems.append("near/far pixel-size spread %.2fx (want >=1.5x for "
+                        "near/mid/far distance coverage)" % _dist_ratio)
+    if problems:
+        print("POSE-DIVERSITY GATE REJECTED:")
+        for p in problems:
+            print("  - " + p)
+        print("  -> recording lacks pose diversity; the resulting K would fall "
+              "into the focal-distortion degeneracy. Re-shoot with board in "
+              "all corners + centre, +/-30-45 deg tilt, near/mid/far distances.")
+        raise SystemExit(3)
+    print("pose-diversity gate PASSED (zones=%s, max tilt=%.1f deg, "
+          "near/far spread=%.2fx, %d frames)"
+          % (",".join(_hit_zones), _max_tilt_deg, _dist_ratio, len(detected)))
     # keep a pose evenly spread over the detection timeline for diversity
     idxs = np.linspace(0, len(detected) - 1, min(args.samples,
                                                  len(detected))).astype(int)

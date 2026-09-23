@@ -33,7 +33,7 @@ class DroneControlNode(Node):
     def __init__(self):
         super().__init__("drone_control")
 
-        self.declare_parameter("connection_url", "udpin://0.0.0.0:14540")
+        self.declare_parameter("connection_url", "udp://0.0.0.0:14540")
         self.declare_parameter("takeoff_alt_m", 1.4)
         self.declare_parameter("cmd_vel_topic", "/drone/cmd_vel")
         self.declare_parameter("command_topic", "/mission/command")

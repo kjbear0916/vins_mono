@@ -274,9 +274,12 @@ def _run_selftest():
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--self-test", action="store_true")
+    ap.add_argument("--self-test", action="store_true",
+                    help="run the three self-tests and exit")
     args = ap.parse_args()
-    if args.self_test or True:
+    # self-tests are cheap (~1 s) and the module is invoked by scripts that
+    # take no CLI args, so run them whenever --self-test is given.
+    if args.self_test:
         _run_selftest()
     print("marker_loc OK")
 

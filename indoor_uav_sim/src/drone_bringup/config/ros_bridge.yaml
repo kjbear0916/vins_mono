@@ -1,17 +1,15 @@
-# ros_gz_bridge topic map (config_file for parameter_bridge).
-# Sensors are injected into the PX4 x500 model by tools/patch_px4_model.py;
-# the gz sensor <topic> names double as the gz-side topics here.
-# Verify actual gz topics at runtime with `gz topic -l` and adjust if needed.
-gz_ros_topics:
-  - name: sensor_nadir/image
-    type: gz.msgs.Image
-    ros_topic: drone/camera/nadir/image_raw
-    ros_type: sensor_msgs/msg/Image
-  - name: sensor_front/image
-    type: gz.msgs.Image
-    ros_topic: drone/camera/front/image_raw
-    ros_type: sensor_msgs/msg/Image
-  - name: sensor_lidar/scan
-    type: gz.msgs.LaserScan
-    ros_topic: drone/lidar/scan
-    ros_type: sensor_msgs/msg/LaserScan
+- ros_topic_name: /drone/camera/nadir/image_raw
+  gz_topic_name: /sensor_nadir/image
+  gz_type_name: gz.msgs.Image
+  ros_type_name: sensor_msgs/msg/Image
+  direction: GZ_TO_ROS
+- ros_topic_name: /drone/camera/front/image_raw
+  gz_topic_name: /sensor_front/image
+  gz_type_name: gz.msgs.Image
+  ros_type_name: sensor_msgs/msg/Image
+  direction: GZ_TO_ROS
+- ros_topic_name: /drone/lidar/scan
+  gz_topic_name: /sensor_lidar/scan
+  gz_type_name: gz.msgs.LaserScan
+  ros_type_name: sensor_msgs/msg/LaserScan
+  direction: GZ_TO_ROS

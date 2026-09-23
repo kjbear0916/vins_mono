@@ -1,0 +1,42 @@
+SLIDES=18
+SLIDE_1: 4 text-elements
+SLIDE_2: 9 text-elements
+SLIDE_3: 10 text-elements
+SLIDE_4: 8 text-elements
+SLIDE_5: 20 text-elements
+SLIDE_6: 10 text-elements
+SLIDE_7: 18 text-elements
+SLIDE_8: 13 text-elements
+SLIDE_9: 6 text-elements
+SLIDE_10: 24 text-elements
+SLIDE_11: 7 text-elements
+SLIDE_12: 11 text-elements
+SLIDE_13: 8 text-elements
+SLIDE_14: 8 text-elements
+SLIDE_15: 7 text-elements
+SLIDE_16: 7 text-elements
+SLIDE_17: 12 text-elements
+SLIDE_18: 3 text-elements
+PASS  封面主標題[感知定位子系統]
+PASS  第二章大綱[報告大綱]
+PASS  背景轉折[飛行載具損壞]
+PASS  問題本質[視覺里程計]
+PASS  範圍表[Bundle Adjustment 全局優化]
+PASS  架構[MJPEG]
+PASS  VO前端[solvePnPRansac]
+PASS  關鍵問題表[Bootstrap]
+PASS  BA[100 倍]
+PASS  開源對照[相關開源模型與技術定位]
+PASS  開源系統[ORB-SLAM2／ORB-SLAM3]
+PASS  開源 VIO[OpenVINS／Kimera-VIO]
+PASS  公開基準 EuRoC[EuRoC]
+PASS  七道閘門[P7 靜止段光流檢驗]
+PASS  合成結果[17 / 17]
+PASS  真機結果[seq_real_14]
+PASS  落差[60 倍]
+PASS  ArUco[Sim3 對齊]
+PASS  視覺化[航點導航模擬]
+PASS  未來工作[DBoW2＋g2o／GTSAM]
+PASS  貢獻開源定位[與開源生態／公開基準之對照定位]
+PASS  結論[謝謝聆聽]
+CHART_PRESENT=PASS

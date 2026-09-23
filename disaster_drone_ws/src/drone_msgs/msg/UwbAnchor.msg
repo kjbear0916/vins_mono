@@ -1,0 +1,4 @@
+int32 anchor_id
+geometry_msgs/Pose pose
+builtin_interfaces/Time deployed_at
+bool permanent
