@@ -404,7 +404,7 @@ class TestIndoorGps(unittest.TestCase):
         self.assertEqual(_run(
             [sys.executable, os.path.join(VO, "gen_synth_calib_shoot.py"),
              "--out", avi, "--fx", str(fx), "--k1", "-0.18",
-             "--seed", "7"],
+             "--seed", "7", "--guided-poses"],
             timeout=300).returncode, 0, "renderer failed")
         Kt = _np.load(avi.replace(".avi", "_truth.npz"))["camera_matrix"]
         dt = _np.load(avi.replace(".avi", "_truth.npz"))["dist_coeffs"]
@@ -425,13 +425,60 @@ class TestCalibrateGuidedGates(unittest.TestCase):
     the guided HUD cannot regress to a zone-only gate that lets fx escape."""
 
     def test_depth_buckets(self):
+        """mn/mx are inner-corner extents; the bucket is the *outer* board
+        coverage, i.e. inner span scaled by (C+1)/(C-1) and (R+1)/(R-1)
+        (6x5 outer squares for the 5x4 inner pattern) over the frame size."""
         import numpy as _np
         from calibrate_guided import depth_label as dl
-        for mn, mx, want in (((0, 100), (256, 160), "NEAR"),
-                             ((30, 60), (190, 120), "MID"),
-                             ((80, 110), (150, 130), "FAR")):
+        for mn, mx, want in (((100, 60), (250, 160), "NEAR"),   # outer 0.70
+                             ((130, 80), (237, 145), "MID"),    # outer 0.50
+                             ((80, 110), (150, 130), "FAR")):   # outer 0.33
             xys = _np.array([(mn[0], mn[1]), (mx[0], mx[1])], float)
             self.assertEqual(dl(xys.min(axis=0), xys.max(axis=0)), want)
+
+    def test_depth_buckets_normalise_each_axis_by_its_frame_dimension(self):
+        """A 6x5 board can only reach NEAR on the vertical axis in QVGA
+        (320x240): covering 70% of the height needs outer_h=168px, and a 6:5
+        board at that height is only 202px wide (0.63 of the frame). The old
+        span/max(frame_w) form divides that vertical extent by the horizontal
+        frame width and returns MID, so NEAR could never turn green on a 4:3
+        stream no matter how close the camera got."""
+        import numpy as _np
+        from calibrate_guided import depth_label as dl
+        # inner corners of a 6x5 board filling 70% of the frame height
+        xys = _np.array([(93.0, 69.0), (227.0, 170.0)])
+        self.assertEqual(dl(xys.min(axis=0), xys.max(axis=0)), "NEAR")
+        # and a genuinely mid-distance board stays MID
+        mid = _np.array([(108.0, 71.0), (217.0, 140.0)], float)
+        self.assertEqual(dl(mid.min(axis=0), mid.max(axis=0)), "MID")
+
+    def test_final_gates_reject_non_square_board_cells(self):
+        """A screen that stretches the image (viewer filling the display
+        instead of letterboxing) makes the cells rectangular, which biases fx
+        against fy and dumps the residual into the distortion terms. The
+        recovered fx/fy = 798.7/645.0 = 1.24 with rms 3.9 and |dist| ~1008 is
+        that failure, not a real 22.7 deg lens -- the anisotropy gate must
+        catch it."""
+        import numpy as _np
+        from calibrate_guided import final_gates
+        bad = _np.array([[798.71, 0.0, 153.21],
+                         [0.0, 644.99, 122.41],
+                         [0.0, 0.0, 1.0]])
+        gates, aniso, _ = final_gates(bad, 3.899)
+        by_name = dict(gates)
+        self.assertAlmostEqual(aniso, 798.71 / 644.99, places=3)
+        self.assertFalse(by_name["fx/fy %.3f in [0.90,1.10] (square cells)"
+                              % aniso])
+        self.assertFalse(any(ok for name, ok in gates
+                             if name.startswith("rms")), )
+        # a square-pixel calibration of the same focal passes the anisotropy
+        good = _np.array([[386.0, 0.0, 153.21],
+                          [0.0, 388.0, 122.41],
+                          [0.0, 0.0, 1.0]])
+        g2, aniso2, hfov2 = final_gates(good, 0.42)
+        self.assertTrue(dict(g2)["fx/fy %.3f in [0.90,1.10] (square cells)"
+                                 % aniso2])
+        self.assertTrue(25.0 <= hfov2 <= 75.0)
 
     def test_corner_margin_is_min_edge_distance(self):
         import numpy as _np
@@ -451,6 +498,29 @@ class TestCalibrateGuidedGates(unittest.TestCase):
         self.assertIn("NEAR", miss)
         self.assertIn("grid cells 2", miss)
         self.assertIn("sample 12/30", miss)
+
+
+class TestAdversarialStress(unittest.TestCase):
+    """Baseline margin of the SB + canonical chain under field-like
+    degradation (adversarial_stress.py at strength 1.0). Locks the finding
+    that light gradient / cast shadow / 5px blur / their combination never
+    stall 30-sample collection and never drift recovered fx more than 3% --
+    the operator-facing claim in HARDWARE_PHASE_RUNBOOK.md."""
+
+    def test_baseline_degradations_all_close(self):
+        import adversarial_stress as st
+        local = st.gs.board_corners_local()
+        poses = st.gp.build(st.K, st.DIST, st.SQ, 24.0, 15.0, 8.0, 60.0, 30,
+                            noise=st.NOISE)
+        for name in ("gradient", "shadow", "blur", "combined"):
+            r = st.pass_condition(name, poses, local)
+            fx = r["fxr"][0] if r["fxr"] else None
+            self.assertIsNotNone(fx, "%s: panel not closed (%s)"
+                                 % (name, "; ".join(r["collector"].missing())))
+            self.assertLess(
+                abs(fx - st.TRUTH_FX) / st.TRUTH_FX, 0.05,
+                "%s: fx %.0f drifts >5%% from truth %.0f"
+                % (name, fx, st.TRUTH_FX))
 
 
 if __name__ == "__main__":

@@ -5,6 +5,30 @@ import cv2
 import numpy as np
 
 
+def mjpeg_frames(buf):
+    """Split an MJPEG multipart buffer into JPEG payloads.
+
+    Shared by the live HTTP reader and the offline replay test, so a file
+    captured from the synthetic stream and the ESP32's live feed go through
+    the identical parser. `buf` is a bytearray that is consumed in place.
+
+    The header terminator is `\r\n\r\n`; the regex must swallow the whole
+    thing, otherwise searching for it again from the match end lands on a
+    false `\r\n\r\n` inside the JPEG body and every frame misaligns.
+    """
+    import re
+    while True:
+        m = re.search(br"\r\nContent-Length:\s*(\d+)\r\n\r\n", buf)
+        if not m:
+            break
+        j_start = m.end()
+        j_end = j_start + int(m.group(1))
+        if len(buf) < j_end:
+            break
+        yield bytes(buf[j_start:j_end])
+        del buf[:j_end]
+
+
 class VideoSource:
     def read(self):
         raise NotImplementedError
@@ -70,43 +94,25 @@ class HTTPMJPEGSource(VideoSource):
         print("HTTPMJPEGSource: no frame within 10s")
 
     def _run(self):
-        import re
         import requests
         while self.alive:
             try:
                 r = requests.get(self.url, stream=True, timeout=self.timeout)
-                buf = b""
+                buf = bytearray()
                 for chunk in r.iter_content(chunk_size=8192):
                     if not self.alive:
                         return
                     buf += chunk
-                    while True:
-                        m = re.search(br"\r\nContent-Length:\s*(\d+)\r\n",
-                                      buf)
-                        if not m:
-                            if len(buf) > 65536:
-                                buf = b""
-                            break
-                        n_bytes = int(m.group(1))
-                        j_start = buf.find(b"\r\n\r\n", m.end())
-                        if j_start < 0:
-                            if len(buf) > 65536:
-                                buf = b""
-                            break
-                        j_start += 4
-                        j_end = j_start + n_bytes
-                        if len(buf) < j_end:
-                            break
-                        jpeg = buf[j_start:j_end]
-                        buf = buf[j_end:]
-                        if jpeg:
-                            img = cv2.imdecode(
-                                np.frombuffer(jpeg, np.uint8),
-                                cv2.IMREAD_COLOR)
-                            if img is not None:
-                                with self.lock:
-                                    self.frame = img
-                                    self.ok = True
+                    if len(buf) > 98304:
+                        del buf[:len(buf) - 16384]
+                    for jpeg in mjpeg_frames(buf):
+                        img = cv2.imdecode(
+                            np.frombuffer(jpeg, np.uint8),
+                            cv2.IMREAD_COLOR)
+                        if img is not None:
+                            with self.lock:
+                                self.frame = img
+                                self.ok = True
             except Exception:
                 if self.alive:
                     time.sleep(0.5)

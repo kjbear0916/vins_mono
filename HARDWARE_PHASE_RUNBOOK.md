@@ -4,9 +4,11 @@
 失敗時的處置。所有 clip 檔存到 `D:\Things\vo\` 下（與其他 t 一致）。
 
 前置檢查（PC 端離線，無需硬體）：
-  python -m unittest vo.test_regression        # 26/26 應全過
-    → 原本是 25/25；26 是合成標定封閉測試（見下第 3 步背景），
-      證明校正管線能從已知 K 恢復 fx 後才值得錄影。
+  python -m unittest vo.test_regression        # 30/30 應全過
+    → 09-18 為 26/26（含 1 項合成標定封閉測試，證明校正管線
+      能從已知 K 恢復 fx 後才值得錄影）；09-23 新增 3 項
+      calibrate_guided REQ 門控純函數測試 → 29/29；09-28 修正
+      NEAR 桶量綱（改量棋盤外框）並新增該情境測試 → 30/30（267.974s）。
 
 ---
 
@@ -99,15 +101,70 @@ PC 連上該 AP（無網際網路的純 AP），測通：
   5. 曝光/對比穩定，無運動模糊（錄影時慢移）。
 
 **畫面右側 REQ 面板**逐項列出完成要求：`edge-fill`(外角貼邊<24px)、
-`tilt>=2`、`sample n/30`、`NEAR/MID/FAR`、`GRID 3x3`；**全綠才會自動存檔
+`tilt >=15deg (n)`、`sample n/30`、`NEAR/MID/FAR`、`GRID 3x3`；**全綠才會自動存檔
 並列印 gate 明細 + `OK PASS`**。按 q 提前離開會在終端印出 MISSING 清單
 （如缺 `edge-fill(near)`=棋盤沒近到貼邊，回去補拍）。
+
+**上機前先跑本機合成 dry run**（不需要相機、不經網路，直接在行程內
+渲染同一組姿勢；2026-09-28 起取代原本的 MJPEG 路徑）：
+  python vo/dryrun_guided_d.py
+    → 期望 `MISSING: none` + `DRY RUN PASS`。
+    → 最近一次實測：47 姿勢涵蓋 NEAR/MID/FAR、9/9 格、tilt 23；
+      recovered fx=471.5（真值 474，誤差 0.5%）、RMS 0.320，
+      `calib_sanity` 判 PASS。
+  這條路徑**不驗證串流傳輸層**。串流傳輸層另由離線回放證實
+  （`python vo/mjpeg_replay_test.py`）：把 synth server 串流量錄成位元流，
+  再用 `video_source.mjpeg_frames` 原樣回放 → 275 frames 全解析、30/30
+  樣本全綠、decode+detect 91 fps 離線 PASS。
+  曾把「MJPEG 讀取只有 2 fps」歸咎於 TCP Nagle/延遲 ACK，但 root cause 是
+  **parser 的 `\r\n\r\n` 終止符搜尋從 regex 結尾起找，漏掉真正的分隔符，
+  落在 JPEG 體內隨機位置的假分隔符上，導致整串 frame 對位錯開、imdecode
+  大部分失敗**；已在 `mjpeg_frames` 修復（regex 吞掉完整 `\r\n\r\n`，
+byte-exact 18/18 對上 server 端編碼輸出）。上機後 HUD 若長時間不前進，
+   才考慮 ESP32 端 Wi-Fi 實際吞吐。
+   偵測/分類鏈對場地式劣化的安全邊界由 `python vo/adversarial_stress.py
+   --sweep` 量化（同 47 姿勢、SB-only + Laplacian 閘，與 live 收樣路徑一致）：
+   - **光梯度／半邊陰影不是威脅**：×3.0 劣化（亮度落差 ±0.95、陰影砍到只剩
+     10% 殘光）仍 SB 46/47、零 reject、panel ~step 31 收齊，fx 誤差 ≤4%。
+   - **橫向動態模糊是唯一危險軸**：≥9px（box blur）SB 仍過、REQ panel 仍是
+     全綠、`rms 0.37` 也過 final gates、連 Laplacian `--blur-min 30` 都判
+     sharp——但角點被抹成橫向條紋，解得 fx 617–652（真值 474，+30~37%）。
+     **這是「靜默錯誤標定」**：所有閘全綠卻拿到錯的 intrinsic。Laplacian
+     variance 在 JPEG 解壓後的 QVGA 上恆在 350–700（blur 到 13px 也降不下來），
+     所以這個預設 30 的閘在現實模糊下形同虛設。
+   - 操作對策：姿勢之間**不要甩動**、保持手穩；錄完若 solved fx 偏離
+     FX_GUESS=474 超過 10%（出現 ~550+ 或 ~400-）就作廢重錄——現有 final
+     gates 抓不到這個偏離，只能靠 fx 與已知先驗對賬。不要把 blur 閘當保護。
 
 即時引導錄影：
   python vo/calibrate_guided.py --url http://192.168.4.1:81/stream ^
       --pattern 5x4 --square 25 --samples 30 ^
       --out D:\Things\vo\calibration_esp32_qvga_v2.npz
     → HUD 上 3x3 dots 全綠 + z bins 全綠 + SAMPLE 到 30 即自動存。
+
+  NEAR 的定義是**棋盤外框**占畫面 >=70%（任一軸，逐軸除以該軸畫面尺寸；
+  內角跨距會先乘 (C+1)/(C-1)、(R+1)/(R-1) 換算成外框）。QVGA 320x240 上
+  6x5 棋盤外框寬需 ≈224px 才會亮，約等於相機距 16mm 方格板 163mm。
+  收錄視窗 `--ppm-min/--ppm-max`（預設 8/60 px per square）必須放得下
+  NEAR 所需的 ≈37 px/square，否則近距離姿勢會在進場前就被丟棄。
+  HUD 頂端 `det=sb|sb-clahe|sb-adaptive` 顯示實際生效的偵測通道。
+  **只有 SB（`findChessboardCornersSB`）的角點會被採用**；
+  classic 通道只留作診斷，畫面上會顯示但不記錄樣本。合成比對證據：
+  classic RMS≈4.95 / fx 115~163（真值 474），SB RMS≈0.32 / fx 466~474。
+  若 HUD 長期停在 classic，代表該幀被丟棄，姿勢永遠收不滿。
+  長期顯示 clahe/adaptive 表示螢幕反光或摩爾吃掉對比（改用列印紙）。
+
+**tilt 指標是「板面離開正面平行多少度」，不是長度比**（2026-09-28 修正）：
+  舊指標是首尾兩排的長度比，需 70~80° 傾角才到 0.12，手持根本做不到，
+  等於 REQ 面板永遠點不亮。現在由 object-grid 單應矩陣分解求板面法線
+  與光軸夾角，HUD 顯示 `tilt=Ndeg`，門檻 `--tilt-min 15`（度）。
+  傾 20°~36°（pitch）即可輕鬆滿足；`tilt 2/2` 綠燈即為此值。
+
+角點編號已正規化（`canonical_corners`）：把 20 點量化到 5x4 晶格並
+  驗證每格恰好一點，軸向固定為 +x/+y。SB 在不同姿勢下會把同一組點
+  編成正序或逆序，錯配時 planar solve 會崩到 RMS 3.3 / fx 77，
+  連帶 ang / tilt / cell 全部失真。量化不成立時該幀直接拒絕（`bad-lattice`），
+  不會被記成錯誤樣本。
 
 離線（若先錄 .avi）：
   python vo/recalibrate_from_frames.py --video vo/<calib_v2>.avi ^

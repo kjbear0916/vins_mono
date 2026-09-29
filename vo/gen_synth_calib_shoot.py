@@ -112,6 +112,76 @@ def make_poses(rng):
     return poses
 
 
+def pose6(p):
+    """Normalise a pose entry to a 6-tuple (z, pu, pv, pitch, yaw, roll).
+
+    Accepts the legacy 5-tuple from make_poses or a dict carrying the
+    gen_guided_pose_set fields (z, pu, pv, pitch, yaw, optional roll).
+    """
+    if isinstance(p, dict):
+        return (float(p["z"]), float(p["pu"]), float(p["pv"]),
+                float(p["pitch"]), float(p["yaw"]), float(p.get("roll", 0)))
+    roll = 0.0 if len(p) < 6 else float(p[5])
+    return (float(p[0]), float(p[1]), float(p[2]), float(p[3]),
+            float(p[4]), roll)
+
+
+def guided_poses(a, Kt, dist_t):
+    """Pose set that satisfies the REQ panel of calibrate_guided (tilt>=15deg
+    x2, NEAR/MID/FAR, GRID 3x3, edge-filled) -- the same list the guided dry
+    run uses. The legacy make_poses set does NOT satisfy those gates and the
+    REQ-gated offline tool rejects it, so REQ-satisfying clips must be
+    rendered from here.
+    """
+    import gen_guided_pose_set as gp
+    poses = gp.build(Kt, dist_t, SQ, 24.0, 15.0, 8.0, 60.0, 30, noise=NOISE)
+    return [pose6(p) for p in poses]
+
+
+def render_clip(out, Kt, dist_t, poses, seed=7, noise=NOISE):
+    """Render poses to an MJPG clip + write <out stem>_truth.npz.
+
+    poses: iterable of 6-tuples (z, pu, pv, pitch, yaw, roll).  Bytes match
+    the legacy main() path (same noise draw + 3x3 GaussianBlur), so the
+    recalibration result is comparably clean.
+    Returns the number of frames written.
+    """
+    rng = np.random.default_rng(seed)
+    local = board_corners_local()
+    fx, fy = Kt[0, 0], Kt[1, 1]
+    cx, cy = Kt[0, 2], Kt[1, 2]
+    writer = cv2.VideoWriter(out, cv2.VideoWriter_fourcc(*"MJPG"),
+                             FPS, (W, H), False)
+    rendered = 0
+    for z, pu, pv, ang_p, ang_y, ang_r in (pose6(p) for p in poses):
+        tx = (pu - cx) / fx * z
+        ty = (pv - cy) / fy * z
+        tz = z
+        p, y, r = (np.radians(ang_p), np.radians(ang_y), np.radians(ang_r))
+        cp, sp = np.cos(p), np.sin(p)
+        cy_, sy_ = np.cos(y), np.sin(y)
+        cr, sr = np.cos(r), np.sin(r)
+        Rx = np.array([[1, 0, 0], [0, cp, -sp], [0, sp, cp]], np.float64)
+        Ry = np.array([[cy_, 0, sy_], [0, 1, 0], [-sy_, 0, cy_]], np.float64)
+        Rr = np.array([[cr, -sr, 0], [sr, cr, 0], [0, 0, 1]], np.float64)
+        R_bc = Ry @ Rr @ Rx
+        t_bc = np.array([tx, ty, tz], np.float64)
+
+        gray = np.zeros((H, W), np.uint8)
+        ok = render_board(gray, Kt, dist_t, local, R_bc, t_bc)
+        if not ok:
+            continue
+        gray = np.clip(gray.astype(np.float32)
+                       + rng.normal(0.0, noise, gray.shape), 0, 255).astype(np.uint8)
+        cv2.GaussianBlur(gray, (3, 3), 0, gray)
+        writer.write(gray)
+        rendered += 1
+    writer.release()
+    np.savez(out.replace(".avi", "_truth.npz"), camera_matrix=Kt,
+             dist_coeffs=dist_t)
+    return rendered
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--out", default=r"D:\Things\vo\synth_calib_gt.avi")
@@ -126,49 +196,26 @@ def main():
     ap.add_argument("--p2", type=float, default=0.0)
     ap.add_argument("--k3", type=float, default=0.0)
     ap.add_argument("--seed", type=int, default=7)
+    ap.add_argument("--guided-poses", action="store_true",
+                    help="render the calibrate_guided REQ-satisfying pose set "
+                         "instead of the legacy make_poses set (required for "
+                         "the REQ-gated offline tool)")
     ap.add_argument("--selftest", action="store_true",
                     help="run the recalibration closed-loop on the clip and "
                          "assert fx recovery within 5%")
     a = ap.parse_args()
 
-    rng = np.random.default_rng(a.seed)
     fy = a.fy or a.fx
     Kt = np.array([[a.fx, 0, a.cx], [0, fy, a.cy], [0, 0, 1]], np.float64)
     dist_t = np.array([a.k1, a.k2, a.p1, a.p2, a.k3], np.float64)
 
-    local = board_corners_local()
-    poses = make_poses(rng)
+    if a.guided_poses:
+        poses = guided_poses(a, Kt, dist_t)
+    else:
+        rng = np.random.default_rng(a.seed)
+        poses = [pose6(p) for p in make_poses(rng)]
 
-    writer = cv2.VideoWriter(a.out, cv2.VideoWriter_fourcc(*"MJPG"),
-                             FPS, (W, H), False)
-    rendered = 0
-    for z, pu, pv, ang_p, ang_y in poses:
-        # board centre aimed so it projects to (pu, pv) at depth z
-        tx = (pu - a.cx) / a.fx * z
-        ty = (pv - a.cy) / fy * z
-        tz = z
-        # tilt: rotate board around its local X (pitch) then Y (yaw)
-        p, y = np.radians(ang_p), np.radians(ang_y)
-        cp, sp = np.cos(p), np.sin(p)
-        cy_, sy_ = np.cos(y), np.sin(y)
-        Rx = np.array([[1, 0, 0], [0, cp, -sp], [0, sp, cp]], np.float64)
-        Ry = np.array([[cy_, 0, sy_], [0, 1, 0], [-sy_, 0, cy_]], np.float64)
-        R_bc = Ry @ Rx
-        t_bc = np.array([tx, ty, tz], np.float64)
-
-        gray = np.zeros((H, W), np.uint8)
-        ok = render_board(gray, Kt, dist_t, local, R_bc, t_bc)
-        if not ok:
-            continue
-        gray = np.clip(gray.astype(np.float32)
-                       + rng.normal(0.0, NOISE, gray.shape), 0, 255).astype(np.uint8)
-        cv2.GaussianBlur(gray, (3, 3), 0, gray)
-        writer.write(gray)
-        rendered += 1
-    writer.release()
-
-    np.savez(a.out.replace(".avi", "_truth.npz"), camera_matrix=Kt,
-             dist_coeffs=dist_t)
+    rendered = render_clip(a.out, Kt, dist_t, poses, seed=a.seed)
     print("wrote %s (%d rendered poses)  truth fx=%.1f fy=%.1f cx=%.1f cy=%.1f"
           % (a.out, rendered, a.fx, fy, a.cx, a.cy))
     print("truth dist: %s" % np.array2string(dist_t, precision=5))

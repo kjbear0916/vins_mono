@@ -114,9 +114,16 @@ def check(npz_path, expect_w=320, expect_h=240, clip=None, pattern=(5, 4),
         warnings.append(
             "cx=%.1f is outside [%.0f, %.0f] for a %d-wide image" %
             (cx, 0.3 * expect_w, 0.7 * expect_w, expect_w))
-    if abs(fx - fy) / max(fx, fy) > 0.2:
-        warnings.append("fx/fy mismatch (non-square pixels?): %.1f / %.1f"
-                        % (fx, fy))
+    aniso = abs(fx - fy) / max(fx, fy)
+    if aniso > 0.10:
+        warnings.append(
+            "board cells are not square: fx/fy=%.3f (fx=%.1f fy=%.1f) is %.0f%% "
+            "anisotropic. A screen viewer stretching the image to fill the "
+            "display, or non-square print scaling, turns the chessboard cells "
+            "into rectangles; the tool then biases fx against fy and dumps the "
+            "residual into the distortion terms. Print the board, or use a "
+            "viewer that letterboxes." % (fx / max(1e-6, fy), fx, fy,
+                                           aniso * 100.0))
     if not (0.25 * expect_w <= fx <= 2.5 * expect_w
             and 0.25 * expect_h <= fy <= 2.5 * expect_h):
         warnings.append(
