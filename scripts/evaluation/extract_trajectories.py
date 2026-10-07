@@ -46,24 +46,24 @@ def quat_to_euler(q):
 
 
 def extract_vins_path(bag, topic, output_path):
-    """Extract VINS estimated trajectory as TUM format."""
-    rows = []
+    """Extract VINS estimated trajectory as TUM format (deduplicated by timestamp)."""
+    pose_map = {}
     for topic, msg, t in bag.read_messages(topics=[topic]):
-        if isinstance(msg, Path):
+        if hasattr(msg, "poses") and getattr(msg, "poses"):
+            # nav_msgs/Path: each message contains keyframe poses up to current time
             for pose in msg.poses:
                 timestamp = pose.header.stamp.to_sec()
                 p = pose.pose.position
                 q = pose.pose.orientation
-                roll, pitch, yaw = quat_to_euler(q)
-                rows.append([timestamp, p.x, p.y, p.z, roll, pitch, yaw])
-        elif isinstance(msg, Odometry):
+                pose_map[timestamp] = [timestamp, p.x, p.y, p.z, q.x, q.y, q.z, q.w]
+        elif hasattr(msg, "pose") and hasattr(msg, "twist"):
+            # nav_msgs/Odometry
             timestamp = msg.header.stamp.to_sec()
             p = msg.pose.pose.position
             q = msg.pose.pose.orientation
-            roll, pitch, yaw = quat_to_euler(q)
-            rows.append([timestamp, p.x, p.y, p.z, roll, pitch, yaw])
+            pose_map[timestamp] = [timestamp, p.x, p.y, p.z, q.x, q.y, q.z, q.w]
 
-    rows.sort(key=lambda r: r[0])
+    rows = sorted(pose_map.values(), key=lambda r: r[0])
     with open(output_path, 'w', newline='') as f:
         writer = csv.writer(f, delimiter=' ')
         for row in rows:
@@ -77,18 +77,18 @@ def extract_gazebo_gt(bag, model_name='iris', output_path=None):
     """Extract ground truth trajectory from /gazebo/model_states."""
     rows = []
     for topic, msg, t in bag.read_messages(topics=['/gazebo/model_states']):
-        if model_name not in msg.name:
+        found = [i for i, n in enumerate(msg.name) if model_name in n]
+        if not found:
             continue
-        idx = msg.name.index(model_name)
+        idx = found[0]
         timestamp = t.to_sec()
         p = msg.pose[idx].position
         q = msg.pose[idx].orientation
-        roll, pitch, yaw = quat_to_euler(q)
-        rows.append([timestamp, p.x, p.y, p.z, roll, pitch, yaw])
+        rows.append([timestamp, p.x, p.y, p.z, q.x, q.y, q.z, q.w])
 
     rows.sort(key=lambda r: r[0])
     if output_path is None:
-        output_path = os.path.splitext(bag)[0] + '_gt.tum'
+        raise ValueError("output_path is required")
     with open(output_path, 'w', newline='') as f:
         writer = csv.writer(f, delimiter=' ')
         for row in rows:
@@ -120,16 +120,17 @@ def main():
     # Extract VINS trajectory
     vins_topic = args.vins_topic
     vins_path = os.path.join(out_dir, base + '_vins.txt')
-    # Try Topic message type detection: some bags use /vins_estimator/odometry
-    try_count = extract_vins_path(args.bag, vins_topic, vins_path)
-    if try_count == 0:
-        print("No poses on /vins_estimator/path, trying /vins_estimator/odometry...")
-        vins_path = os.path.join(out_dir, base + '_vins.txt')
-        extract_vins_path(args.bag, '/vins_estimator/odometry', vins_path)
+    with rosbag.Bag(args.bag, 'r') as bag:
+        # Try Topic message type detection: some bags use /vins_estimator/odometry
+        try_count = extract_vins_path(bag, vins_topic, vins_path)
+        if try_count == 0:
+            print("No poses on /vins_estimator/path, trying /vins_estimator/odometry...")
+            vins_path = os.path.join(out_dir, base + '_vins.txt')
+            extract_vins_path(bag, '/vins_estimator/odometry', vins_path)
 
-    # Extract ground truth
-    gt_path = os.path.join(out_dir, base + '_gt.tum')
-    count = extract_gazebo_gt(args.bag, args.model)
+        # Extract ground truth
+        gt_path = os.path.join(out_dir, base + '_gt.tum')
+        count = extract_gazebo_gt(bag, args.model, gt_path)
     if count == 0:
         print("WARNING: No ground truth found for model '{}'".format(args.model))
 

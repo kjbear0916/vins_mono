@@ -13,6 +13,8 @@ FLIGHT_TIMEOUT=$((DUR + 35))
 
 source /opt/ros/noetic/setup.bash
 source /root/catkin_ws/devel/setup.bash
+export HEADLESS=1 NO_PXH=1
+unset DISPLAY
 
 VINS_WS=/root/catkin_ws/src
 SIM_LOG=/tmp/sim_${TRIAL}.log
@@ -72,7 +74,7 @@ wait_hz /iris_fpv_cam/usb_cam/image_raw 10 45 || { echo "RESULT FAIL sim_camera"
 
 # --- mavros ---
 nohup roslaunch /root/catkin_ws/src/mavros/mavros/launch/px4.launch \
-  fcu_url:=udp://:14540@127.0.0.1:14557 >"$MAV_LOG" 2>&1 &
+  fcu_url:=udp://:14540@127.0.0.1:14580 >"$MAV_LOG" 2>&1 &
 wait_hz /mavros/imu/data_raw 40 35 || { echo "RESULT FAIL mavros_imu"; exit 1; }
 
 # --- vins stack ---
@@ -89,16 +91,17 @@ RECORD_DUR=$(awk -v d="$DUR" 'BEGIN{printf "%.0f", d+15}')
 nohup python3 -u /tmp/path_recorder.py --duration "$RECORD_DUR" --out "$CSV" >"$REC_LOG" 2>&1 &
 sleep 2
 
-# --- raw-mavlink arm + offboard ---
-ARM_LOG=/tmp/arm_${TRIAL}.log
-timeout 60 python3 -u /tmp/mavlink_arm.py >"$ARM_LOG" 2>&1
-ARM_RC=$?
-echo "ARM_TAIL: $(tail -2 "$ARM_LOG" 2>/dev/null | tr '\n' '|')"
-
-# --- flight (pre-armed) ---
+# --- flight (pre-armed): keep setpoint stream alive while arming ---
+FLIGHT_TIMEOUT=$((DUR + 60))
 timeout "$FLIGHT_TIMEOUT" python3 -u /tmp/waypoint_flight.py --pre-armed \
   --trajectory "$TRAJ" --speed "$SPEED" --radius "$RADIUS" \
-  --altitude "$ALT" --duration "$DUR" >"$FLY_LOG" 2>&1
+  --altitude "$ALT" --duration "$DUR" >"$FLY_LOG" 2>&1 &
+WPPID=$!
+sleep 8
+timeout 90 python3 -u /tmp/mavlink_arm.py >"$ARM_LOG" 2>&1
+ARM_RC=$?
+echo "ARM_TAIL: $(tail -2 "$ARM_LOG" 2>/dev/null | tr '\n' '|')"
+while kill -0 "$WPPID" 2>/dev/null; do sleep 5; done
 FLY_RC=$?
 sleep 4
 
