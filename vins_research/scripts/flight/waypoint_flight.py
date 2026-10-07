@@ -90,9 +90,10 @@ class WaypointController:
                 self.set_mode(0, "OFFBOARD")
                 rospy.sleep(0.5)
 
-        # Hold at initial position while switching
+        # Hold at initial position while switching (keep the OFFBOARD
+        # setpoint stream alive long enough for a parallel arming step)
         rate = rospy.Rate(10)
-        for _ in range(50):
+        for _ in range(150):
             self.send_position(0, 0, target_alt)
             rate.sleep()
 
