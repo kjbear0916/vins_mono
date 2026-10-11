@@ -1,0 +1,8 @@
+{
+  "bag": "low_0.5ms_circle_r2_infra.bag",
+  "bag_bytes": 450712597,
+  "wall_s": "184",
+  "bag_sim_dur_s": "95",
+  "imu_hz": "50.00",
+  "rtf": "0.5163"
+}

@@ -1,0 +1,2 @@
+light,speed,trajectory,repeat,ate_rms,ate_median,ate_mean,ate_std,ate_max,rpe_rms,rpe_mean,features_note,trial_id,config_label,wall_s,bag_sim_dur_s,imu_hz,rtf
+low,0.5,circle,r2,4.719161430276981,4.7687913579717245,4.6711688160251725,0.6713169871289287,5.7702392862566985,0.21742609809815608,0.058633590286505125,ok,low_0.5ms_circle_r2_infra,light=low; speed=0.5m/s; traj=circle; repeat=r2; imu_hz=50,184,95,50.00,0.5163

@@ -103,6 +103,34 @@ python3 scripts/analysis/realbag_z.py <bag_path>    # 从 /gazebo/model_states �
 > 逐 cell 差异为**单目初始化 / scale-collapse 的运行间随机性**，非脚本版本引入的系统效应。
 > ⚠️ repo54 是"可移植版脚本"的产物，**不等于**主表 `/tmp` 版逐字节同源，比较时按上述口径解读。
 
+> **suspect cell 重跑（2026-10-11，RUN_TAG=infra）**：对 `low/0.5/circle/r2`（原 repo54 行标
+> `suspect_rtf`）单独重跑，得到干净的 `wall=184s / rtf=0.516 / imu_hz=50`——这正是重跑目的。
+> 但其 `ATE_RMS=4.719 m` 与原始值**不可比**（master 0.375 m、repo54 原行 1.224 m），因 54 组
+> 所用 `vins_demo.world` 在容器重建后遗失、现用**重建版**（md5 与原版 `1bcb504c…` 不同，场景特征
+> 不同）。故该重跑仅作基础设施 datapoint，**不能**当作原 cell 的复现值。产物单行见
+> `data/results_rerun54/infra_rerun.csv`（详见下方"容器重建"说明）。
+
+> **#11 主表 × repo54 配对分析 + 失败率口径（2026-10-11）**：失败率有两个口径——
+> (a) `ATE_RMS > 1 m`：**14/108（13%）**（主表 9 / repo54 5）；
+> (b) scale gate `[0.96, 1.03]` 未通过：**34/107（32%）**（主表 17/53、repo54 17/54）。
+> ⚠️ gate `[0.96,1.03]` 为**事后硬编码**（`report_stats.py:24`、`scale_gate.py:13` 等），非预注册；
+> 同 cell 重复实测可散在 0.9–1.05。宽松口径 `[0.9,1.1]`：主表 43/53、repo54 47/54（合计 90/107）。
+> `gate × ATE` 交叉表（合计）：带内＆ATE≤1 = **73**、带内＆ATE>1 = **0**、带外＆ATE≤1 = 20、
+> 带外＆ATE>1 = 14、缺 scale = 1 —— 即 `ATE>1` 的离群**全部**落在 scale 带外（scale-collapse），
+> 带内无一是失败。
+> 逐光照 `ATE>1`（主表+repo54 合计）：**high 1/36、medium 4/36、low 9/36** —— 唯一在两批间
+> 方向一致的模式。
+> 18-cell（每 cell 取 3 rep 中位）逐 cell `ΔATE = repo54 − master`：median **+0.059 m**、
+> 11 正 / 7 负（近似对称）；`|Δ|≤0.14 m` **10/18**、`0.14–0.16` 2/18、`>0.16` 6/18 → 差异为
+> 单目初始化 / scale-collapse 的运行间随机性，非脚本版本引入的系统效应。
+
+> **主表 per-trial 产物污染（2026-10-11 核查）**：权威表 `data/results/summary_54.csv` 逐字节未变
+> （md5 `a9a3ce6520bd7a40286008e7f65655a8`）。但该目录下**逐 trial 证据**在 10-09 之后被覆盖：
+> `trial_high_1.5ms_circle_r1/` **缺失**，其 TUM（`high_1.5ms_circle_r1_{gt.tum,vins.txt}`，另有
+> `sim_1.5ms_circle_r1_*`）被并入 `trial_high_0.5ms_circle_r1/trajectories/`；主表 `scale_sweep.csv`
+> 将 `high_1.5ms_circle_r1` 记为 `MISSING`。**故汇总数值以 summary_54.csv 为准，该 cell 的
+> per-trial 轨迹文件不可用于重建。**
+
 > **时钟稳健性修复 (2026-10-10)**: `trial_one.sh` 的 `wall_s` 改用 bash `$SECONDS`（单调，
 > 不受 guest 墙钟跳变影响），`batch_run_54.py` 的超时看门狗改用 `time.monotonic()`；
 > 此前用 `date +%s` / `time.time()` 会在 Docker 重启后产生 `end<start` 的病态 `wall_s`/`rtf`
@@ -126,6 +154,8 @@ python3 scripts/analysis/realbag_z.py <bag_path>    # 从 /gazebo/model_states �
 > vs #9 的 50 Hz 健康值 0.36–0.50，scale 8/12 离带），说明**结果高度依赖主机状态**，不只是
 > 单目随机性。因此：54 组 matrix 的绝对数值只在特定主机状态下可重现；跨 session（Docker
 > Desktop 重启、主机睡眠恢复后）的比较**只能信同 session 配对的差分**，单方绝对 ATE 不具可比性。
+> **推论（2026-10-11）**：任何单方绝对 ATE（含本次 infra 重跑的 4.719 m）都只在产生它的那个
+> 主机/环境状态下有意义，不得直接与其他 session 的数对标。
 > 判别脚本 `compare_suspect_cells.py`、图 `data/plots/suspect_cells_5arms.png`。
 
 > **IMU 高采样率子实验 (#12, 2026-10-10, RUN_TAG=imu161)**: 把 mavros `/mavros/imu/data_raw`
