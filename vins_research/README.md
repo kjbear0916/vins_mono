@@ -140,6 +140,12 @@ python3 scripts/analysis/realbag_z.py <bag_path>    # 从 /gazebo/model_states �
 > 自行回收；50 Hz 基线与磁盘对照组经 `set_imu_hz.py` 自愈验证（build+ROMFS 两处
 > `px4-rc.mavlink` 均回到 `f869fece…`）。`sim_config.yaml` 的 `output_path` 改到
 > `/tmp/vins_out/`，VINS 自产物（`vins_result*.csv`）不再污染 `/data/results/` 主表目录。
+> **仿真资产现已烤入镜像（2026-10-11）**：gazebo-classic 插件、渲染后的 jinja 模型、自定义
+> 世界/模型（`vins_demo.world`、`vins_props`）、GeographicLib 大地水准面、以及 3 个
+> `sitl_run.sh` 补丁，全部由 `docker/setup_sim_assets.sh`（幂等）在镜像构建时装好；容器重建后
+> 也可在容器内直接重跑该脚本自愈（3 个补丁脚本均已改为幂等）。⚠️ 注意：`vins_demo.world`
+> 原版已丢失，烤入的是**重建版**（见上文 suspect cell 重跑说明），故其 ATE 与原始 54 组
+> 不可直接比较。
 
 > **#12 同会话对照与离群判别 (2026-10-11)**：对 2 个被标记 cell（`high/0.5/circle`、
 > `medium/3.0/figure8`）×3 rep×2 臂在同一次会话交错重跑（`scripts/ops/rerun_pair.py` +

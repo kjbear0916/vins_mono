@@ -63,6 +63,17 @@ RUN pip3 install --upgrade 'pip<25' && \
     pip3 install 'setuptools<70' && \
     pip3 install 'pandas>=1.3.0,<3.0' evo matplotlib seaborn scipy
 
+# ─── Baked simulation runtime assets (2026-10-11) ───
+# Not produced by the stock PX4 build (and previously applied by hand inside the
+# container, lost on every recreate): the gazebo-classic plugins, the rendered
+# jinja models, the custom vins_demo world + vins_props model, the GeographicLib
+# geoid, and three sitl_run.sh patches. setup_sim_assets.sh is idempotent and can
+# also be re-run in a live container after a recreate. Placed last so changing an
+# asset does not invalidate the expensive PX4 / MAVROS / VINS layers.
+COPY setup_sim_assets.sh fix_sitl_run.py fix_ros1_plugins.py fix_xvfb.py /tmp/sim_assets/
+COPY assets/ /tmp/sim_assets/assets/
+RUN ASSETS_DIR=/tmp/sim_assets/assets bash /tmp/sim_assets/setup_sim_assets.sh
+
 # ─── Volume mounts ───
 VOLUME ["/root/catkin_ws/src/vins_research", "/data"]
 

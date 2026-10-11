@@ -1,0 +1,6 @@
+# Shell scripts and the Dockerfile are consumed by Linux (container build step
+# and bash execution). core.autocrlf=true on a Windows checkout would otherwise
+# inject CRLF and break them (e.g. the shebang / `set -euo pipefail` line in
+# docker/setup_sim_assets.sh). Force LF for these regardless of platform.
+*.sh text eol=lf
+Dockerfile text eol=lf
