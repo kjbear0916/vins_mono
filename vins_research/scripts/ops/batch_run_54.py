@@ -197,6 +197,40 @@ def read_metrics(trial_dir):
     return {}
 
 
+def preserve_evidence(trial_dir, bag_base, metrics):
+    """Save cheap derived evidence before a bag is deleted.
+
+    trial_one.sh already writes the GT/VINS TUM trajectories under
+    trial_dir/trajectories (scale_sweep.py reads them to recompute the Sim3
+    scale), so the only artifact lost with the bag is the rosbag metadata.
+    Dump it plus the runtime metrics so a later audit can still inspect bag
+    duration/topics after the recording itself is gone.
+    """
+    if not os.path.isdir(trial_dir):
+        return
+    if os.path.exists(bag_base):
+        try:
+            info = subprocess.run(["rosbag", "info", bag_base],
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.STDOUT, text=True,
+                                  timeout=180)
+            with open(os.path.join(trial_dir, "bag_info.txt"), "w") as f:
+                f.write(info.stdout or "")
+        except Exception as e:
+            print(f"    -> bag_info dump failed: {e}")
+    try:
+        with open(os.path.join(trial_dir, "evidence.json"), "w") as f:
+            json.dump({"bag": os.path.basename(bag_base),
+                       "bag_bytes": (os.path.getsize(bag_base)
+                                     if os.path.exists(bag_base) else None),
+                       "wall_s": metrics.get("wall_s", ""),
+                       "bag_sim_dur_s": metrics.get("bag_sim_dur_s", ""),
+                       "imu_hz": metrics.get("imu_hz", ""),
+                       "rtf": metrics.get("rtf", "")}, f, indent=2)
+    except Exception as e:
+        print(f"    -> evidence.json dump failed: {e}")
+
+
 def cleanup_sim():
     """Kill any lingering simulator/ROS processes left after a timeout."""
     for pat in ("sitl_run.sh", "gzserver", "px4", "mavros_node", "roslaunch",
@@ -377,6 +411,9 @@ def main():
             if args.cleanup:
                 bag_base = os.path.join(DATA_DIR, "rosbags",
                                         f"{trial_id(l, s, t, r)}.bag")
+                trial_res_dir = os.path.join(RESULTS_DIR,
+                                             f"trial_{trial_id(l, s, t, r)}")
+                preserve_evidence(trial_res_dir, bag_base, metrics)
                 removed = False
                 for bp in (bag_base, bag_base + ".active", bag_base + ".orig.bag"):
                     if os.path.exists(bp):
