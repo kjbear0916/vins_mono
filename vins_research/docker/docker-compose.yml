@@ -17,6 +17,7 @@ services:
       - ../data:/data
     network_mode: host
     ipc: host
+    init: true
     stdin_open: true
     tty: true
     command: >

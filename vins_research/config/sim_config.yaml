@@ -3,7 +3,7 @@
 #common parameters
 imu_topic: "/mavros/imu/data_raw"
 image_topic: "/iris_fpv_cam/usb_cam/image_raw"
-output_path: "/data/results/"
+output_path: "/tmp/vins_out/"
 
 #camera calibration (Gazebo fpv_cam: 320x240, hfov 1.047 => fx/fy 277.19)
 model_type: PINHOLE

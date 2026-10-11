@@ -96,6 +96,9 @@ for BAG in "${BAGS[@]}"; do
         echo "    ERROR: cannot parse experiment id from '${BASENAME}'; use <light>_<speed>ms_<traj>_r<N>"
         continue
     fi
+    # A RUN_TAG suffix (e.g. _repo54) rides along in the last parsed field; the
+    # repeat token is always r<N>, so drop anything after the first underscore.
+    REPEAT="${REPEAT%%_*}"
     echo "    light=${LIGHT} speed=${SPEED}ms traj=${TRAJ} repeat=${REPEAT}"
 
     # ─── Extract trajectories ───

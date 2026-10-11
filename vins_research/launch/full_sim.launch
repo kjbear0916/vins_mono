@@ -24,7 +24,7 @@
 
   <!-- MAVROS -->
   <node pkg="mavros" type="mavros_node" name="mavros" output="screen">
-    <param name="fcu_url" value="udp://:14556@localhost:14557"/>
+    <param name="fcu_url" value="udp://:14540@127.0.0.1:14580"/>
     <param name="gcs_url" value=""/>
     <param name="target_system" value="1"/>
     <param name="target_component" value="1"/>

@@ -19,22 +19,105 @@ Features:
 import os
 import sys
 import csv
+import json
 import time
+import signal
+import hashlib
 import argparse
+import shutil
 import subprocess
 
 REPO_DIR = "/root/catkin_ws/src/vins_research"
 DATA_DIR = "/data"
-RESULTS_DIR = os.path.join(DATA_DIR, "results")
-SUMMARY_CSV = os.path.join(RESULTS_DIR, "summary_54.csv")
+# Allow a rerun to write to a separate tree / summary so a re-matrix never
+# clobbers the committed master evidence. RUN_TAG is forwarded to trial_one.sh
+# as its 8th arg so bags + per-trial dirs are suffixed too.
+RESULTS_DIR = os.environ.get("VINS_RESULTS_DIR", os.path.join(DATA_DIR, "results"))
+SUMMARY_CSV = os.environ.get("VINS_SUMMARY_CSV", os.path.join(RESULTS_DIR, "summary_54.csv"))
+RUN_TAG = os.environ.get("RUN_TAG", "").strip()
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TRIAL_SCRIPT = os.environ.get("TRIAL_SCRIPT", os.path.join(SCRIPT_DIR, "trial_one.sh"))
+
+
+def trial_id(light, speed, traj, rep):
+    """Canonical trial id, suffixed with RUN_TAG when this is a re-matrix run."""
+    base = f"{light}_{speed}ms_{traj}_r{rep}"
+    return f"{base}_{RUN_TAG}" if RUN_TAG else base
+
+#: rough on-disk size of one recorded bag (observed ~400 MB for an 85 s record)
+BAG_EST_BYTES = 420 * 1024 * 1024
+#: refuse to start unless this many bags' worth of free space is available
+#: (a reindex can momentarily double one bag, hence >1x)
+MIN_FREE_BAGS = 3
+#: hard floor on free space before starting a run / the next recording (1.5 GiB).
+#: D: is typically ~98% full, so keep a firm buffer above one bag's worth.
+MIN_FREE_BYTES = int(1.5 * 1024 ** 3)
+
+#: per-trial wall-clock timeout and retry count. A healthy trial is ~150-250 s;
+#: a hung one was observed at ~2800 s. Default 3x-normal ceiling.
+TRIAL_TIMEOUT = int(os.environ.get("VINS_TRIAL_TIMEOUT", "720"))
+TRIAL_RETRIES = int(os.environ.get("VINS_TRIAL_RETRIES", "1"))
 
 CSV_HEADER = [
     "light", "speed", "trajectory", "repeat",
     "ate_rms", "ate_median", "ate_mean", "ate_std", "ate_max",
-    "rpe_rms", "rpe_mean", "features_note"
+    "rpe_rms", "rpe_mean", "features_note",
+    "trial_id", "config_label",
+    "wall_s", "bag_sim_dur_s", "imu_hz", "rtf"
 ]
+
+
+def free_bytes(path=DATA_DIR):
+    """Free bytes on the filesystem holding `path`, or None if unavailable."""
+    try:
+        return shutil.disk_usage(path).free
+    except OSError:
+        return None
+
+
+def _md5(path):
+    """Hex md5 of a file, or None if it does not exist / cannot be read."""
+    if not os.path.isfile(path):
+        return None
+    h = hashlib.md5()
+    try:
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(65536), b""):
+                h.update(chunk)
+    except OSError:
+        return None
+    return h.hexdigest()
+
+
+def write_manifest(trial_dir, light, speed, traj, rep):
+    """Record per-trial provenance: md5s of the config (camera pose + RIC),
+
+    the sim launcher (world selection) and the light world file, so a result
+    can be tied to the exact inputs that produced it.
+    """
+    if not os.path.isdir(trial_dir):
+        return
+    if os.path.exists(os.path.join(trial_dir, "manifest.json")):
+        # trial_one.sh already wrote the authoritative (turnkey) manifest.
+        return
+    world_rel = f"worlds/light_{light}.world"
+    manifest = {
+        "trial_id": trial_id(light, speed, traj, rep),
+        "light": light, "speed": speed, "trajectory": traj, "repeat": rep,
+        "generated": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "vins_world": os.environ.get("VINS_WORLD", "vins_demo"),
+        "md5": {
+            "config/sim_config.yaml": _md5(os.path.join(REPO_DIR, "config", "sim_config.yaml")),
+            "docker/sim_launch.sh": _md5(os.path.join(REPO_DIR, "docker", "sim_launch.sh")),
+            world_rel: _md5(os.path.join(REPO_DIR, world_rel)),
+        },
+    }
+    try:
+        with open(os.path.join(trial_dir, "manifest.json"), "w", encoding="utf-8") as f:
+            json.dump(manifest, f, indent=2, sort_keys=True)
+            f.write("\n")
+    except OSError as e:
+        print(f"Warning: could not write manifest for {manifest['trial_id']}: {e}")
 
 
 def load_completed_trials(csv_path):
@@ -74,11 +157,15 @@ def read_trial_summary(trial_dir):
         with open(sum_csv, 'r', newline='') as f:
             reader = csv.DictReader(f)
             for row in reader:
+                light = row.get("light", "N/A")
+                speed = row.get("speed", "N/A")
+                traj = row.get("trajectory", "N/A")
+                rep = row.get("repeat", "N/A")
                 return [
-                    row.get("light", "N/A"),
-                    row.get("speed", "N/A"),
-                    row.get("trajectory", "N/A"),
-                    row.get("repeat", "N/A"),
+                    light,
+                    speed,
+                    traj,
+                    rep,
                     row.get("ate_rms", "N/A"),
                     row.get("ate_median", "N/A"),
                     row.get("ate_mean", "N/A"),
@@ -86,37 +173,103 @@ def read_trial_summary(trial_dir):
                     row.get("ate_max", "N/A"),
                     row.get("rpe_rms", "N/A"),
                     row.get("rpe_mean", "N/A"),
-                    row.get("features_note", "N/A")
+                    row.get("features_note", "N/A"),
+                    trial_id(light, speed, traj, str(rep).lstrip("r")),
+                    f"light={light}; speed={speed}m/s; traj={traj}; repeat={rep}; "
+                    f"imu_hz={os.environ.get('IMU_HZ', '50')}"
                 ]
     except Exception as e:
         print(f"Error reading trial summary from {sum_csv}: {e}")
     return None
 
 
+def read_metrics(trial_dir):
+    """Read metrics.csv (wall_s, bag_sim_dur_s, imu_hz, rtf) written by trial_one.sh."""
+    path = os.path.join(trial_dir, "metrics.csv")
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, "r", newline="") as f:
+            for row in csv.DictReader(f):
+                return row
+    except Exception as e:
+        print(f"Error reading metrics from {path}: {e}")
+    return {}
+
+
+def cleanup_sim():
+    """Kill any lingering simulator/ROS processes left after a timeout."""
+    for pat in ("sitl_run.sh", "gzserver", "px4", "mavros_node", "roslaunch",
+                "rosbag record", "vins_estimator", "feature_tracker",
+                "Xvfb", "xvfb-run"):
+        subprocess.run(["pkill", "-9", "-f", pat],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def exec_trial(cmd, timeout):
+    """Run a trial, killing its whole process group on timeout.
+
+    Returns (timed_out, elapsed_s, returncode). start_new_session isolates the
+    trial in its own process group so the kill also reaps gzserver/px4/mavros.
+    """
+    start_t = time.monotonic()
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT, text=True,
+                            start_new_session=True)
+    try:
+        proc.communicate(timeout=timeout)
+        return False, time.monotonic() - start_t, proc.returncode
+    except subprocess.TimeoutExpired:
+        print(f"    -> TIMEOUT after {timeout}s; killing process group {proc.pid}")
+        try:
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+        except Exception:
+            pass
+        try:
+            proc.communicate(timeout=30)
+        except Exception:
+            pass
+        cleanup_sim()
+        return True, time.monotonic() - start_t, None
+
+
 def run_single_trial(light, speed, traj, rep, radius=5.0, alt=3.0, dur=45):
-    """Execute a single trial using trial_one.sh."""
+    """Execute one trial (one retry on wall-clock timeout).
+
+    Returns (row, status, metrics); status is "ok" | "hang" | "crash".
+    """
     cmd = [
         "bash", TRIAL_SCRIPT,
-        str(light),
-        str(traj),
-        str(speed),
-        str(radius),
-        str(alt),
-        str(dur),
-        str(rep)
+        str(light), str(traj), str(speed),
+        str(radius), str(alt), str(dur), str(rep),
     ]
-    print(f"\n[{time.strftime('%H:%M:%S')}] RUNNING: {' '.join(cmd)}")
-    start_t = time.time()
-    
-    # Run trial script with timeout (default flight 45s + setup/teardown ~240s)
-    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-    elapsed = time.time() - start_t
-    print(f"[{time.strftime('%H:%M:%S')}] Finished in {elapsed:.1f}s, exit code: {proc.returncode}")
-    
-    # Locate result
-    trial_res_dir = os.path.join(RESULTS_DIR, f"trial_{light}_{speed}ms_{traj}_r{rep}")
+    if RUN_TAG:
+        cmd.append(RUN_TAG)
+
+    trial_res_dir = os.path.join(RESULTS_DIR, f"trial_{trial_id(light, speed, traj, rep)}")
+    timed_out_any = False
+    for attempt in range(1, TRIAL_RETRIES + 2):
+        print(f"\n[{time.strftime('%H:%M:%S')}] RUNNING (attempt {attempt}/{TRIAL_RETRIES + 1}): {' '.join(cmd)}")
+        timed_out, elapsed, rc = exec_trial(cmd, TRIAL_TIMEOUT)
+        timed_out_any = timed_out_any or timed_out
+        print(f"[{time.strftime('%H:%M:%S')}] Finished in {elapsed:.1f}s, exit={rc}, timeout={timed_out}")
+        write_manifest(trial_res_dir, light, speed, traj, rep)
+        if not timed_out:
+            break
+        if attempt <= TRIAL_RETRIES:
+            print("    -> retrying once after timeout")
+        else:
+            print("    -> timeout again; marking hang")
+
     row = read_trial_summary(trial_res_dir)
-    return row
+    metrics = read_metrics(trial_res_dir)
+    if row is not None:
+        status = "ok"
+    elif timed_out_any:
+        status = "hang"
+    else:
+        status = "crash"
+    return row, status, metrics
 
 
 def main():
@@ -178,6 +331,18 @@ def main():
             print(f"  [{idx}/{len(pending)}] {l} | {s} m/s | {t} | r{r}")
         return
 
+    # Disk-space guard: refuse to start (and abort mid-run) when the recording
+    # target cannot hold MIN_FREE_BAGS bags, so a run never dies half-way with
+    # a truncated bag.
+    fb = free_bytes(DATA_DIR)
+    if fb is not None and fb < MIN_FREE_BYTES:
+        print(f"ERROR: {fb / 1e9:.2f} GB free at {DATA_DIR}, need "
+              f">= {MIN_FREE_BYTES / 1e9:.2f} GB (hard floor). Aborting.")
+        sys.exit(2)
+    if fb is not None:
+        print(f"Disk check OK: {fb / 1e9:.2f} GB free "
+              f"(>= {MIN_FREE_BYTES / 1e9:.2f} GB required).")
+
     run_count = 0
     for idx, (l, s, t, r) in enumerate(pending, 1):
         if args.limit and run_count >= args.limit:
@@ -187,27 +352,44 @@ def main():
         print(f"\n>>> Trial [{idx}/{len(pending)}] Overall: [Done {done_count + run_count}/{total}]")
         print(f"    Setting: Light={l}, Speed={s} m/s, Trajectory={t}, Repeat=r{r}")
 
+        fb = free_bytes(DATA_DIR)
+        if fb is not None and fb < MIN_FREE_BYTES:
+            print(f"ERROR: only {fb / 1e9:.2f} GB free (< {MIN_FREE_BYTES / 1e9:.2f} GB). "
+                  f"Stopping before the next recording.")
+            break
+
         # Choose flight duration based on speed
         # At 0.5 m/s, circle lap takes ~63s; at 1.5 m/s takes ~21s; at 3.0 m/s takes ~10.5s
         flight_dur = 55 if s == "0.5" else 45
 
-        result_row = run_single_trial(l, s, t, r, radius=5.0, alt=3.0, dur=flight_dur)
-        if result_row:
-            append_result(SUMMARY_CSV, result_row)
-            note = result_row[11]
-            ate = result_row[4]
-            rpe = result_row[9]
-            print(f"    -> Result: note={note}, ATE_RMS={ate} m, RPE_RMS={rpe} m")
-            # Free disk: successful trials only need summary/traj/evo artifacts.
-            if note == "ok" and args.cleanup:
-                bag_path = os.path.join(DATA_DIR, "rosbags",
-                                        f"{l}_{s}ms_{t}_r{r}.bag")
-                if os.path.exists(bag_path):
-                    os.remove(bag_path)
-                    print(f"    -> Cleaned bag: {os.path.basename(bag_path)}")
+        row, status, metrics = run_single_trial(l, s, t, r, radius=5.0, alt=3.0, dur=flight_dur)
+        mcols = [metrics.get("wall_s", ""), metrics.get("bag_sim_dur_s", ""),
+                 metrics.get("imu_hz", ""), metrics.get("rtf", "")]
+        if row is not None:
+            row = row + mcols
+            append_result(SUMMARY_CSV, row)
+            note = row[11]
+            ate = row[4]
+            rpe = row[9]
+            print(f"    -> Result: note={note}, ATE_RMS={ate} m, RPE_RMS={rpe} m, "
+                  f"wall={mcols[0]}s sim={mcols[1]}s imu_hz={mcols[2]} rtf={mcols[3]}")
+            # Free disk: a successful trial only needs summary/traj/evo artifacts.
+            if args.cleanup:
+                bag_base = os.path.join(DATA_DIR, "rosbags",
+                                        f"{trial_id(l, s, t, r)}.bag")
+                removed = False
+                for bp in (bag_base, bag_base + ".active", bag_base + ".orig.bag"):
+                    if os.path.exists(bp):
+                        os.remove(bp)
+                        removed = True
+                if removed:
+                    print(f"    -> Cleaned bag + sidecars: {os.path.basename(bag_base)}")
         else:
-            print(f"    -> ERROR: No summary produced for {l}_{s}ms_{t}_r{r}")
-            fallback_row = [l, s, t, f"r{r}", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "trial_crashed"]
+            print(f"    -> ERROR: no summary for {trial_id(l, s, t, r)} (status={status})")
+            fallback_row = [l, s, t, f"r{r}", "N/A", "N/A", "N/A", "N/A", "N/A",
+                            "N/A", "N/A", status,
+                            trial_id(l, s, t, r),
+                            f"light={l}; speed={s}m/s; traj={t}; repeat=r{r}"] + mcols
             append_result(SUMMARY_CSV, fallback_row)
 
         run_count += 1
