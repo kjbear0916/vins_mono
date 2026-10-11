@@ -64,7 +64,7 @@ sleep 8
 # ─── Step 3: Start MAVROS ───
 echo "[3/6] Starting MAVROS..."
 rosrun mavros mavros_node \
-    _fcu_url:=udp://:14556@localhost:14557 &
+    _fcu_url:=udp://:14540@127.0.0.1:14580 &
 MAVROS_PID=$!
 sleep 3
 

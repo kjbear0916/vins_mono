@@ -76,9 +76,73 @@ python3 scripts/analysis/realbag_z.py <bag_path>    # 从 /gazebo/model_states �
 - 轨迹: circle median 0.489 / figure8 0.182
 - 明显离群 (ATE>2.0m, 5 组) 为 VINS 初始化的**单目随机尺度失败**（V/G 路径比 0.2–0.3），非光照/速度/轨迹系统性；同 cell 的健康重复 <0.8 m。中位数是稳健指标。详见 OUTLIER_ANALYSIS.md。
 
-> **可复现性凭据**: 54 组实际运行逻辑固化为 `scripts/ops/trial_one.sh`；
-> 容器 `/tmp/trial_one.sh` 权威副本 md5 `685adff44c2f7b90c74d2a2e2039d429`（备份 `.as_run`）。
+> **可复现性凭据**: 54 组的**实际运行脚本**是容器 `/tmp/trial_one.sh`
+> （md5 `685adff44c2f7b90c74d2a2e2039d429`，备份 `scripts/trial_one.sh.as_run`，两者逐字节相同）。
+> ⚠️ repo 版 `scripts/ops/trial_one.sh` 与它**并非逐字节相同**（`Compare-Object` 显示 22 行差异）：
+> repo 版把 `/tmp`/`/root` 硬编码换成 `$REPO` 相对路径，并新增 bag 索引修复（`rosbag reindex`）
+> 与 `evaluate_all.sh` 的 exit 3/4 处理。故 repo 版是**可移植复现版**，权威产物出自 `/tmp` 版。
 > `data/`（bags/results/plots）为容器挂载产物，**不入库**。
+
+> **重跑 / 归属规则 (2026-10-09)**: `trial_one.sh` 第 8 参数 `RUN_TAG` 把输出导向
+> `<cell>_<tag>`（bag 与 `trial_<...>/` 均带 tag），同 cell 重跑**不再覆盖**先前产物；
+> 每组结果落 `manifest.json`（md5: `sim_config.yaml` / `sim_launch.sh` / `light_*.world` / PX4 `<world>.world`）。
+> 已知例外：`high / 1.5 / circle / r1` 的**首播原始 bag 已被一次重跑覆盖**，该重跑现标记为
+> `..._r1_rep2`（ATE 0.495）；原始值 0.383 仅存于主表 `summary_54.csv`。
+
+> **数据卫生 / stale 判定规则**: 主表 `summary_54.csv` 每行附 `trial_id` 与 `config_label`；
+> 任何汇总行只要 `light ∉ {high,medium,low}` 或 `trajectory ∉ {circle,figure8}`
+> （如 `sim`/`day0`/`night0`/`fig8`），一律隔离到 `data/results/summary_stale.csv`，不参与 54 组统计。
+
+> **全矩阵复现重跑 (2026-10-10, RUN_TAG=repo54)**: 用 repo 版可移植脚本对整个 54 组重跑一遍，
+> 产物在 `data/results_rerun54/`（`summary_54.csv`、`scale_sweep_repo54.csv`、
+> `paired_master_repo54.csv`）。首轮 52/54 直接通过；2 组基础设施失败（Docker Desktop 两次
+> 重启导致 guest 时钟跳变，详见 obs #0100）经**仅重跑**后补回 → **54/54 ok**，这 2 行标
+> `config_label` 含 `rerun=infra`。
+> 两版对比（`compare_master_rerun.py`）: 主表中位 ATE 0.365 m vs repo54 0.363 m；配对差
+> 中位 **+0.009 m**（无系统性偏移，正负尾部对称）；scale 在带内 36/54 (67%) vs 37/54 (69%)。
+> 逐 cell 差异为**单目初始化 / scale-collapse 的运行间随机性**，非脚本版本引入的系统效应。
+> ⚠️ repo54 是"可移植版脚本"的产物，**不等于**主表 `/tmp` 版逐字节同源，比较时按上述口径解读。
+
+> **时钟稳健性修复 (2026-10-10)**: `trial_one.sh` 的 `wall_s` 改用 bash `$SECONDS`（单调，
+> 不受 guest 墙钟跳变影响），`batch_run_54.py` 的超时看门狗改用 `time.monotonic()`；
+> 此前用 `date +%s` / `time.time()` 会在 Docker 重启后产生 `end<start` 的病态 `wall_s`/`rtf`
+> （obs #0100）。`docker/docker-compose.yml` 增加 `init: true` 以回收僵尸进程（下次重建容器生效）。
+
+> **容器重建 + 卫生 (2026-10-11)**：容器按 compose 重建后 PID1=`docker-init`（tini），僵尸
+> 自行回收；50 Hz 基线与磁盘对照组经 `set_imu_hz.py` 自愈验证（build+ROMFS 两处
+> `px4-rc.mavlink` 均回到 `f869fece…`）。`sim_config.yaml` 的 `output_path` 改到
+> `/tmp/vins_out/`，VINS 自产物（`vins_result*.csv`）不再污染 `/data/results/` 主表目录。
+
+> **#12 同会话对照与离群判别 (2026-10-11)**：对 2 个被标记 cell（`high/0.5/circle`、
+> `medium/3.0/figure8`）×3 rep×2 臂在同一次会话交错重跑（`scripts/ops/rerun_pair.py` +
+> `run5_ctl_pair.sh`，RUN_TAG=imu161r/ctl50，12/12 ok）。
+> **结论 1（原 r2 bump 未重现）**：`high/0.5/circle` 原 imu161 r2=1.30 m 在同会话 imu161r
+> r2 仅 0.28 m（scale 带内）→ 单次单目初始化随机性，非 125 Hz 系统性。
+> **结论 2（本批数据看不出 125Hz 与 50Hz 的差别，不写"不劣于"）**：12 次中 8 次 scale 在
+> gate[0.96,1.03] 外，gate 外 ATE 不可信、不可取中位数；gate 内样本（125Hz 0.28/0.24 vs
+> 50Hz 0.97）无同 cell 可配对。且同 cell 同臂 ATE 可在 0.28–4.95 间跳变，变异大于任何臂间
+> 差异；崩溃率在 n=12 下也比不出（两侧皆 0/12）。
+> **⚠️ 主机状态依赖（比 IMU 结论更重要）**：本会话两臂绝对 ATE 都显著偏高（ctl50 中位 0.90
+> vs #9 的 50 Hz 健康值 0.36–0.50，scale 8/12 离带），说明**结果高度依赖主机状态**，不只是
+> 单目随机性。因此：54 组 matrix 的绝对数值只在特定主机状态下可重现；跨 session（Docker
+> Desktop 重启、主机睡眠恢复后）的比较**只能信同 session 配对的差分**，单方绝对 ATE 不具可比性。
+> 判别脚本 `compare_suspect_cells.py`、图 `data/plots/suspect_cells_5arms.png`。
+
+> **IMU 高采样率子实验 (#12, 2026-10-10, RUN_TAG=imu161)**: 把 mavros `/mavros/imu/data_raw`
+> 协商为 200 Hz（`sim_launch.sh` 每次启动按 `IMU_HZ` 环境变量调用 `docker/set_imu_hz.py` 改写
+> PX4 `px4-rc.mavlink` 的 `mavlink stream -s HIGHRES_IMU`，默认 50 Hz，幂等、启动后自动复位）。
+> 实测 HIGHRES_IMU 协商失败（PX4 无定义该 rate）时由 IMU+baro 填充，**按 bag sim 时间测得
+> 实际约 125 Hz（min 125.0 / median 125.0 / max 126.5）**，故标签用 `imu161` 并如实标注 ~125 Hz，
+> 不用 200 Hz。6 cell × 3 rep 交错（rep-major, `scripts/ops/run12_subset.py`）单线程跑，
+> 结果在 `data/results_imu161/`。
+> **结果 18/18 ok、零 crash/hang**；中位 ATE **0.326 m**（master 50Hz 0.302 / repo54 50Hz 0.346，
+> 均指同一 18 cell 子集），中位 RTF 0.518（略慢于 50Hz 的 ~0.55，符合消息量增大的代价），
+> scale 带内 17/18（离带：`medium_3.0ms_figure8_r3` 0.9472）。逐 cell 与两 50Hz 臂的 |ΔATE|
+> 大都落在 ±0.14 m 运行间噪声内，**未观察到系统性精度劣化**（注：这个 18-cell 子集的绝对
+> 数值是跨 session 的，按下方"主机状态依赖"警告只作参考）；3 个臂都有少量离群运行
+> （master 3 个 ATE≥2.8 m、repo54 2 个、imu161 1 个：`high_0.5ms_circle_r2` 1.299 m，
+> 以及 1 个 scale 离带），判定为单目初始化的运行间随机性。流程加固（flock 单实例锁、
+> kill_chain 后残留进程 precheck、watchdog 仅告警不重启）保证全链 18/18 无重试、无重复链。
 
 ### 目录结构
 ```
