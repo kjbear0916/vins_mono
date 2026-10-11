@@ -72,7 +72,7 @@ python3 scripts/analysis/realbag_z.py <bag_path>    # 从 /gazebo/model_states �
 | RPE_RMS 中位数 | — | 0.040 m |
 | Scale | 0.012–0.036 | ~1.07 |
 
-- 光照槽位: high n=18 median 0.234 / medium 0.449 / low 0.455
+- 光照槽位: high n=18 median 0.234 / medium 0.449 / low 0.455 ⚠️ 三档实为同一 world，"光照"仅为标签（见下"光照轴实际未生效"）
 - 轨迹: circle median 0.489 / figure8 0.182
 - 明显离群 (ATE>2.0m, 5 组) 为 VINS 初始化的**单目随机尺度失败**（V/G 路径比 0.2–0.3），非光照/速度/轨迹系统性；同 cell 的健康重复 <0.8 m。中位数是稳健指标。详见 OUTLIER_ANALYSIS.md。
 
@@ -118,11 +118,26 @@ python3 scripts/analysis/realbag_z.py <bag_path>    # 从 /gazebo/model_states �
 > `gate × ATE` 交叉表（合计）：带内＆ATE≤1 = **73**、带内＆ATE>1 = **0**、带外＆ATE≤1 = 20、
 > 带外＆ATE>1 = 14、缺 scale = 1 —— 即 `ATE>1` 的离群**全部**落在 scale 带外（scale-collapse），
 > 带内无一是失败。
-> 逐光照 `ATE>1`（主表+repo54 合计）：**high 1/36、medium 4/36、low 9/36** —— 唯一在两批间
-> 方向一致的模式。
+> 逐光照 `ATE>1`（主表+repo54 合计）：**high 1/36、medium 4/36、low 9/36** —— 两批间方向一致，
+> **但该模式不可归因于光照**（三档实为同一 world，见上/下"光照轴实际未生效"）。
 > 18-cell（每 cell 取 3 rep 中位）逐 cell `ΔATE = repo54 − master`：median **+0.059 m**、
 > 11 正 / 7 负（近似对称）；`|Δ|≤0.14 m` **10/18**、`0.14–0.16` 2/18、`>0.16` 6/18 → 差异为
 > 单目初始化 / scale-collapse 的运行间随机性，非脚本版本引入的系统效应。
+
+> **⚠️ 光照轴实际未生效（2026-10-11 核查，重要）**：54 组的 `light∈{high,medium,low}` **只是标签**，
+> 三档跑的是**同一个世界文件**。证据链：
+> - `batch_run_54.py:39` 实际调用 `scripts/ops/trial_one.sh`；该脚本把 `LIGHT`（$1）**仅用于命名**
+>   trial 目录 / `TRIAL_ID` / manifest 标签，**从不映射到 world 文件**（`:20`）。
+> - `trial_one.sh:16` `VINS_WORLD=${VINS_WORLD:-vins_demo}`、`docker/sim_launch.sh:7` 同款默认；
+>   `sim_launch.sh:18` 把 `$VINS_WORLD` 传给 `sitl_run.sh` 作为世界名 → 全程 `vins_demo.world`。
+> - 唯一真正加载 `worlds/light_${LIGHT}.world` 的是 `scripts/run_experiment.sh:25,59`（`roslaunch ... world:=`），
+>   但它是**旁路脚本，不在 54 组矩阵的调用链上**。
+> - manifest 自身即反证：`trial_one.sh:201` 记 `"vins_world": "vins_demo"`（实际使用），
+>   而 `worlds/light_${LIGHT}.world` 的 md5（`:206`）只是被记录的**未被使用的**标签文件。
+> **影响**：逐光照 `ATE>1`（1/36、4/36、9/36）与逐光照中位（0.234/0.449/0.455）
+> **不能归因于光照**；三档差异只反映运行间随机性 / 基础设施时序（3 个 `suspect_rtf` 中 2 个属 low）。
+> **报告正文不得据光照轴作结论**；光照条件的实际场景差异**待确认**。复现光照条件需改 `trial_one.sh`
+> （按 `LIGHT` 设 `VINS_WORLD=light_${LIGHT}` 并同步 `light_*.world`）或走 `run_experiment.sh` 后重跑全矩阵。
 
 > **主表 per-trial 产物污染（2026-10-11 核查）**：权威表 `data/results/summary_54.csv` 逐字节未变
 > （md5 `a9a3ce6520bd7a40286008e7f65655a8`）。但该目录下**逐 trial 证据**在 10-09 之后被覆盖：
@@ -203,7 +218,7 @@ vins_research/
 
 | 变量 | 取值 |
 |---|---|
-| 光照 | 高 (ambient 0.8) / 中 (0.4) / 低 (0.1) |
+| 光照 | 高 (ambient 0.8) / 中 (0.4) / 低 (0.1) ⚠️ 未实际生效：54 组均跑 vins_demo.world |
 | 速度 | 0.5 / 1.5 / 3.0 m/s |
 | 轨迹 | 圆形 (A) / 8字形 (B) |
 | 重复 | 3 次/组 |
