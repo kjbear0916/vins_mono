@@ -81,6 +81,10 @@ python3 scripts/analysis/realbag_z.py <bag_path>    # 从 /gazebo/model_states �
 > ⚠️ repo 版 `scripts/ops/trial_one.sh` 与它**并非逐字节相同**（`Compare-Object` 显示 22 行差异）：
 > repo 版把 `/tmp`/`/root` 硬编码换成 `$REPO` 相对路径，并新增 bag 索引修复（`rosbag reindex`）
 > 与 `evaluate_all.sh` 的 exit 3/4 处理。故 repo 版是**可移植复现版**，权威产物出自 `/tmp` 版。
+> **2026-10-12 更新**：容器重建后 `/tmp/trial_one.sh` 已不存在；挂载的 `scripts/ops/trial_one.sh`
+> 现为当前权威副本（md5 `384325554b12da942bb52f6b03695484`），在 `685adff44c2f7b90c74d2a2e2039d429`
+> 基础上新增 `LIGHT`→`VINS_WORLD` 映射（真正切换光照世界）。原始主结果 54 组**仍出自
+> `685adff…`**（备份 `scripts/trial_one.sh.as_run`，逐字节相同）。
 > `data/`（bags/results/plots）为容器挂载产物，**不入库**。
 
 > **重跑 / 归属规则 (2026-10-09)**: `trial_one.sh` 第 8 参数 `RUN_TAG` 把输出导向
