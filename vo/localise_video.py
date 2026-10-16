@@ -90,7 +90,9 @@ def main():
     ap.add_argument("--video", help="recorded .avi file (file source)")
     ap.add_argument("--stream", help="ESP32 MJPEG URL, e.g. "
                     "http://192.168.4.1:81/stream")
-    ap.add_argument("--calib", default=r"D:\Things\vo\calibration_esp32_qvga.npz")
+    ap.add_argument("--calib", required=True,
+                    help="calibration for marker localisation; gated by "
+                         "calib_sanity via marker_loc.load_calibration")
     ap.add_argument("--markers", default=r"D:\Things\vo\marker_positions.json")
     ap.add_argument("--marker-m", type=float, default=0.15,
                     help="printed marker edge length in metres (measured)")
@@ -137,6 +139,7 @@ def main():
                 row += [r["n_obs"], r["n_ambiguous"]]
                 row += list(np.round(r["spread"], 3))
                 row += ["1" if r["n_ambiguous"] == 0 else "0"]
+                print(f"[Frame {i:04d}] Cam 3D Pos: X={r['fused'][0]:+.3f}m, Y={r['fused'][1]:+.3f}m, Z={r['fused'][2]:+.3f}m | Sighted: {r['ids']}")
             else:
                 row += ["", "", "", "", 0, 0, "", "", "", ""]
             row += [ids_txt]
