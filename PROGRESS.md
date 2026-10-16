@@ -234,6 +234,7 @@ bracket 後,0.15 差距 2.59° 合法 PASS,0.30 才觸發 VO 追蹤崩壞 FAIL)�
 2. **室內 GPS 硬體閉環**:印 ArUco 15–20cm 標記→實量 `--marker-m`→`marker_positions.json`(目前為佔位值)→`localise_video.py` 實測補 4.4 硬體缺口
 3. **推甄備審交付**:已完成 **28 頁/12 圖/125 檢查 PASS**(含封面頁 `cover_info.txt` 待填),已置 `推甄提交\` 與桌面;若系所有頁數上限再評估精簡版
 4. **回環偵測 + 位姿圖最佳化 (2026-10-13,軟體)**:新增 `vo/vo_loop_closure.py`(ORB 描述子 + 比例測試 + essential 幾何驗證的地點辨識;SE(3) 位姿圖 LM,數值 Jacobian,沿用 vo_bundle 風格)與 `vo/test_loop_closure.py`(4 測試全過:位姿圖閉環把合成漂移 ATE 由 1.30→0.14、真機幀重訪 52 匹配/51 內點、異場景 0 匹配、detect_loops 正確連 0↔2 且不誤連)。**限制**:週期性紋理(棋盤↔房間)會產生假陽性內點(已記錄);端到端驗證需一段「有迴環且具可追蹤紋理」的序列,現有 glow 合成場景無 ORB 特徵、真機序列無迴環,故此項為基礎建設、部分仍屬未來工作。
+5. **第一人稱相對導航原型 (2026-10-16,軟體)**:新增 `vo/drone_indoor_navigator.py`(載具座標系示教/導航:SPACE 記錄航點、N 切 TEACH/NAV、`R_w2c` 把目標向量投影到相機當前視角、360° 指南針 + 平移/直行指令、20cm 抵達自動前進),依 `marker_loc`/`marker_positions`/`video_source`;補 **可信度閘門**(近正面雙根之 `conditioned=False` 預設剔除,`--allow-ambiguous` 可覆寫)與 `--video` 離線來源。**驗證**:`--selftest` 純幾何自測 PASS(還原相機世界座標誤差 <1e-9、右偏目標航向為正,與 `marker_loc.camera_abs_position` 交叉一致),已印製 ArUco ID 0–5 偵測全中;真機串流端到端待硬體。`localise_video.py` 之 `--calib` 改為 required(經 `calib_sanity` 把關)+ 每幀印相機 3D 位置;`markers/test_marker_detect.py` 加 mission 面板(ID 0–5 完成度)+ ESP32 來源 + 每標記距離。**已寫入報告 §8**(第一人稱相對導航原型,標為已實作待真機);報告全鏈重跑 **PASS(28 頁/12 圖/125 檢查)**並複製交付。commit `4ca8905`。
 
 ---
 
