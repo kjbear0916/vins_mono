@@ -13,7 +13,15 @@ REPEAT=${7:-1}
 RUN_TAG=${8:-}
 REC_DUR=$((DUR + 40))
 REPO=/root/catkin_ws/src/vins_research
-VINS_WORLD=${VINS_WORLD:-vins_demo}
+# Light axis (fix): LIGHT (arg 1) selects the world file so the three arms run
+# genuinely different scenes. Before this, LIGHT was only a label and every arm
+# ran vins_demo, leaving the light axis silently inert. An explicit VINS_WORLD
+# env still overrides.
+case "$LIGHT" in
+  high|medium|low) _def_world="light_${LIGHT}" ;;
+  *)               _def_world="vins_demo" ;;
+esac
+VINS_WORLD=${VINS_WORLD:-$_def_world}
 export VINS_WORLD
 # Canonical trial id; RUN_TAG (8th arg) namespaces reruns so a repeat never
 # overwrites the bag / result dir of an earlier run (e.g. ..._r1_rep2).

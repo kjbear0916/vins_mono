@@ -65,6 +65,19 @@ mkdir -p "$PKG/models/vins_props"
 cp -f "$ASSETS/vins_props/vins_props.sdf" "$PKG/models/vins_props/vins_props.sdf"
 cp -f "$ASSETS/vins_props/model.config"   "$PKG/models/vins_props/model.config"
 cp -f "$ASSETS/vins_demo.world"           "$PKG/worlds/vins_demo.world"
+# iris_fpv_cam camera-pitch override: the jinja render in [2/6] regenerates
+# iris_fpv_cam.sdf with the stock level camera, but the RIC in
+# config/sim_config.yaml assumes the ~0.6 rad downward pitch used by the
+# original 54-run; without it VINS init collapses (scale ~1.37, ATE ~5 m).
+# The preserved original (data/_iris_fpv_cam.sdf) carries pose roll/pitch/yaw
+# "0 0.6 0"; restore it here so the bake keeps it.
+cp -f "$ASSETS/iris_fpv_cam/iris_fpv_cam.sdf" "$PKG/models/iris_fpv_cam/iris_fpv_cam.sdf"
+# light-axis worlds: identical scene to vins_demo, differ ONLY in <scene>/<light>.
+# trial_one.sh selects these by LIGHT so the three 'light' arms really run
+# different scenes (before the fix the light axis was silently inert).
+for lw in light_high light_medium light_low; do
+  cp -f "$ASSETS/$lw.world" "$PKG/worlds/$lw.world"
+done
 
 echo "=== [6/6] geoid dataset ==="
 if [ ! -f /usr/share/GeographicLib/geoids/egm96-5.pgm ]; then
