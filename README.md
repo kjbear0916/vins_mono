@@ -72,9 +72,11 @@ python3 scripts/analysis/realbag_z.py <bag_path>    # 从 /gazebo/model_states �
 | RPE_RMS 中位数 | — | 0.040 m |
 | Scale | 0.012–0.036 | ~1.07 |
 
-- 光照槽位: high n=18 median 0.234 / medium 0.449 / low 0.455 ⚠️ 三档实为同一 world，"光照"仅为标签（见下"光照轴实际未生效"）
+- 光照槽位: high n=18 median 0.234 / medium 0.449 / low 0.455 ⚠️ 三档实为同一 world，"光照"仅为标签 —— **本表的光照维度等于没测**
+  （2026-10-12 已接线重跑，但那份矩阵仍非单变量，见 [`docs/light_axis_status.md`](docs/light_axis_status.md)）
 - 轨迹: circle median 0.489 / figure8 0.182
-- 明显离群 (ATE>2.0m, 5 组) 为 VINS 初始化的**单目随机尺度失败**（V/G 路径比 0.2–0.3），非光照/速度/轨迹系统性；同 cell 的健康重复 <0.8 m。中位数是稳健指标。详见 OUTLIER_ANALYSIS.md。
+- 明显离群 (ATE>2.0m, 5 组) 为 VINS 初始化的**单目随机尺度失败**（同 cell 其它重复 0.12–0.76 m，scale 3.6–9.5 倍）。
+  中位数是稳健指标，判失败必须同时看 `sim3_scale`。详见 [`OUTLIER_ANALYSIS.md`](OUTLIER_ANALYSIS.md)。
 
 > **可复现性凭据**: 54 组的**实际运行脚本**是容器 `/tmp/trial_one.sh`
 > （md5 `685adff44c2f7b90c74d2a2e2039d429`，备份 `scripts/trial_one.sh.as_run`，两者逐字节相同）。
@@ -128,7 +130,9 @@ python3 scripts/analysis/realbag_z.py <bag_path>    # 从 /gazebo/model_states �
 > 11 正 / 7 负（近似对称）；`|Δ|≤0.14 m` **10/18**、`0.14–0.16` 2/18、`>0.16` 6/18 → 差异为
 > 单目初始化 / scale-collapse 的运行间随机性，非脚本版本引入的系统效应。
 
-> **⚠️ 光照轴实际未生效（2026-10-11 核查，重要）**：54 组的 `light∈{high,medium,low}` **只是标签**，
+> **⚠️ 光照轴：先失效（10-11 核查）→ 已接线（10-12 修复）→ 仍非单变量（见 `docs/light_axis_status.md`）**
+>
+> **① 主表 54 组：光照轴实际未生效（2026-10-11 核查）**：54 组的 `light∈{high,medium,low}` **只是标签**，
 > 三档跑的是**同一个世界文件**。证据链：
 > - `batch_run_54.py:39` 实际调用 `scripts/ops/trial_one.sh`；该脚本把 `LIGHT`（$1）**仅用于命名**
 >   trial 目录 / `TRIAL_ID` / manifest 标签，**从不映射到 world 文件**（`:20`）。
@@ -142,6 +146,19 @@ python3 scripts/analysis/realbag_z.py <bag_path>    # 从 /gazebo/model_states �
 > **不能归因于光照**；三档差异只反映运行间随机性 / 基础设施时序（3 个 `suspect_rtf` 中 2 个属 low）。
 > **报告正文不得据光照轴作结论**；光照条件的实际场景差异**待确认**。复现光照条件需改 `trial_one.sh`
 > （按 `LIGHT` 设 `VINS_WORLD=light_${LIGHT}` 并同步 `light_*.world`）或走 `run_experiment.sh` 后重跑全矩阵。
+>
+> **② 修复 + 第一次真正切换世界的矩阵（2026-10-12，RUN_TAG=lfinal）**：上面那条修复已落地 ——
+> `scripts/ops/trial_one.sh:16-25` 按 `LIGHT` 设 `VINS_WORLD=light_${LIGHT}`（md5
+> `384325554b12da942bb52f6b03695484`），manifest 的 `vins_world` 不再恒为 `vins_demo`。
+> 用它跑完整 54 组：**54/54 ok、IMU 50.01 Hz、RTF 0.465**（基础设施健康），但结果显著劣化：
+> 全体 ATE 中位 **1.390 m**（main 0.365），逐档 high **1.160** / medium **1.676** / low **1.492**，
+> `ATE>1` **43/54**。**三档全部劣化、无「越暗越差」的单调关系，high 档也坏** →
+> 劣化不可能来自照度本身。根因已定位：`docker/assets/light_*.world`（lfinal 实际加载）比
+> `docker/assets/vins_demo.world`（主表实际加载）**多了 12 个塔状遮挡物**，改的是几何不是光照；
+> 而 `worlds/light_*.world` 又是第三份（无塔、无 ground_plane），从未被 `setup_sim_assets.sh` 安装。
+> **因此 lfinal 矩阵不能用来支持任何光照结论**，也不能与主表 0.365 m 对标。
+> 汇总 `data/results_light_final/summary_54.csv`、日志 `run.log` 已入库；
+> 完整证据链、禁止的推论清单、修复清单见 [`docs/light_axis_status.md`](docs/light_axis_status.md)。
 
 > **主表 per-trial 产物污染（2026-10-11 核查）**：权威表 `data/results/summary_54.csv` 逐字节未变
 > （md5 `a9a3ce6520bd7a40286008e7f65655a8`）。但该目录下**逐 trial 证据**在 10-09 之后被覆盖：
@@ -222,8 +239,25 @@ vins_research/
 
 | 变量 | 取值 |
 |---|---|
-| 光照 | 高 (ambient 0.8) / 中 (0.4) / 低 (0.1) ⚠️ 未实际生效：54 组均跑 vins_demo.world |
+| 光照 | 高 (ambient 0.8) / 中 (0.4) / 低 (0.1) ⚠️ 主表 54 组未实际生效（均跑 vins_demo.world）；lfinal 矩阵已切换世界但仍含几何混杂 → [`docs/light_axis_status.md`](docs/light_axis_status.md) |
 | 速度 | 0.5 / 1.5 / 3.0 m/s |
 | 轨迹 | 圆形 (A) / 8字形 (B) |
 | 重复 | 3 次/组 |
 | 总数 | 3×3×2×3 = 54 次 |
+
+### 文档索引
+
+| 文件 | 内容 |
+|---|---|
+| [`docs/research_overview.md`](docs/research_overview.md) | 研究题目、假设 H1/H2、系统架构、实验设计、失效判据 |
+| [`docs/light_axis_status.md`](docs/light_axis_status.md) | **光照轴三段历史**：标签无效 → 已接线 → 仍非单变量；lfinal 矩阵结果、根因（世界文件几何不一致）、禁止的推论、修复清单 |
+| [`OUTLIER_ANALYSIS.md`](OUTLIER_ANALYSIS.md) | 5 个 ATE>2 m 离群的逐条判定；尺度带 × ATE 交叉表；处置规则 |
+| `docker/assets/` | 实际被 `setup_sim_assets.sh` 安装的世界/模型资产（**世界文件以这里为准**） |
+
+### 仓库维护须知
+
+- **`data/` 默认被 `.gitignore` 忽略**，但主表与 lfinal 汇总等少量证据文件是强制入库的
+  （`git add -f data/...`）。新增结果若要入库，必须显式 `-f`，否则只留在本机。
+- **世界文件有两个来源，且历史上已经分叉**：`docker/assets/light_*.world` 是运行时真正被安装的副本，
+  `worlds/light_*.world` 是参考副本。改动前先 diff 两者，详见 `docs/light_axis_status.md` 第 3 节。
+- **跨 session 的绝对 ATE 不可对标**（见上方「主机状态依赖」）：只信同 session 内的配对差分。
