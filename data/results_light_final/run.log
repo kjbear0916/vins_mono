@@ -1,0 +1,499 @@
+==================================================
+ VINS-Mono Simulation Matrix (54 Trials)
+ Total in matrix:     54
+ Already completed:   0
+ Remaining to run:    54
+ Output master CSV:   /data/results_light_final/summary_54.csv
+==================================================
+Disk check OK: 10.74 GB free (>= 1.61 GB required).
+
+>>> Trial [1/54] Overall: [Done 0/54]
+    Setting: Light=high, Speed=0.5 m/s, Trajectory=circle, Repeat=r1
+
+[02:14:09] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh high circle 0.5 5.0 3.0 55 1 lfinal
+[02:17:14] Finished in 184.7s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=0.6281806308661821 m, RPE_RMS=0.020995172580326703 m, wall=183s sim=94s imu_hz=50.54 rtf=0.5137
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: high_0.5ms_circle_r1_lfinal.bag
+
+>>> Trial [2/54] Overall: [Done 1/54]
+    Setting: Light=high, Speed=0.5 m/s, Trajectory=circle, Repeat=r2
+
+[02:17:19] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh high circle 0.5 5.0 3.0 55 2 lfinal
+[02:20:25] Finished in 185.8s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=0.9900849311212505 m, RPE_RMS=0.026042743192128966 m, wall=185s sim=95s imu_hz=50.00 rtf=0.5135
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: high_0.5ms_circle_r2_lfinal.bag
+
+>>> Trial [3/54] Overall: [Done 2/54]
+    Setting: Light=high, Speed=0.5 m/s, Trajectory=circle, Repeat=r3
+
+[02:20:30] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh high circle 0.5 5.0 3.0 55 3 lfinal
+[02:23:39] Finished in 188.5s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.0248387838625628 m, RPE_RMS=0.04585590773867636 m, wall=188s sim=95s imu_hz=50.00 rtf=0.5053
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: high_0.5ms_circle_r3_lfinal.bag
+
+>>> Trial [4/54] Overall: [Done 3/54]
+    Setting: Light=high, Speed=0.5 m/s, Trajectory=figure8, Repeat=r1
+
+[02:23:44] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh high figure8 0.5 5.0 3.0 55 1 lfinal
+[02:26:53] Finished in 189.6s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=0.7529220262090797 m, RPE_RMS=0.019520857909881863 m, wall=188s sim=95s imu_hz=50.00 rtf=0.5053
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: high_0.5ms_figure8_r1_lfinal.bag
+
+>>> Trial [5/54] Overall: [Done 4/54]
+    Setting: Light=high, Speed=0.5 m/s, Trajectory=figure8, Repeat=r2
+
+[02:26:58] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh high figure8 0.5 5.0 3.0 55 2 lfinal
+[02:30:23] Finished in 204.7s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.1851192195061033 m, RPE_RMS=0.03679334490490498 m, wall=204s sim=94s imu_hz=50.54 rtf=0.4608
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: high_0.5ms_figure8_r2_lfinal.bag
+
+>>> Trial [6/54] Overall: [Done 5/54]
+    Setting: Light=high, Speed=0.5 m/s, Trajectory=figure8, Repeat=r3
+
+[02:30:28] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh high figure8 0.5 5.0 3.0 55 3 lfinal
+[02:33:45] Finished in 197.0s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=0.8837158440163739 m, RPE_RMS=0.027189645316522914 m, wall=196s sim=95s imu_hz=50.00 rtf=0.4847
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: high_0.5ms_figure8_r3_lfinal.bag
+
+>>> Trial [7/54] Overall: [Done 6/54]
+    Setting: Light=high, Speed=1.5 m/s, Trajectory=circle, Repeat=r1
+
+[02:33:50] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh high circle 1.5 5.0 3.0 45 1 lfinal
+[02:36:54] Finished in 183.5s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.464631859187925 m, RPE_RMS=0.03888931996240105 m, wall=183s sim=85s imu_hz=50.01 rtf=0.4645
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: high_1.5ms_circle_r1_lfinal.bag
+
+>>> Trial [8/54] Overall: [Done 7/54]
+    Setting: Light=high, Speed=1.5 m/s, Trajectory=circle, Repeat=r2
+
+[02:36:59] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh high circle 1.5 5.0 3.0 45 2 lfinal
+[02:39:53] Finished in 174.6s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=0.7616918392766634 m, RPE_RMS=0.030791803862034423 m, wall=174s sim=85s imu_hz=50.00 rtf=0.4885
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: high_1.5ms_circle_r2_lfinal.bag
+
+>>> Trial [9/54] Overall: [Done 8/54]
+    Setting: Light=high, Speed=1.5 m/s, Trajectory=circle, Repeat=r3
+
+[02:39:58] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh high circle 1.5 5.0 3.0 45 3 lfinal
+[02:42:55] Finished in 176.7s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.1617320426258257 m, RPE_RMS=0.0363265729962186 m, wall=175s sim=84s imu_hz=50.61 rtf=0.4800
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: high_1.5ms_circle_r3_lfinal.bag
+
+>>> Trial [10/54] Overall: [Done 9/54]
+    Setting: Light=high, Speed=1.5 m/s, Trajectory=figure8, Repeat=r1
+
+[02:43:00] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh high figure8 1.5 5.0 3.0 45 1 lfinal
+[02:46:14] Finished in 194.2s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.6845071047762836 m, RPE_RMS=0.035708973052120584 m, wall=194s sim=85s imu_hz=50.01 rtf=0.4381
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: high_1.5ms_figure8_r1_lfinal.bag
+
+>>> Trial [11/54] Overall: [Done 10/54]
+    Setting: Light=high, Speed=1.5 m/s, Trajectory=figure8, Repeat=r2
+
+[02:46:19] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh high figure8 1.5 5.0 3.0 45 2 lfinal
+[02:49:35] Finished in 195.2s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=0.9378126726794465 m, RPE_RMS=0.03881325165809046 m, wall=194s sim=84s imu_hz=50.60 rtf=0.4330
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: high_1.5ms_figure8_r2_lfinal.bag
+
+>>> Trial [12/54] Overall: [Done 11/54]
+    Setting: Light=high, Speed=1.5 m/s, Trajectory=figure8, Repeat=r3
+
+[02:49:40] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh high figure8 1.5 5.0 3.0 45 3 lfinal
+[02:52:42] Finished in 182.3s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.827399347686561 m, RPE_RMS=0.03447752501828601 m, wall=181s sim=85s imu_hz=50.00 rtf=0.4696
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: high_1.5ms_figure8_r3_lfinal.bag
+
+>>> Trial [13/54] Overall: [Done 12/54]
+    Setting: Light=high, Speed=3.0 m/s, Trajectory=circle, Repeat=r1
+
+[02:52:47] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh high circle 3.0 5.0 3.0 45 1 lfinal
+[02:55:50] Finished in 183.3s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.6981319547263884 m, RPE_RMS=0.05028457369203269 m, wall=183s sim=85s imu_hz=50.01 rtf=0.4645
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: high_3.0ms_circle_r1_lfinal.bag
+
+>>> Trial [14/54] Overall: [Done 13/54]
+    Setting: Light=high, Speed=3.0 m/s, Trajectory=circle, Repeat=r2
+
+[02:55:55] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh high circle 3.0 5.0 3.0 45 2 lfinal
+[02:58:58] Finished in 182.5s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.8678576702951128 m, RPE_RMS=0.06287080425003416 m, wall=181s sim=85s imu_hz=50.00 rtf=0.4696
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: high_3.0ms_circle_r2_lfinal.bag
+
+>>> Trial [15/54] Overall: [Done 14/54]
+    Setting: Light=high, Speed=3.0 m/s, Trajectory=circle, Repeat=r3
+
+[02:59:03] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh high circle 3.0 5.0 3.0 45 3 lfinal
+[03:01:57] Finished in 174.5s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.2302071876036387 m, RPE_RMS=0.034071122308250316 m, wall=174s sim=85s imu_hz=50.01 rtf=0.4885
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: high_3.0ms_circle_r3_lfinal.bag
+
+>>> Trial [16/54] Overall: [Done 15/54]
+    Setting: Light=high, Speed=3.0 m/s, Trajectory=figure8, Repeat=r1
+
+[03:02:03] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh high figure8 3.0 5.0 3.0 45 1 lfinal
+[03:05:12] Finished in 189.6s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=0.7341527207957942 m, RPE_RMS=0.027369145073322363 m, wall=188s sim=85s imu_hz=50.01 rtf=0.4521
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: high_3.0ms_figure8_r1_lfinal.bag
+
+>>> Trial [17/54] Overall: [Done 16/54]
+    Setting: Light=high, Speed=3.0 m/s, Trajectory=figure8, Repeat=r2
+
+[03:05:17] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh high figure8 3.0 5.0 3.0 45 2 lfinal
+[03:08:12] Finished in 175.1s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.3584479028174112 m, RPE_RMS=0.035179590693316554 m, wall=175s sim=85s imu_hz=50.00 rtf=0.4857
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: high_3.0ms_figure8_r2_lfinal.bag
+
+>>> Trial [18/54] Overall: [Done 17/54]
+    Setting: Light=high, Speed=3.0 m/s, Trajectory=figure8, Repeat=r3
+
+[03:08:17] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh high figure8 3.0 5.0 3.0 45 3 lfinal
+[03:11:10] Finished in 173.1s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.1584385533943964 m, RPE_RMS=0.1336265337912613 m, wall=173s sim=84s imu_hz=50.60 rtf=0.4855
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: high_3.0ms_figure8_r3_lfinal.bag
+
+>>> Trial [19/54] Overall: [Done 18/54]
+    Setting: Light=medium, Speed=0.5 m/s, Trajectory=circle, Repeat=r1
+
+[03:11:15] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh medium circle 0.5 5.0 3.0 55 1 lfinal
+[03:14:21] Finished in 186.1s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.254404796443973 m, RPE_RMS=0.1267158266343273 m, wall=185s sim=94s imu_hz=50.54 rtf=0.5081
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: medium_0.5ms_circle_r1_lfinal.bag
+
+>>> Trial [20/54] Overall: [Done 19/54]
+    Setting: Light=medium, Speed=0.5 m/s, Trajectory=circle, Repeat=r2
+
+[03:14:27] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh medium circle 0.5 5.0 3.0 55 2 lfinal
+[03:17:55] Finished in 208.2s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.4981844837238607 m, RPE_RMS=0.030891188069138927 m, wall=207s sim=95s imu_hz=50.01 rtf=0.4589
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: medium_0.5ms_circle_r2_lfinal.bag
+
+>>> Trial [21/54] Overall: [Done 20/54]
+    Setting: Light=medium, Speed=0.5 m/s, Trajectory=circle, Repeat=r3
+
+[03:18:00] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh medium circle 0.5 5.0 3.0 55 3 lfinal
+[03:21:27] Finished in 207.4s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.055233753351558 m, RPE_RMS=0.03606030125310154 m, wall=206s sim=94s imu_hz=50.54 rtf=0.4563
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: medium_0.5ms_circle_r3_lfinal.bag
+
+>>> Trial [22/54] Overall: [Done 21/54]
+    Setting: Light=medium, Speed=0.5 m/s, Trajectory=figure8, Repeat=r1
+
+[03:21:32] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh medium figure8 0.5 5.0 3.0 55 1 lfinal
+[03:24:56] Finished in 203.5s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.7929574996729483 m, RPE_RMS=0.04896584495023935 m, wall=203s sim=95s imu_hz=50.01 rtf=0.4680
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: medium_0.5ms_figure8_r1_lfinal.bag
+
+>>> Trial [23/54] Overall: [Done 22/54]
+    Setting: Light=medium, Speed=0.5 m/s, Trajectory=figure8, Repeat=r2
+
+[03:25:01] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh medium figure8 0.5 5.0 3.0 55 2 lfinal
+[03:28:07] Finished in 185.6s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.2326939157824046 m, RPE_RMS=0.02956004996257585 m, wall=185s sim=95s imu_hz=50.00 rtf=0.5135
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: medium_0.5ms_figure8_r2_lfinal.bag
+
+>>> Trial [24/54] Overall: [Done 23/54]
+    Setting: Light=medium, Speed=0.5 m/s, Trajectory=figure8, Repeat=r3
+
+[03:28:12] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh medium figure8 0.5 5.0 3.0 55 3 lfinal
+[03:31:18] Finished in 186.0s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.6270773655407063 m, RPE_RMS=0.14121911327828973 m, wall=185s sim=95s imu_hz=50.01 rtf=0.5135
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: medium_0.5ms_figure8_r3_lfinal.bag
+
+>>> Trial [25/54] Overall: [Done 24/54]
+    Setting: Light=medium, Speed=1.5 m/s, Trajectory=circle, Repeat=r1
+
+[03:31:23] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh medium circle 1.5 5.0 3.0 45 1 lfinal
+[03:34:33] Finished in 190.4s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.2998016116717974 m, RPE_RMS=0.07262908503643967 m, wall=189s sim=85s imu_hz=50.01 rtf=0.4497
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: medium_1.5ms_circle_r1_lfinal.bag
+
+>>> Trial [26/54] Overall: [Done 25/54]
+    Setting: Light=medium, Speed=1.5 m/s, Trajectory=circle, Repeat=r2
+
+[03:34:38] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh medium circle 1.5 5.0 3.0 45 2 lfinal
+[03:37:41] Finished in 182.4s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=7.026718290994996 m, RPE_RMS=0.2937474096622312 m, wall=182s sim=85s imu_hz=50.00 rtf=0.4670
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: medium_1.5ms_circle_r2_lfinal.bag
+
+>>> Trial [27/54] Overall: [Done 26/54]
+    Setting: Light=medium, Speed=1.5 m/s, Trajectory=circle, Repeat=r3
+
+[03:37:46] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh medium circle 1.5 5.0 3.0 45 3 lfinal
+[03:40:46] Finished in 180.8s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.9511134930492813 m, RPE_RMS=0.2450431419204357 m, wall=180s sim=85s imu_hz=50.01 rtf=0.4722
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: medium_1.5ms_circle_r3_lfinal.bag
+
+>>> Trial [28/54] Overall: [Done 27/54]
+    Setting: Light=medium, Speed=1.5 m/s, Trajectory=figure8, Repeat=r1
+
+[03:40:51] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh medium figure8 1.5 5.0 3.0 45 1 lfinal
+[03:43:54] Finished in 182.1s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.237653296141233 m, RPE_RMS=0.03682004579286627 m, wall=181s sim=84s imu_hz=50.61 rtf=0.4641
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: medium_1.5ms_figure8_r1_lfinal.bag
+
+>>> Trial [29/54] Overall: [Done 28/54]
+    Setting: Light=medium, Speed=1.5 m/s, Trajectory=figure8, Repeat=r2
+
+[03:43:59] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh medium figure8 1.5 5.0 3.0 45 2 lfinal
+[03:47:09] Finished in 190.8s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.970079368460556 m, RPE_RMS=0.05319481794562513 m, wall=190s sim=85s imu_hz=50.01 rtf=0.4474
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: medium_1.5ms_figure8_r2_lfinal.bag
+
+>>> Trial [30/54] Overall: [Done 29/54]
+    Setting: Light=medium, Speed=1.5 m/s, Trajectory=figure8, Repeat=r3
+
+[03:47:14] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh medium figure8 1.5 5.0 3.0 45 3 lfinal
+[03:50:17] Finished in 183.0s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.725258921602484 m, RPE_RMS=0.03945354053971205 m, wall=182s sim=85s imu_hz=50.01 rtf=0.4670
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: medium_1.5ms_figure8_r3_lfinal.bag
+
+>>> Trial [31/54] Overall: [Done 30/54]
+    Setting: Light=medium, Speed=3.0 m/s, Trajectory=circle, Repeat=r1
+
+[03:50:23] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh medium circle 3.0 5.0 3.0 45 1 lfinal
+[03:53:26] Finished in 183.5s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=0.8883424429289706 m, RPE_RMS=0.026542594832903544 m, wall=182s sim=85s imu_hz=50.00 rtf=0.4670
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: medium_3.0ms_circle_r1_lfinal.bag
+
+>>> Trial [32/54] Overall: [Done 31/54]
+    Setting: Light=medium, Speed=3.0 m/s, Trajectory=circle, Repeat=r2
+
+[03:53:31] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh medium circle 3.0 5.0 3.0 45 2 lfinal
+[03:56:42] Finished in 190.9s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=2.6820401198181942 m, RPE_RMS=0.08436329336278027 m, wall=190s sim=85s imu_hz=50.02 rtf=0.4474
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: medium_3.0ms_circle_r2_lfinal.bag
+
+>>> Trial [33/54] Overall: [Done 32/54]
+    Setting: Light=medium, Speed=3.0 m/s, Trajectory=circle, Repeat=r3
+
+[03:56:47] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh medium circle 3.0 5.0 3.0 45 3 lfinal
+[03:59:48] Finished in 180.6s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.4014442240020322 m, RPE_RMS=0.2471993216075226 m, wall=180s sim=84s imu_hz=50.60 rtf=0.4667
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: medium_3.0ms_circle_r3_lfinal.bag
+
+>>> Trial [34/54] Overall: [Done 33/54]
+    Setting: Light=medium, Speed=3.0 m/s, Trajectory=figure8, Repeat=r1
+
+[03:59:53] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh medium figure8 3.0 5.0 3.0 45 1 lfinal
+[04:03:01] Finished in 188.2s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=2.96231058172643 m, RPE_RMS=0.08906206839180013 m, wall=187s sim=85s imu_hz=50.01 rtf=0.4545
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: medium_3.0ms_figure8_r1_lfinal.bag
+
+>>> Trial [35/54] Overall: [Done 34/54]
+    Setting: Light=medium, Speed=3.0 m/s, Trajectory=figure8, Repeat=r2
+
+[04:03:06] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh medium figure8 3.0 5.0 3.0 45 2 lfinal
+[04:06:20] Finished in 194.4s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=5.04095389421439 m, RPE_RMS=0.11491709530889219 m, wall=194s sim=85s imu_hz=50.00 rtf=0.4381
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: medium_3.0ms_figure8_r2_lfinal.bag
+
+>>> Trial [36/54] Overall: [Done 35/54]
+    Setting: Light=medium, Speed=3.0 m/s, Trajectory=figure8, Repeat=r3
+
+[04:06:25] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh medium figure8 3.0 5.0 3.0 45 3 lfinal
+[04:09:37] Finished in 191.7s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.9914306204588654 m, RPE_RMS=0.0626698822779293 m, wall=190s sim=84s imu_hz=50.60 rtf=0.4421
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: medium_3.0ms_figure8_r3_lfinal.bag
+
+>>> Trial [37/54] Overall: [Done 36/54]
+    Setting: Light=low, Speed=0.5 m/s, Trajectory=circle, Repeat=r1
+
+[04:09:42] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh low circle 0.5 5.0 3.0 55 1 lfinal
+[04:13:06] Finished in 203.4s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=3.993887427910017 m, RPE_RMS=0.20671877631270613 m, wall=203s sim=95s imu_hz=50.01 rtf=0.4680
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: low_0.5ms_circle_r1_lfinal.bag
+
+>>> Trial [38/54] Overall: [Done 37/54]
+    Setting: Light=low, Speed=0.5 m/s, Trajectory=circle, Repeat=r2
+
+[04:13:11] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh low circle 0.5 5.0 3.0 55 2 lfinal
+[04:16:34] Finished in 203.5s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=2.43071576500046 m, RPE_RMS=0.062498528351612834 m, wall=202s sim=94s imu_hz=50.53 rtf=0.4653
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: low_0.5ms_circle_r2_lfinal.bag
+
+>>> Trial [39/54] Overall: [Done 38/54]
+    Setting: Light=low, Speed=0.5 m/s, Trajectory=circle, Repeat=r3
+
+[04:16:39] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh low circle 0.5 5.0 3.0 55 3 lfinal
+[04:20:02] Finished in 202.5s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.5772004265464794 m, RPE_RMS=0.0472163839365004 m, wall=202s sim=95s imu_hz=50.01 rtf=0.4703
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: low_0.5ms_circle_r3_lfinal.bag
+
+>>> Trial [40/54] Overall: [Done 39/54]
+    Setting: Light=low, Speed=0.5 m/s, Trajectory=figure8, Repeat=r1
+
+[04:20:07] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh low figure8 0.5 5.0 3.0 55 1 lfinal
+[04:23:21] Finished in 194.5s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.3790375047502985 m, RPE_RMS=0.033747196190593964 m, wall=194s sim=94s imu_hz=50.55 rtf=0.4845
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: low_0.5ms_figure8_r1_lfinal.bag
+
+>>> Trial [41/54] Overall: [Done 40/54]
+    Setting: Light=low, Speed=0.5 m/s, Trajectory=figure8, Repeat=r2
+
+[04:23:26] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh low figure8 0.5 5.0 3.0 55 2 lfinal
+[04:26:49] Finished in 203.0s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.313137734298964 m, RPE_RMS=0.03694368176584428 m, wall=202s sim=95s imu_hz=50.00 rtf=0.4703
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: low_0.5ms_figure8_r2_lfinal.bag
+
+>>> Trial [42/54] Overall: [Done 41/54]
+    Setting: Light=low, Speed=0.5 m/s, Trajectory=figure8, Repeat=r3
+
+[04:26:55] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh low figure8 0.5 5.0 3.0 55 3 lfinal
+[04:30:10] Finished in 195.9s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.3171986502355608 m, RPE_RMS=0.03224424865541436 m, wall=195s sim=95s imu_hz=50.01 rtf=0.4872
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: low_0.5ms_figure8_r3_lfinal.bag
+
+>>> Trial [43/54] Overall: [Done 42/54]
+    Setting: Light=low, Speed=1.5 m/s, Trajectory=circle, Repeat=r1
+
+[04:30:16] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh low circle 1.5 5.0 3.0 45 1 lfinal
+[04:33:29] Finished in 193.7s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.3724396450032894 m, RPE_RMS=0.03959569879766167 m, wall=193s sim=85s imu_hz=50.01 rtf=0.4404
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: low_1.5ms_circle_r1_lfinal.bag
+
+>>> Trial [44/54] Overall: [Done 43/54]
+    Setting: Light=low, Speed=1.5 m/s, Trajectory=circle, Repeat=r2
+
+[04:33:34] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh low circle 1.5 5.0 3.0 45 2 lfinal
+[04:36:47] Finished in 192.9s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.3333740432911088 m, RPE_RMS=0.038650464306141455 m, wall=193s sim=85s imu_hz=50.01 rtf=0.4404
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: low_1.5ms_circle_r2_lfinal.bag
+
+>>> Trial [45/54] Overall: [Done 44/54]
+    Setting: Light=low, Speed=1.5 m/s, Trajectory=circle, Repeat=r3
+
+[04:36:52] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh low circle 1.5 5.0 3.0 45 3 lfinal
+[04:40:02] Finished in 189.7s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=9.818089561772558 m, RPE_RMS=0.4213745532539882 m, wall=189s sim=85s imu_hz=50.01 rtf=0.4497
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: low_1.5ms_circle_r3_lfinal.bag
+
+>>> Trial [46/54] Overall: [Done 45/54]
+    Setting: Light=low, Speed=1.5 m/s, Trajectory=figure8, Repeat=r1
+
+[04:40:07] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh low figure8 1.5 5.0 3.0 45 1 lfinal
+[04:43:18] Finished in 191.3s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.6577438858910671 m, RPE_RMS=0.04803637608444803 m, wall=191s sim=84s imu_hz=50.61 rtf=0.4398
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: low_1.5ms_figure8_r1_lfinal.bag
+
+>>> Trial [47/54] Overall: [Done 46/54]
+    Setting: Light=low, Speed=1.5 m/s, Trajectory=figure8, Repeat=r2
+
+[04:43:23] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh low figure8 1.5 5.0 3.0 45 2 lfinal
+[04:46:36] Finished in 192.2s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=0.6780977934800194 m, RPE_RMS=0.028913469454832384 m, wall=191s sim=84s imu_hz=50.61 rtf=0.4398
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: low_1.5ms_figure8_r2_lfinal.bag
+
+>>> Trial [48/54] Overall: [Done 47/54]
+    Setting: Light=low, Speed=1.5 m/s, Trajectory=figure8, Repeat=r3
+
+[04:46:41] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh low figure8 1.5 5.0 3.0 45 3 lfinal
+[04:49:51] Finished in 190.8s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=0.5733314614074911 m, RPE_RMS=0.04900050192390607 m, wall=190s sim=85s imu_hz=50.01 rtf=0.4474
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: low_1.5ms_figure8_r3_lfinal.bag
+
+>>> Trial [49/54] Overall: [Done 48/54]
+    Setting: Light=low, Speed=3.0 m/s, Trajectory=circle, Repeat=r1
+
+[04:49:57] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh low circle 3.0 5.0 3.0 45 1 lfinal
+[04:53:07] Finished in 190.6s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.4710558691383546 m, RPE_RMS=0.04372837527379554 m, wall=189s sim=85s imu_hz=50.00 rtf=0.4497
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: low_3.0ms_circle_r1_lfinal.bag
+
+>>> Trial [50/54] Overall: [Done 49/54]
+    Setting: Light=low, Speed=3.0 m/s, Trajectory=circle, Repeat=r2
+
+[04:53:12] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh low circle 3.0 5.0 3.0 45 2 lfinal
+[04:56:22] Finished in 190.1s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.8038701222809448 m, RPE_RMS=0.04556854912040526 m, wall=190s sim=85s imu_hz=50.00 rtf=0.4474
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: low_3.0ms_circle_r2_lfinal.bag
+
+>>> Trial [51/54] Overall: [Done 50/54]
+    Setting: Light=low, Speed=3.0 m/s, Trajectory=circle, Repeat=r3
+
+[04:56:27] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh low circle 3.0 5.0 3.0 45 3 lfinal
+[04:59:30] Finished in 182.2s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=0.8838277118923865 m, RPE_RMS=0.021526494490422217 m, wall=182s sim=85s imu_hz=50.00 rtf=0.4670
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: low_3.0ms_circle_r3_lfinal.bag
+
+>>> Trial [52/54] Overall: [Done 51/54]
+    Setting: Light=low, Speed=3.0 m/s, Trajectory=figure8, Repeat=r1
+
+[04:59:35] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh low figure8 3.0 5.0 3.0 45 1 lfinal
+[05:02:46] Finished in 191.0s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=1.5120086897984468 m, RPE_RMS=0.038791563041546566 m, wall=190s sim=85s imu_hz=50.01 rtf=0.4474
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: low_3.0ms_figure8_r1_lfinal.bag
+
+>>> Trial [53/54] Overall: [Done 52/54]
+    Setting: Light=low, Speed=3.0 m/s, Trajectory=figure8, Repeat=r2
+
+[05:02:51] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh low figure8 3.0 5.0 3.0 45 2 lfinal
+[05:06:01] Finished in 190.4s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=4.34869094088115 m, RPE_RMS=0.09519243717239222 m, wall=189s sim=84s imu_hz=50.61 rtf=0.4444
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: low_3.0ms_figure8_r2_lfinal.bag
+
+>>> Trial [54/54] Overall: [Done 53/54]
+    Setting: Light=low, Speed=3.0 m/s, Trajectory=figure8, Repeat=r3
+
+[05:06:06] RUNNING (attempt 1/2): bash /root/catkin_ws/src/vins_research/scripts/ops/trial_one.sh low figure8 3.0 5.0 3.0 45 3 lfinal
+[05:09:18] Finished in 191.5s, exit=0, timeout=False
+    -> Result: note=ok, ATE_RMS=2.016298185229356 m, RPE_RMS=0.03844686187906941 m, wall=191s sim=85s imu_hz=50.01 rtf=0.4450
+    -> bag_info dump failed: [Errno 2] No such file or directory: 'rosbag'
+    -> Cleaned bag + sidecars: low_3.0ms_figure8_r3_lfinal.bag
+
+==================================================
+ Batch run completed 54 trials.
+ Master summary: /data/results_light_final/summary_54.csv
+==================================================

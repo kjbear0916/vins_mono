@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  vins-sim:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vins_research
+    privileged: true
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+      - HEADLESS=1
+      - ROS_MASTER_URI=http://localhost:11311
+      - ROS_IP=127.0.0.1
+    volumes:
+      - ../:/root/catkin_ws/src/vins_research
+      - ../data:/data
+    network_mode: host
+    ipc: host
+    init: true
+    stdin_open: true
+    tty: true
+    command: >
+      bash -c "
+        source /opt/ros/noetic/setup.bash &&
+        source /root/catkin_ws/devel/setup.bash &&
+        echo 'ROS environment ready. Type commands to start.' &&
+        /bin/bash
+      "

@@ -1,0 +1,16 @@
+{
+  "trial_id": "high_0.5ms_circle_r1_lfinal",
+  "run_tag": "lfinal",
+  "light": "high",
+  "speed": "0.5",
+  "trajectory": "circle",
+  "repeat": "1",
+  "vins_world": "light_high",
+  "imu_hz": "50",
+  "md5": {
+    "config/sim_config.yaml": "6dc16a8849099bc381b471f7eb88633f",
+    "docker/sim_launch.sh": "d815fe4d2bc8410ca0caeec212e673a6",
+    "worlds/light_high.world": "3d2c520bb7e4a14ab92d02de086cad31",
+    "px4_world/light_high.world": "87468ab89608002f0c3f4544b5695d8b"
+  }
+}
