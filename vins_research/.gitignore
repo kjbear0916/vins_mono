@@ -1,8 +1,0 @@
-# .gitignore for VINS-Mono research project
-# data/ is the container-mounted experiment-artifact dir (bags, results,
-# trajectories, plots) — never commit it.
-data/
-*.pyc
-__pycache__/
-.vscode/
-*.log

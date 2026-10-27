@@ -1,4 +1,0 @@
-trial_id,reason
-low_0.5ms_circle_r2_repo54,wall 3071 s / rtf 0.031 (guest clock jump; pre-fix wall accounting)
-low_0.5ms_figure8_r3_repo54,wall 668 s / rtf 0.142
-high_1.5ms_figure8_r3_repo54,wall 311 s / rtf 0.270
